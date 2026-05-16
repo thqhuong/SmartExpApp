@@ -1,7 +1,21 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.SmartExpApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <!-- Changed 'sans' to 'sans-serif' to ensure the layout preview can resolve the system font correctly and avoid NPE when attempting to load it as an asset -->
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/smart_surface</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="elevationOverlayColor">@android:color/transparent</item>
+        <item name="elevationOverlayAccentColor">@android:color/transparent</item>
+        <item name="colorPrimary">@color/smart_primary_container</item>
+        <item name="colorOnPrimary">@color/smart_on_primary</item>
+        <item name="colorSecondary">@color/smart_secondary</item>
+        <item name="colorSurface">@color/smart_surface</item>
+        <item name="colorOnSurface">@color/smart_on_surface</item>
+        <item name="colorError">@color/smart_error</item>
     </style>
 </resources>
