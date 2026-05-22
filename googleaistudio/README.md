@@ -18,3 +18,5 @@ View your app in AI Studio: https://ai.studio/apps/17ec2e24-fe02-44af-9ae1-6a080
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+`npm run dev` starts the Express API and Vite frontend together. The Gemini key stays on the server and is used through `/api/generate-recipes`.

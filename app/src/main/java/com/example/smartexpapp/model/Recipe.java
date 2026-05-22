@@ -1,5 +1,6 @@
 package com.example.smartexpapp.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Recipe {
@@ -16,9 +17,14 @@ public class Recipe {
     }
 
     public Recipe(String title, String summary, List<String> expiringIngredients, String actionText, int iconRes, boolean featured, String imageUrl) {
+        if (title == null) throw new IllegalArgumentException("title cannot be null");
+        if (summary == null) throw new IllegalArgumentException("summary cannot be null");
+        if (expiringIngredients == null) throw new IllegalArgumentException("expiringIngredients cannot be null");
+        if (actionText == null) throw new IllegalArgumentException("actionText cannot be null");
+
         this.title = title;
         this.summary = summary;
-        this.expiringIngredients = expiringIngredients;
+        this.expiringIngredients = new ArrayList<>(expiringIngredients);
         this.actionText = actionText;
         this.iconRes = iconRes;
         this.featured = featured;

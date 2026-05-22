@@ -70,7 +70,9 @@ export default function RecipesScreen({ products }: RecipesScreenProps) {
             className="flex flex-col gap-6"
           >
             {recipes.map((recipe, idx) => (
-              <RecipeCard key={recipe.id} recipe={recipe} priority={idx === 0} />
+              <div key={recipe.id}>
+                <RecipeCard recipe={recipe} priority={idx === 0} />
+              </div>
             ))}
           </motion.div>
         ) : (

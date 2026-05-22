@@ -82,6 +82,6 @@ public class Product {
         if (daysUntilExpiry <= 0) {
             return 100;
         }
-        return Math.min(100, Math.max(0, Math.round(daysUntilExpiry / 14f * 100f)));
+        return Math.max(0, Math.min(100, 100 - Math.round(daysUntilExpiry / 14f * 100f)));
     }
 }
