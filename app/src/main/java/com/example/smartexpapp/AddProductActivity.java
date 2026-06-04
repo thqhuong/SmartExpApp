@@ -14,7 +14,6 @@ import com.example.smartexpapp.model.Product;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public class AddProductActivity extends BaseActivity {
     private final Calendar selectedDate = Calendar.getInstance();
@@ -63,6 +62,7 @@ public class AddProductActivity extends BaseActivity {
                 this,
                 (view, year, month, dayOfMonth) -> {
                     selectedDate.set(year, month, dayOfMonth, 23, 59, 59);
+                    selectedDate.set(Calendar.MILLISECOND, 999);
                     hasSelectedDate = true;
                     expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
                     expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
@@ -86,11 +86,10 @@ public class AddProductActivity extends BaseActivity {
         }
 
         String storage = selectedStorage();
-        int days = daysUntilExpiry();
         int icon = iconForStorage(storage);
 
         // Future OCR can replace this manual field mapping without changing the screen flow.
-        ProductRepository.addProduct(new Product(name, "General", "1 pcs", storage, days, icon));
+        ProductRepository.addProduct(this, new Product(name, "General", "1", "pcs", storage, selectedDate.getTimeInMillis(), icon));
         Toast.makeText(this, name + " added.", Toast.LENGTH_SHORT).show();
         startActivity(new Intent(this, InventoryActivity.class));
         overridePendingTransition(0, 0);
@@ -104,11 +103,6 @@ public class AddProductActivity extends BaseActivity {
             return "Freeze";
         }
         return "Room Temp";
-    }
-
-    private int daysUntilExpiry() {
-        long diff = selectedDate.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
-        return Math.max(0, (int) Math.ceil(diff / (double) TimeUnit.DAYS.toMillis(1)));
     }
 
     private int iconForStorage(String storage) {

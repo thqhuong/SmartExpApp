@@ -54,7 +54,7 @@ public class InventoryActivity extends BaseActivity {
     private void renderProducts(String filter) {
         productList.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-        List<Product> sorted = new ArrayList<>(ProductRepository.getProducts());
+        List<Product> sorted = new ArrayList<>(ProductRepository.getProducts(this));
         sorted.sort(Comparator.comparingInt(Product::getDaysUntilExpiry));
         for (Product product : sorted) {
             if (!matches(product, filter)) {

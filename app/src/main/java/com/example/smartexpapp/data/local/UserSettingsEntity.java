@@ -1,0 +1,45 @@
+package com.example.smartexpapp.data.local;
+
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.Index;
+import androidx.room.PrimaryKey;
+
+@Entity(
+        tableName = "user_settings",
+        foreignKeys = @ForeignKey(
+                entity = StorageLocationEntity.class,
+                parentColumns = "id",
+                childColumns = "default_storage_location_id"
+        ),
+        indices = @Index("default_storage_location_id")
+)
+public class UserSettingsEntity {
+    @PrimaryKey
+    @NonNull
+    public String id = "default";
+
+    @ColumnInfo(name = "reminder_days_before")
+    public int reminderDaysBefore = 3;
+
+    @ColumnInfo(name = "dietary_preferences")
+    public String dietaryPreferences;
+
+    @ColumnInfo(name = "default_storage_location_id")
+    @NonNull
+    public String defaultStorageLocationId = LocalDataContract.STORAGE_ROOM_TEMP_ID;
+
+    @ColumnInfo(name = "notification_enabled")
+    public boolean notificationEnabled = true;
+
+    @ColumnInfo(name = "created_at")
+    public long createdAt;
+
+    @ColumnInfo(name = "updated_at")
+    public long updatedAt;
+
+    public UserSettingsEntity() {
+    }
+}
