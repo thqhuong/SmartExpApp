@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartExpApp Team Implementation Guide</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #1d2430;
+      --muted: #5d6978;
+      --line: #d8dee8;
+      --accent: #f08a24;
+      --accent-soft: #fff3e8;
+      --green: #267a50;
+      --red: #b43b3b;
+      --blue: #2e5f9f;
+      --code-bg: #111827;
+      --code-ink: #f5f7fb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.55;
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      padding: 32px 24px;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.2;
+      margin: 0 0 12px;
+    }
+
+    h1 {
+      font-size: 34px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      border-bottom: 1px solid var(--line);
+      font-size: 24px;
+      padding-bottom: 10px;
+      margin-top: 34px;
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-top: 22px;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    ul,
+    ol {
+      margin-top: 8px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      margin: 14px 0 22px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+    }
+
+    th {
+      background: #eef2f7;
+      font-weight: 700;
+    }
+
+    code {
+      background: #eef2f7;
+      border-radius: 4px;
+      padding: 2px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.95em;
+    }
+
+    pre {
+      overflow-x: auto;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #263244;
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 900px;
+      font-size: 16px;
+    }
+
+    .meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #f9fafc;
+      color: var(--muted);
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      margin: 16px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .callout {
+      background: var(--accent-soft);
+      border: 1px solid #ffd7b0;
+      border-left: 5px solid var(--accent);
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin: 16px 0;
+    }
+
+    .ok {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .warn {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 20px;
+      margin: 14px 0 6px;
+    }
+
+    .toc a {
+      display: block;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    @media (max-width: 760px) {
+      h1 {
+        font-size: 28px;
+      }
+
+      main {
+        padding: 16px;
+      }
+
+      .grid,
+      .toc {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SmartExpApp Team Implementation Guide</h1>
+    <p class="subtitle">
+      This is the shared technical guide for the SmartExpApp team. Use it to keep scope,
+      architecture, dependencies, API choices, database contracts, testing, and delivery
+      decisions consistent across the project.
+    </p>
+    <div class="meta">
+      <span class="badge">Project: SmartExpApp</span>
+      <span class="badge">Target: Native Android</span>
+      <span class="badge">Language: Java 11</span>
+      <span class="badge">Updated: 2026-06-03</span>
+    </div>
+  </header>
+
+  <main>
+    <section id="toc" class="panel">
+      <h2>Contents</h2>
+      <div class="toc">
+        <a href="#mission">1. Product Mission</a>
+        <a href="#scope">2. Scope</a>
+        <a href="#team">3. Team Ownership</a>
+        <a href="#stack">4. Frameworks and Libraries</a>
+        <a href="#storage-plan">5. Storage Strategy</a>
+        <a href="#apis">6. External APIs</a>
+        <a href="#architecture">7. Architecture Rules</a>
+        <a href="#database">8. Database Contract</a>
+        <a href="#features">9. Feature Implementation Guide</a>
+        <a href="#milestones">10. Milestones and Issues</a>
+        <a href="#workflow">11. Workflow Rules</a>
+        <a href="#testing">12. Testing and QA</a>
+        <a href="#submission">13. Submission Materials</a>
+        <a href="#references">14. References</a>
+      </div>
+    </section>
+
+    <section id="mission">
+      <h2>1. Product Mission</h2>
+      <div class="callout">
+        <strong>SmartExpApp helps users reduce waste by making it easy to add products,
+        track expiry dates, get reminders, and turn expiring items into useful recipes.</strong>
+      </div>
+      <p>
+        The app should feel practical, fast, and reliable. The main user should be able to
+        open the app and immediately know which items need attention today, this week, and later.
+      </p>
+    </section>
+
+    <section id="scope">
+      <h2>2. Scope</h2>
+
+      <h3>MVP Features</h3>
+      <ol>
+        <li>Persistent inventory with product add, edit, delete, search, filter, and sort.</li>
+        <li>Expiry dashboard with expired, urgent, soon, and safe groups.</li>
+        <li>Local reminders before products expire.</li>
+        <li>OCR-assisted expiry date scanning with user confirmation.</li>
+        <li>Barcode scanning and product lookup to auto-fill product details.</li>
+        <li>AI Agent screen with voice chat, suggested prompts, and recipe help based on expiring products.</li>
+        <li>Basic stats for saved, wasted, expired, donated, and consumed items.</li>
+        <li>Settings for reminders, default storage, and dietary preferences.</li>
+      </ol>
+
+      <h3>Out of Scope for First Release</h3>
+      <ul>
+        <li>Cloud sync, login, multi-device accounts, and household sharing.</li>
+        <li>Payment, grocery checkout, retailer cart integration, or delivery ordering.</li>
+        <li>Community recipe sharing.</li>
+        <li>Advanced nutrition coaching or medical diet advice.</li>
+      </ul>
+
+      <h3>Delivery Target</h3>
+      <p>
+        The native Android app in <code>app/</code> is the delivery target. The React/Vite
+        prototype in <code>googleaistudio/</code> is reference material only unless the team
+        explicitly decides to build a web app later.
+      </p>
+    </section>
+
+    <section id="team">
+      <h2>3. Team Ownership</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Owner</th>
+            <th>Main responsibility</th>
+            <th>GitHub issues</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>You</td>
+            <td>Project lead, database/data layer, planning docs, final QA, report, slides, and demo.</td>
+            <td>#7, #8, #15</td>
+          </tr>
+          <tr>
+            <td>Teammate 1</td>
+            <td>Inventory UI, expiry dashboard, reminders, stats, and settings screens.</td>
+            <td>#9, #10, #14</td>
+          </tr>
+          <tr>
+            <td>Teammate 2</td>
+            <td>OCR expiry scan, barcode lookup, and AI Agent integration.</td>
+            <td>#11, #12, #13</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        The database contract must be finished early because the inventory, OCR, barcode,
+        Agent, stats, and settings work all depend on the same product model and repository APIs.
+      </p>
+    </section>
+
+    <section id="stack">
+      <h2>4. Frameworks and Libraries</h2>
+
+      <h3>Current Project Stack</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>Decision</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Platform</td>
+            <td>Native Android</td>
+            <td>Main app lives in <code>app/</code>.</td>
+          </tr>
+          <tr>
+            <td>Language</td>
+            <td>Java 11</td>
+            <td>Keep Java for consistency with the current codebase.</td>
+          </tr>
+          <tr>
+            <td>UI</td>
+            <td>XML layouts, AppCompat, Material Components, ConstraintLayout</td>
+            <td>Do not migrate to Jetpack Compose during this project unless the team agrees first.</td>
+          </tr>
+          <tr>
+            <td>Build</td>
+            <td>Gradle Kotlin DSL and version catalog</td>
+            <td>Add new dependencies through <code>gradle/libs.versions.toml</code>.</td>
+          </tr>
+          <tr>
+            <td>Testing</td>
+            <td>JUnit, AndroidX Test, Espresso</td>
+            <td>Already configured in the Android module.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Recommended Additions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Need</th>
+            <th>Recommended library</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Local database</td>
+            <td>AndroidX Room</td>
+            <td>Room gives a typed SQLite abstraction and fits the project requirement for persistent app data.</td>
+          </tr>
+          <tr>
+            <td>State/data observation</td>
+            <td>AndroidX Lifecycle ViewModel and LiveData</td>
+            <td>Keeps UI screens from directly owning database/network logic.</td>
+          </tr>
+          <tr>
+            <td>Lists</td>
+            <td>RecyclerView</td>
+            <td>Use for inventory, recipe, and history lists.</td>
+          </tr>
+          <tr>
+            <td>Camera</td>
+            <td>CameraX</td>
+            <td>Use for OCR and barcode capture with lifecycle-aware camera handling.</td>
+          </tr>
+          <tr>
+            <td>OCR</td>
+            <td>Google ML Kit Text Recognition v2</td>
+            <td>On-device text extraction for expiry labels.</td>
+          </tr>
+          <tr>
+            <td>Barcode</td>
+            <td>Google ML Kit Barcode Scanning</td>
+            <td>On-device barcode decoding before product API lookup.</td>
+          </tr>
+          <tr>
+            <td>Networking</td>
+            <td>Retrofit, OkHttp, Gson converter</td>
+            <td>Typed HTTP clients for Open Food Facts and recipe API calls.</td>
+          </tr>
+          <tr>
+            <td>Background checks</td>
+            <td>WorkManager</td>
+            <td>Run daily expiry checks and schedule reminder work reliably.</td>
+          </tr>
+          <tr>
+            <td>Notifications</td>
+            <td>Android notifications with notification channels</td>
+            <td>Required for expiry reminders outside the app UI.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Dependency Management Rule</h3>
+      <p>
+        All new dependency versions must be added to <code>gradle/libs.versions.toml</code>
+        and referenced from <code>app/build.gradle.kts</code>. Do not hard-code dependency
+        strings directly in the module build file unless the team agrees to make a temporary exception.
+      </p>
+    </section>
+
+    <section id="storage-plan">
+      <h2>5. Storage Strategy</h2>
+
+      <div class="callout">
+        <strong>Decision: build local-first storage now, then add cloud sync later.</strong>
+      </div>
+
+      <p>
+        The first working version should save products, settings, scan history, recipe/Agent context,
+        and inventory actions locally using Room. Cloud storage and Google sign-in should be added
+        after the local product model and repository APIs are stable.
+      </p>
+
+      <h3>Why Local-First</h3>
+      <ul>
+        <li>The app remains useful offline and during demos without depending on network or sign-in.</li>
+        <li>Inventory, expiry, notifications, OCR, barcode lookup, Agent prompts, and stats all need the same local product data.</li>
+        <li>The team can build faster because UI features do not need to wait for authentication and cloud security rules.</li>
+        <li>Cloud sync can be added behind the repository layer later without rewriting every screen.</li>
+      </ul>
+
+      <h3>Cloud Sync Later</h3>
+      <p>
+        When the local app is stable, add Google Sign-In and a cloud database such as Firebase Firestore.
+        Keep the repository API the same, and add a sync service that mirrors local Room changes to the cloud.
+      </p>
+
+      <pre><code>Phase 1:
+UI -> Repository -> Room local database
+
+Phase 2:
+UI -> Repository -> Room local database -> Sync service -> Cloud database</code></pre>
+
+      <h3>Prepare for Future Sync Now</h3>
+      <ul>
+        <li>Use stable IDs for all local entities.</li>
+        <li>Add <code>createdAt</code> and <code>updatedAt</code> timestamps to syncable records.</li>
+        <li>Keep user-owned data separated from static/reference data.</li>
+        <li>Plan optional future fields: <code>cloudId</code>, <code>ownerUserId</code>, <code>syncStatus</code>, and <code>lastSyncedAt</code>.</li>
+        <li>Recommended sync states: <code>LOCAL_ONLY</code>, <code>PENDING_UPLOAD</code>, <code>SYNCED</code>, and <code>CONFLICT</code>.</li>
+      </ul>
+    </section>
+
+    <section id="apis">
+      <h2>6. External APIs</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Primary choice</th>
+            <th>How we use it</th>
+            <th>Fallback</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>OCR expiry date</td>
+            <td>Google ML Kit Text Recognition v2</td>
+            <td>Extract raw label text, then run our own date parser and ask the user to confirm.</td>
+            <td>Manual expiry date entry.</td>
+          </tr>
+          <tr>
+            <td>Barcode scan</td>
+            <td>Google ML Kit Barcode Scanning</td>
+            <td>Decode barcode locally, then pass the barcode value to product lookup.</td>
+            <td>Manual product name/category entry.</td>
+          </tr>
+          <tr>
+            <td>Product lookup</td>
+            <td>Open Food Facts Product Opener API</td>
+            <td>Fetch product name, brand/category, image, quantity, and nutrition fields when available.</td>
+            <td>Manual product details if the barcode is missing or API data is incomplete.</td>
+          </tr>
+          <tr>
+            <td>AI Agent</td>
+            <td>Gemini Developer API free tier for text responses; Gemini Live API through Firebase AI Logic for real-time voice if feasible.</td>
+            <td>Answer inventory questions, explain expiring items, generate recipes, and respond to voice or suggested prompts.</td>
+            <td>Android SpeechRecognizer + Gemini text API + Android TextToSpeech for a simpler voice MVP.</td>
+          </tr>
+          <tr>
+            <td>Recipe data inside Agent</td>
+            <td>Spoonacular <code>findByIngredients</code></td>
+            <td>Send expiring item names and rank recipes that use the most urgent ingredients.</td>
+            <td>Edamam Recipe Search API or AI-generated recipe suggestions if Spoonacular is unavailable.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>API Key Rule</h3>
+      <p>
+        Do not commit real API keys. Store demo keys in <code>local.properties</code> or an ignored
+        environment file. If this becomes a production app, move recipe API calls behind a backend
+        proxy so the secret key is not shipped inside the APK.
+      </p>
+
+      <h3>Network Error Rule</h3>
+      <p>
+        Every external API feature must have a useful fallback. The app must still allow manual
+        product entry, manual date entry, suggested prompt use, and no-result Agent/recipe states when the network fails.
+      </p>
+
+      <h3>AI Privacy Rule</h3>
+      <p>
+        The Agent should only send the minimum inventory context needed to answer the user's question.
+        Avoid sending private notes or unnecessary personal data. Free-tier AI services can have different
+        data-use rules than paid services, so review provider terms before using real personal data.
+      </p>
+    </section>
+
+    <section id="architecture">
+      <h2>7. Architecture Rules</h2>
+
+      <h3>Recommended Package Structure</h3>
+      <pre><code>com.example.smartexpapp
+  data/
+    local/
+      dao/
+      entity/
+      converter/
+      AppDatabase.java
+    repository/
+    network/
+      product/
+      recipe/
+      agent/
+  scanner/
+    ocr/
+    barcode/
+    notification/
+  model/
+    ui/
+    dashboard/
+    inventory/
+    addproduct/
+    agent/
+    settings/
+    stats/
+  util/</code></pre>
+
+      <h3>Rules</h3>
+      <ol>
+        <li>Activities and adapters should not directly call Room DAOs or Retrofit services.</li>
+        <li>Use repository classes as the boundary between UI, database, and network code.</li>
+        <li>Use one source of truth for product data: the local database.</li>
+        <li>API responses should be mapped into app models before reaching UI screens.</li>
+        <li>OCR, barcode, and Agent results must be treated as suggestions until the user confirms any inventory-changing action.</li>
+        <li>Keep sample data only as seed/demo data, not as the main runtime data source.</li>
+      </ol>
+    </section>
+
+    <section id="database">
+      <h2>8. Database Contract</h2>
+
+      <h3>Core Entities</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Entity</th>
+            <th>Purpose</th>
+            <th>Important fields</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>ProductEntity</code></td>
+            <td>Tracks one inventory item.</td>
+            <td><code>id</code>, <code>name</code>, <code>category</code>, <code>quantity</code>, <code>unit</code>, <code>storageLocationId</code>, <code>expiryDate</code>, <code>barcode</code>, <code>imageUri</code>, <code>status</code>, <code>createdAt</code>, <code>updatedAt</code></td>
+          </tr>
+          <tr>
+            <td><code>StorageLocationEntity</code></td>
+            <td>Stores fridge, freezer, pantry, room temp, or custom locations.</td>
+            <td><code>id</code>, <code>name</code>, <code>type</code>, <code>sortOrder</code></td>
+          </tr>
+          <tr>
+            <td><code>InventoryActionEntity</code></td>
+            <td>Records consumed, wasted, donated, expired, quantity adjusted, and restored actions.</td>
+            <td><code>id</code>, <code>productId</code>, <code>actionType</code>, <code>quantityChanged</code>, <code>actionAt</code>, <code>note</code></td>
+          </tr>
+          <tr>
+            <td><code>ExpiryScanEntity</code></td>
+            <td>Stores OCR scan evidence and detected date results.</td>
+            <td><code>id</code>, <code>productId</code>, <code>rawText</code>, <code>detectedDate</code>, <code>confidence</code>, <code>scannedAt</code></td>
+          </tr>
+          <tr>
+            <td><code>RecipeCacheEntity</code></td>
+            <td>Optionally caches Agent recipe suggestions for demo stability.</td>
+            <td><code>id</code>, <code>provider</code>, <code>title</code>, <code>imageUrl</code>, <code>sourceUrl</code>, <code>usedIngredients</code>, <code>missingIngredients</code>, <code>cachedAt</code></td>
+          </tr>
+          <tr>
+            <td><code>AgentMessageEntity</code></td>
+            <td>Optionally stores local Agent conversation history for continuity and demo review.</td>
+            <td><code>id</code>, <code>role</code>, <code>message</code>, <code>createdAt</code>, <code>relatedProductIds</code>, <code>sourcePrompt</code></td>
+          </tr>
+          <tr>
+            <td><code>UserSettingsEntity</code></td>
+            <td>Stores reminder, storage, and dietary preferences.</td>
+            <td><code>id</code>, <code>reminderDaysBefore</code>, <code>defaultStorageLocationId</code>, <code>dietaryPreferences</code>, <code>notificationEnabled</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Required Repository Methods</h3>
+      <pre><code>ProductRepository
+  getAllProducts()
+  getProductById(String id)
+  getProductsExpiringBetween(long startDate, long endDate)
+  getExpiredProducts(long today)
+  searchProducts(String query)
+  filterProducts(String category, String storageLocationId, String status)
+  insertProduct(Product product)
+  updateProduct(Product product)
+  deleteProduct(String productId)
+  markConsumed(String productId, int quantity)
+  markWasted(String productId, int quantity)
+  markDonated(String productId, int quantity)
+
+SettingsRepository
+  getSettings()
+  updateReminderDaysBefore(int days)
+  updateDietaryPreferences(String preferences)
+  updateDefaultStorageLocation(String storageLocationId)</code></pre>
+
+      <h3>Date Rules</h3>
+      <ul>
+        <li>Store dates as UTC epoch milliseconds or ISO strings consistently. Pick one and use it everywhere.</li>
+        <li>Expiry status should be calculated from the same utility method across all screens.</li>
+        <li>Recommended groups: <code>expired</code>, <code>today</code>, <code>soon</code>, <code>safe</code>.</li>
+        <li><code>soon</code> means expiring within the user-configured reminder window, default 3 days.</li>
+      </ul>
+    </section>
+
+    <section id="features">
+      <h2>9. Feature Implementation Guide</h2>
+
+      <h3>Inventory</h3>
+      <ul>
+        <li>Use the database as the source of truth.</li>
+        <li>Support add, edit, delete, search, filter, and sort.</li>
+        <li>Show useful empty states instead of blank screens.</li>
+        <li>Every product card must show name, quantity, storage, expiry status, and category/image if available.</li>
+      </ul>
+
+      <h3>Expiry Dashboard and Reminders</h3>
+      <ul>
+        <li>Dashboard sections: expired, today, soon, and safe.</li>
+        <li>Use one shared expiry calculation utility.</li>
+        <li>Use notification channels and request notification permission on Android 13+.</li>
+        <li>When a product is updated, consumed, wasted, donated, or deleted, update reminder scheduling.</li>
+      </ul>
+
+      <h3>OCR Expiry Scan</h3>
+      <ul>
+        <li>Use CameraX or image picker to capture the label.</li>
+        <li>Use ML Kit Text Recognition v2 to extract text.</li>
+        <li>Parse common formats such as <code>EXP 05/28/2026</code>, <code>Best before 28-05-26</code>, and <code>Use by 2026/05/28</code>.</li>
+        <li>Show detected date candidates and require user confirmation.</li>
+        <li>Never silently save an OCR date without user confirmation.</li>
+      </ul>
+
+      <h3>Barcode Lookup</h3>
+      <ul>
+        <li>Use ML Kit Barcode Scanning to decode UPC/EAN values.</li>
+        <li>Use Open Food Facts to fetch product metadata.</li>
+        <li>Auto-fill only fields returned with reasonable confidence.</li>
+        <li>Always let the user edit auto-filled fields before saving.</li>
+      </ul>
+
+      <h3>Agent Screen</h3>
+      <ul>
+        <li>Rename the bottom navigation item from <code>Meals</code> to <code>Agent</code>.</li>
+        <li>The Agent screen should support typed prompts, suggested question chips, and voice input/output.</li>
+        <li>Suggested prompts should include: <code>Give me the recipe for the expiring foods</code>, <code>Recipe for a diet</code>, <code>What should I use today?</code>, and <code>How can I reduce waste this week?</code>.</li>
+        <li>The Agent should read inventory context through repositories, not directly through UI state.</li>
+        <li>Any Agent action that changes inventory must ask for user confirmation first.</li>
+        <li>Recommended MVP: use Android speech-to-text, Gemini text response, and Android text-to-speech.</li>
+        <li>Advanced version: use Gemini Live API for low-latency real-time voice if quota, setup time, and Firebase integration are acceptable.</li>
+      </ul>
+
+      <h3>Recipe Suggestions Inside Agent</h3>
+      <ul>
+        <li>Start with products expiring soon.</li>
+        <li>Send ingredient names to Spoonacular <code>findByIngredients</code>.</li>
+        <li>Rank recipes by urgency and number of expiring items used.</li>
+        <li>Show used ingredients, missing ingredients, image, title, and source/instructions.</li>
+        <li>Fallback to a no-result state if the API fails.</li>
+      </ul>
+
+      <h3>Stats and Settings</h3>
+      <ul>
+        <li>Stats should come from <code>InventoryActionEntity</code>, not from hard-coded values.</li>
+        <li>Track consumed, wasted, donated, expired, and saved outcomes.</li>
+        <li>Settings should control reminder timing, default storage, and dietary preferences.</li>
+      </ul>
+    </section>
+
+    <section id="milestones">
+      <h2>10. Milestones and Issues</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Milestone</th>
+            <th>Description</th>
+            <th>Issues</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>M1: Planning and Design</td>
+            <td>Finalize product scope, report-ready diagrams, issue backlog, and route before implementation starts.</td>
+            <td>#7</td>
+          </tr>
+          <tr>
+            <td>M2: Core App Foundation</td>
+            <td>Establish the native Android architecture, persistent database layer, repositories, and shared data contracts.</td>
+            <td>#8</td>
+          </tr>
+          <tr>
+            <td>M3: Inventory and Expiry Tracking</td>
+            <td>Deliver the core workflow for managing products, viewing expiry status, and receiving reminders.</td>
+            <td>#9, #10</td>
+          </tr>
+          <tr>
+            <td>M4: Smart Input and Recipe Features</td>
+            <td>Add OCR, barcode lookup, and Agent features that reduce manual work.</td>
+            <td>#11, #12, #13</td>
+          </tr>
+          <tr>
+            <td>M5: Insights, Polish, and Submission</td>
+            <td>Complete stats, settings, tests, documentation, report, slides, and demo materials.</td>
+            <td>#14, #15</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="workflow">
+      <h2>11. Workflow Rules</h2>
+
+      <ol>
+        <li>Use <code>dev</code> as the integration branch.</li>
+        <li>Keep <code>master</code> stable for final/demo-ready code.</li>
+        <li>Create work branches from <code>dev</code>.</li>
+        <li>Use clear, neutral branch names such as <code>08-stats-settings</code> or <code>11-ocr-expiry-scan</code>.</li>
+        <li>Open pull requests into <code>dev</code>, not directly into <code>master</code>.</li>
+        <li>One pull request should focus on one issue or one tightly related set of changes.</li>
+        <li>Every pull request should include screenshots or short manual test notes when it changes UI behavior.</li>
+        <li>Do not commit API keys, generated build folders, or local machine configuration.</li>
+      </ol>
+
+      <h3>Merge Order</h3>
+      <ol>
+        <li>Planning and design docs.</li>
+        <li>Database and repository foundation.</li>
+        <li>Inventory CRUD.</li>
+        <li>Expiry dashboard and reminders.</li>
+        <li>OCR scan.</li>
+        <li>Barcode lookup.</li>
+        <li>Agent screen and recipe API.</li>
+        <li>Stats and settings.</li>
+        <li>Testing, README, report, slides, and demo.</li>
+      </ol>
+    </section>
+
+    <section id="testing">
+      <h2>12. Testing and QA</h2>
+
+      <h3>Required Automated Tests</h3>
+      <ul>
+        <li>Expiry status calculation: expired, today, soon, safe.</li>
+        <li>Date parser: multiple expiry label formats and invalid text.</li>
+        <li>Repository behavior: insert, update, delete, search, and expiring-soon queries.</li>
+        <li>Agent prompt handling: suggested prompts, inventory context, and fallback states.</li>
+        <li>Recipe mapping inside Agent: used ingredients, missing ingredients, image, and source fields.</li>
+      </ul>
+
+      <h3>Required Manual QA</h3>
+      <ul>
+        <li>Add product manually.</li>
+        <li>Edit and delete product.</li>
+        <li>Scan expiry date and correct a wrong OCR result.</li>
+        <li>Scan barcode with a found product and with a missing product.</li>
+        <li>Use the Agent suggested prompts and test API failure state.</li>
+        <li>Use voice input and confirm the app responds with text or spoken output.</li>
+        <li>Receive or trigger expiry reminder notification.</li>
+        <li>Mark items as consumed, wasted, donated, and expired; verify stats update.</li>
+      </ul>
+
+      <h3>Standard Commands</h3>
+      <pre><code>.\gradlew.bat :app:testDebugUnitTest
+.\gradlew.bat :app:lintDebug
+.\gradlew.bat :app:assembleDebug</code></pre>
+    </section>
+
+    <section id="submission">
+      <h2>13. Submission Materials</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Deliverable</th>
+            <th>Required content</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>README</td>
+            <td>Setup, dependencies, API key instructions, feature list, screenshots, and demo flow.</td>
+          </tr>
+          <tr>
+            <td>Report</td>
+            <td>Problem introduction, scope, use case diagram, architecture, ERD, DFD, activity/sequence diagrams, implementation, evaluation, conclusion, and references.</td>
+          </tr>
+          <tr>
+            <td>Slides</td>
+            <td>Problem, solution, architecture, key features, technical choices, team contribution, demo screenshots, and conclusion.</td>
+          </tr>
+          <tr>
+            <td>Demo video</td>
+            <td>Show add product, inventory, expiry dashboard, OCR/barcode flow, Agent voice/suggested prompts, recipe suggestions, stats/settings, and final app value.</td>
+          </tr>
+          <tr>
+            <td>Source code</td>
+            <td>Clean final code, no committed secrets, no unnecessary generated files, and reproducible build instructions.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="references">
+      <h2>14. References</h2>
+      <ul>
+        <li><a href="https://developer.android.com/topic/architecture">Android Developers: Guide to app architecture</a></li>
+        <li><a href="https://developer.android.com/training/data-storage/room">Android Developers: Save data in a local database using Room</a></li>
+        <li><a href="https://developers.google.com/ml-kit/vision/text-recognition/v2/android">Google ML Kit: Text Recognition on Android</a></li>
+        <li><a href="https://developers.google.com/ml-kit/vision/barcode-scanning/android">Google ML Kit: Barcode Scanning on Android</a></li>
+        <li><a href="https://developer.android.com/ai/gemini/live">Android Developers: Gemini Live API</a></li>
+        <li><a href="https://ai.google.dev/gemini-api/docs/pricing">Google AI for Developers: Gemini API pricing</a></li>
+        <li><a href="https://developer.android.com/media/camera/camerax">Android Developers: CameraX overview</a></li>
+        <li><a href="https://developer.android.com/develop/ui/views/notifications">Android Developers: Notifications</a></li>
+        <li><a href="https://openfoodfacts.github.io/openfoodfacts-server/api/">Open Food Facts: Product Opener API documentation</a></li>
+        <li><a href="https://spoonacular.com/food-api/docs">Spoonacular: Food API documentation</a></li>
+        <li><a href="https://developer.edamam.com/edamam-docs-recipe-api">Edamam: Recipe Search API documentation</a></li>
+        <li><a href="https://square.github.io/retrofit/">Retrofit documentation</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
