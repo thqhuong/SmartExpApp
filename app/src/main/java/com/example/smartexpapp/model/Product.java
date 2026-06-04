@@ -1,6 +1,9 @@
 package com.example.smartexpapp.model;
 
+import java.util.UUID;
+
 public class Product {
+    private final String id;
     private final String name;
     private final String category;
     private final String amount;
@@ -8,12 +11,18 @@ public class Product {
     private final int daysUntilExpiry;
     private final int iconRes;
     private final String imageUrl;
+    private final long createdAt;
 
     public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes) {
         this(name, category, amount, storage, daysUntilExpiry, iconRes, null);
     }
 
     public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes, String imageUrl) {
+        this(UUID.randomUUID().toString(), name, category, amount, storage, daysUntilExpiry, iconRes, imageUrl, System.currentTimeMillis());
+    }
+
+    public Product(String id, String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes, String imageUrl, long createdAt) {
+        this.id = id;
         this.name = name;
         this.category = category;
         this.amount = amount;
@@ -21,6 +30,11 @@ public class Product {
         this.daysUntilExpiry = daysUntilExpiry;
         this.iconRes = iconRes;
         this.imageUrl = imageUrl;
+        this.createdAt = createdAt;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getName() {
@@ -51,13 +65,21 @@ public class Product {
         return imageUrl;
     }
 
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
     public boolean isExpiringSoon() {
-        return daysUntilExpiry <= 3;
+        return daysUntilExpiry > 0 && daysUntilExpiry <= 3;
+    }
+
+    public boolean isExpired() {
+        return daysUntilExpiry <= 0;
     }
 
     public String getExpiryStatus() {
         if (daysUntilExpiry <= 0) {
-            return "Today";
+            return "Expired";
         }
         if (daysUntilExpiry == 1) {
             return "1 Day";
@@ -70,7 +92,7 @@ public class Product {
 
     public String getDashboardBadge() {
         if (daysUntilExpiry <= 0) {
-            return "TODAY";
+            return "EXPIRED";
         }
         if (daysUntilExpiry == 1) {
             return "TOMORROW";
