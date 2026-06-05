@@ -1,7 +1,7 @@
 package com.example.smartexpapp;
 
 import android.app.AlertDialog;
-import android.net.Uri;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,8 +15,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.content.res.AppCompatResources;
 
 import com.example.smartexpapp.data.ProductRepository;
@@ -54,11 +52,6 @@ public class InventoryActivity extends BaseActivity {
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
 
-    private EditProductDialog activeDialog;
-
-    private final ActivityResultLauncher<String> pickPhotoLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onPhotoPicked);
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,16 +84,6 @@ public class InventoryActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         renderProducts();
-    }
-
-    private void onPhotoPicked(Uri uri) {
-        if (uri == null || activeDialog == null) return;
-        String path = saveImageToInternalStorage(uri);
-        if (path == null) {
-            Toast.makeText(this, "Failed to save photo.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        activeDialog.setPhotoPath(path);
     }
 
     private void setupSearch() {
@@ -206,7 +189,7 @@ public class InventoryActivity extends BaseActivity {
 
     private void renderProducts() {
         try {
-            List<Product> products = ProductRepository.searchProducts(currentSearch);
+            List<Product> products = ProductRepository.search(this, currentSearch);
             products = filterProducts(products);
             products = sortProducts(products);
             bindProducts(products);
@@ -334,8 +317,9 @@ public class InventoryActivity extends BaseActivity {
         }
 
         card.setOnClickListener(v -> {
-            activeDialog = new EditProductDialog(product, this::renderProducts, () -> pickPhotoLauncher.launch("image/*"));
-            activeDialog.show(this);
+            Intent intent = new Intent(this, AddProductActivity.class);
+            intent.putExtra(AddProductActivity.EXTRA_PRODUCT_ID, product.getId());
+            startActivity(intent);
         });
 
         deleteBtn.setOnClickListener(v -> confirmDelete(product));
@@ -346,7 +330,7 @@ public class InventoryActivity extends BaseActivity {
                 .setTitle(R.string.delete_title)
                 .setMessage(getString(R.string.delete_message, product.getName()))
                 .setPositiveButton(R.string.delete_confirm, (dialog, which) -> {
-                    ProductRepository.deleteProduct(product.getId());
+                    ProductRepository.deleteProduct(this, product.getId());
                     Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
                     renderProducts();
                 })

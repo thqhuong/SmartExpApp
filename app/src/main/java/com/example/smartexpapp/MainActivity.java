@@ -27,7 +27,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void bindDashboard() {
-        List<Product> products = ProductRepository.getProducts();
+        List<Product> products = ProductRepository.getProducts(this);
         int urgentCount = 0;
         for (Product product : products) {
             if (product.isExpiringSoon()) {
@@ -90,7 +90,7 @@ public class MainActivity extends BaseActivity {
             ((TextView) item.findViewById(R.id.productMeta)).setText(product.getStorage() + " • " + product.getAmount());
 
             TextView badge = item.findViewById(R.id.expiryBadge);
-            badge.setText(i == 0 ? "TOMORROW" : "IN " + (i + 1) + " DAYS");
+            badge.setText(product.getDashboardBadge());
             if (product.isExpiringSoon()) {
                 badge.setBackgroundResource(R.drawable.bg_error_badge);
                 badge.setTextColor(getColor(R.color.smart_primary_container));

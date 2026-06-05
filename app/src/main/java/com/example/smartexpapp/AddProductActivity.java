@@ -24,7 +24,6 @@ import com.google.android.material.button.MaterialButton;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public class AddProductActivity extends BaseActivity {
     public static final String EXTRA_PRODUCT_ID = "extra_product_id";
@@ -142,6 +141,7 @@ public class AddProductActivity extends BaseActivity {
                 this,
                 (view, year, month, dayOfMonth) -> {
                     selectedDate.set(year, month, dayOfMonth, 23, 59, 59);
+                    selectedDate.set(Calendar.MILLISECOND, 999);
                     hasSelectedDate = true;
                     expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
                     expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
@@ -154,7 +154,7 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void populateForEdit(String productId) {
-        Product product = ProductRepository.getProductById(productId);
+        Product product = ProductRepository.getProductById(this, productId);
         if (product == null) {
             Toast.makeText(this, "Product not found", Toast.LENGTH_SHORT).show();
             finish();
@@ -183,7 +183,7 @@ public class AddProductActivity extends BaseActivity {
             selectStorage(R.id.storageFreezer);
         }
 
-        selectedDate.add(Calendar.DAY_OF_YEAR, product.getDaysUntilExpiry());
+        selectedDate.setTimeInMillis(product.getExpiryDateMillis());
         hasSelectedDate = true;
         expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
         expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
@@ -201,21 +201,36 @@ public class AddProductActivity extends BaseActivity {
         }
 
         String storage = selectedStorage();
-        int days = daysUntilExpiry();
         int icon = iconForStorage(storage);
 
         if (editingProductId != null) {
-            Product existing = ProductRepository.getProductById(editingProductId);
+            Product existing = ProductRepository.getProductById(this, editingProductId);
             if (existing != null) {
                 Product updated = new Product(
-                        editingProductId, name, existing.getCategory(), existing.getAmount(),
-                        storage, days, icon, selectedPhotoPath, existing.getCreatedAt()
+                        editingProductId,
+                        name,
+                        existing.getCategory(),
+                        existing.getQuantity(),
+                        existing.getUnit(),
+                        storage,
+                        null,
+                        selectedDate.getTimeInMillis(),
+                        existing.getBarcode(),
+                        existing.getStatus(),
+                        icon,
+                        selectedPhotoPath,
+                        existing.getCreatedAt(),
+                        System.currentTimeMillis(),
+                        existing.getCloudId(),
+                        existing.getOwnerUserId(),
+                        existing.getSyncStatus(),
+                        existing.getLastSyncedAt()
                 );
-                ProductRepository.updateProduct(updated);
+                ProductRepository.updateProduct(this, updated);
                 Toast.makeText(this, R.string.product_updated, Toast.LENGTH_SHORT).show();
             }
         } else {
-            ProductRepository.addProduct(new Product(name, "General", "1 pcs", storage, days, icon, selectedPhotoPath));
+            ProductRepository.addProduct(this, new Product(name, "General", "1", "pcs", storage, selectedDate.getTimeInMillis(), icon, selectedPhotoPath));
             Toast.makeText(this, name + " added.", Toast.LENGTH_SHORT).show();
         }
 
@@ -231,11 +246,6 @@ public class AddProductActivity extends BaseActivity {
             return "Freeze";
         }
         return "Room Temp";
-    }
-
-    private int daysUntilExpiry() {
-        long diff = selectedDate.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
-        return Math.max(0, (int) Math.ceil(diff / (double) TimeUnit.DAYS.toMillis(1)));
     }
 
     private int iconForStorage(String storage) {
