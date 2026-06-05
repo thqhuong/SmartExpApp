@@ -230,7 +230,12 @@ public class Product {
     }
 
     public boolean isExpiringSoon() {
-        return getDaysUntilExpiry() <= 3;
+        int days = getDaysUntilExpiry();
+        return days >= 0 && days <= 3 && !isExpired();
+    }
+
+    public boolean isExpired() {
+        return ProductStatus.EXPIRED.equals(status) || getDaysUntilExpiry() < 0;
     }
 
     public String getExpiryStatus() {

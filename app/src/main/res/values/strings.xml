@@ -1,3 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SmartExpApp</string>
+    <string name="search_hint">Search products…</string>
+    <string name="empty_inventory">No products yet</string>
+    <string name="empty_inventory_desc">Add a product to start tracking expiry dates.</string>
+    <string name="empty_search">No products found</string>
+    <string name="empty_search_desc">Try a different search term or filter.</string>
+    <string name="delete_title">Delete product?</string>
+    <string name="delete_message">Are you sure you want to remove &quot;%s&quot; from your inventory?</string>
+    <string name="delete_confirm">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit_product">Edit Product</string>
+    <string name="add_product">Add Product</string>
+    <string name="filter_expiring">Expiring Soon</string>
+    <string name="filter_expired">Expired</string>
+    <string name="sort_date">Date</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_newest">Newest</string>
+    <string name="sort_by">Sort by</string>
+    <string name="all">All</string>
+    <string name="product_updated">Product updated</string>
+    <string name="product_deleted">Product deleted</string>
+    <string name="error_load">Failed to load products</string>
 </resources>

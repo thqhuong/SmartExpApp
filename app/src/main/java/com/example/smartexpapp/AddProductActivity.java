@@ -1,26 +1,52 @@
 package com.example.smartexpapp;
 
 import android.app.DatePickerDialog;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.util.ImageLoader;
+import com.google.android.material.button.MaterialButton;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
 public class AddProductActivity extends BaseActivity {
+    public static final String EXTRA_PRODUCT_ID = "extra_product_id";
+
     private final Calendar selectedDate = Calendar.getInstance();
     private boolean hasSelectedDate;
     private int selectedStorageId = R.id.storageRoom;
     private EditText productNameInput;
     private TextView expiryDateInput;
+    private MaterialButton submitButton;
+    private TextView titleText;
+    private TextView subtitleText;
+    private ImageView productPhoto;
+    private LinearLayout photoPlaceholder;
+    private ImageView editIconOverlay;
+    private MaterialButton btnRemovePhoto;
+    private FrameLayout photoPreview;
+
+    private String editingProductId;
+    private String selectedPhotoPath;
+
+    private final ActivityResultLauncher<String> pickPhotoLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onPhotoPicked);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,10 +56,63 @@ public class AddProductActivity extends BaseActivity {
 
         productNameInput = findViewById(R.id.productNameInput);
         expiryDateInput = findViewById(R.id.expiryDateInput);
-        setupStorageOptions();
+        submitButton = findViewById(R.id.addProductButton);
+        titleText = findViewById(R.id.addProductTitle);
+        subtitleText = findViewById(R.id.addProductSubtitle);
+        productPhoto = findViewById(R.id.productPhoto);
+        photoPlaceholder = findViewById(R.id.photoPlaceholder);
+        editIconOverlay = findViewById(R.id.editIconOverlay);
+        btnRemovePhoto = findViewById(R.id.btnRemovePhoto);
+        photoPreview = findViewById(R.id.photoPreview);
 
+        photoPreview.setOnClickListener(v -> pickPhotoLauncher.launch("image/*"));
+        btnRemovePhoto.setOnClickListener(v -> confirmRemovePhoto());
+
+        setupStorageOptions();
         expiryDateInput.setOnClickListener(v -> showDatePicker());
-        findViewById(R.id.addProductButton).setOnClickListener(v -> submitProduct());
+        submitButton.setOnClickListener(v -> submitProduct());
+
+        editingProductId = getIntent().getStringExtra(EXTRA_PRODUCT_ID);
+        if (editingProductId != null) {
+            populateForEdit(editingProductId);
+        }
+    }
+
+    private void onPhotoPicked(Uri uri) {
+        if (uri == null) return;
+        String path = saveImageToInternalStorage(uri);
+        if (path == null) {
+            Toast.makeText(this, "Failed to save photo.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        selectedPhotoPath = path;
+        showPhotoPreview(path);
+    }
+
+    private void showPhotoPreview(String path) {
+        photoPlaceholder.setVisibility(View.GONE);
+        productPhoto.setVisibility(View.VISIBLE);
+        editIconOverlay.setVisibility(View.VISIBLE);
+        btnRemovePhoto.setVisibility(View.VISIBLE);
+        ImageLoader.load(productPhoto, path);
+    }
+
+    private void clearPhoto() {
+        selectedPhotoPath = null;
+        productPhoto.setVisibility(View.GONE);
+        productPhoto.setImageBitmap(null);
+        editIconOverlay.setVisibility(View.GONE);
+        btnRemovePhoto.setVisibility(View.GONE);
+        photoPlaceholder.setVisibility(View.VISIBLE);
+    }
+
+    private void confirmRemovePhoto() {
+        new AlertDialog.Builder(this)
+                .setTitle("Remove photo?")
+                .setMessage("Are you sure you want to remove this photo?")
+                .setPositiveButton("Remove", (dialog, which) -> clearPhoto())
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void setupStorageOptions() {
@@ -74,6 +153,42 @@ public class AddProductActivity extends BaseActivity {
         dialog.show();
     }
 
+    private void populateForEdit(String productId) {
+        Product product = ProductRepository.getProductById(this, productId);
+        if (product == null) {
+            Toast.makeText(this, "Product not found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        titleText.setText(R.string.edit_product);
+        subtitleText.setText("Update the product details.");
+        submitButton.setText(R.string.edit_product);
+        submitButton.setIcon(null);
+
+        productNameInput.setText(product.getName());
+
+        String imgPath = product.getImageUrl();
+        if (imgPath != null && !imgPath.isEmpty()) {
+            selectedPhotoPath = imgPath;
+            showPhotoPreview(imgPath);
+        }
+
+        String storage = product.getStorage();
+        if ("Room Temp".equals(storage)) {
+            selectStorage(R.id.storageRoom);
+        } else if ("Refrigerator".equals(storage)) {
+            selectStorage(R.id.storageFridge);
+        } else if ("Freeze".equals(storage)) {
+            selectStorage(R.id.storageFreezer);
+        }
+
+        selectedDate.setTimeInMillis(product.getExpiryDateMillis());
+        hasSelectedDate = true;
+        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+        expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
+    }
+
     private void submitProduct() {
         String name = productNameInput.getText().toString().trim();
         if (name.isEmpty()) {
@@ -88,9 +203,37 @@ public class AddProductActivity extends BaseActivity {
         String storage = selectedStorage();
         int icon = iconForStorage(storage);
 
-        // Future OCR can replace this manual field mapping without changing the screen flow.
-        ProductRepository.addProduct(this, new Product(name, "General", "1", "pcs", storage, selectedDate.getTimeInMillis(), icon));
-        Toast.makeText(this, name + " added.", Toast.LENGTH_SHORT).show();
+        if (editingProductId != null) {
+            Product existing = ProductRepository.getProductById(this, editingProductId);
+            if (existing != null) {
+                Product updated = new Product(
+                        editingProductId,
+                        name,
+                        existing.getCategory(),
+                        existing.getQuantity(),
+                        existing.getUnit(),
+                        storage,
+                        null,
+                        selectedDate.getTimeInMillis(),
+                        existing.getBarcode(),
+                        existing.getStatus(),
+                        icon,
+                        selectedPhotoPath,
+                        existing.getCreatedAt(),
+                        System.currentTimeMillis(),
+                        existing.getCloudId(),
+                        existing.getOwnerUserId(),
+                        existing.getSyncStatus(),
+                        existing.getLastSyncedAt()
+                );
+                ProductRepository.updateProduct(this, updated);
+                Toast.makeText(this, R.string.product_updated, Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            ProductRepository.addProduct(this, new Product(name, "General", "1", "pcs", storage, selectedDate.getTimeInMillis(), icon, selectedPhotoPath));
+            Toast.makeText(this, name + " added.", Toast.LENGTH_SHORT).show();
+        }
+
         startActivity(new Intent(this, InventoryActivity.class));
         overridePendingTransition(0, 0);
     }
