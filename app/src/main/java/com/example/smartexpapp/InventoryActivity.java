@@ -1,7 +1,7 @@
 package com.example.smartexpapp;
 
 import android.app.AlertDialog;
-import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +15,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.content.res.AppCompatResources;
 
 import com.example.smartexpapp.data.ProductRepository;
@@ -50,6 +52,10 @@ public class InventoryActivity extends BaseActivity {
     private String currentSort = "date";
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
+    private EditProductDialog currentEditDialog;
+
+    private final ActivityResultLauncher<String> pickPhotoLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onPhotoPicked);
     private Runnable searchRunnable;
 
     @Override
@@ -316,13 +322,17 @@ public class InventoryActivity extends BaseActivity {
             progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
         }
 
-        card.setOnClickListener(v -> {
-            Intent intent = new Intent(this, AddProductActivity.class);
-            intent.putExtra(AddProductActivity.EXTRA_PRODUCT_ID, product.getId());
-            startActivity(intent);
-        });
+        card.setOnClickListener(v -> openEditDialog(product));
 
         deleteBtn.setOnClickListener(v -> confirmDelete(product));
+    }
+
+    private void openEditDialog(Product product) {
+        currentEditDialog = new EditProductDialog(product,
+                this::renderProducts,
+                () -> pickPhotoLauncher.launch("image/*")
+        );
+        currentEditDialog.show(this);
     }
 
     private void confirmDelete(Product product) {
@@ -336,5 +346,13 @@ public class InventoryActivity extends BaseActivity {
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private void onPhotoPicked(Uri uri) {
+        if (uri == null || currentEditDialog == null) return;
+        String path = saveImageToInternalStorage(uri);
+        if (path != null) {
+            currentEditDialog.setPhotoPath(path);
+        }
     }
 }
