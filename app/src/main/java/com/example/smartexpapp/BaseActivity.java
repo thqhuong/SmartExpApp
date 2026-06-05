@@ -1,6 +1,10 @@
 package com.example.smartexpapp;
 
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -10,6 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.UUID;
 
 public abstract class BaseActivity extends AppCompatActivity {
     protected void setupChrome(@IdRes int selectedNavItemId) {
@@ -85,5 +94,27 @@ public abstract class BaseActivity extends AppCompatActivity {
             return SettingsActivity.class;
         }
         return null;
+    }
+
+    public String saveImageToInternalStorage(Uri sourceUri) {
+        try {
+            File dir = new File(getFilesDir(), "images");
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            File file = new File(dir, UUID.randomUUID().toString() + ".jpg");
+            ContentResolver resolver = getContentResolver();
+            Bitmap bitmap;
+            try (InputStream in = resolver.openInputStream(sourceUri)) {
+                bitmap = BitmapFactory.decodeStream(in);
+            }
+            if (bitmap == null) return null;
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+            }
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -19,19 +19,19 @@ public final class ImageLoader {
     private ImageLoader() {
     }
 
-    public static void load(ImageView imageView, String imageUrl) {
-        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+    public static void load(ImageView imageView, String path) {
+        if (path == null || path.trim().isEmpty()) {
             return;
         }
 
-        imageView.setTag(imageUrl);
+        imageView.setTag(path);
         EXECUTOR.execute(() -> {
-            Bitmap bitmap = download(imageUrl);
+            Bitmap bitmap = decode(path);
             if (bitmap == null) {
                 return;
             }
             MAIN.post(() -> {
-                if (imageUrl.equals(imageView.getTag())) {
+                if (path.equals(imageView.getTag())) {
                     imageView.clearColorFilter();
                     imageView.setImageTintList(null);
                     imageView.setImageBitmap(bitmap);
@@ -40,10 +40,14 @@ public final class ImageLoader {
         });
     }
 
-    private static Bitmap download(String imageUrl) {
+    private static Bitmap decode(String path) {
+        if (path.startsWith("/") || path.startsWith("file://")) {
+            String filePath = path.startsWith("file://") ? path.substring(7) : path;
+            return BitmapFactory.decodeFile(filePath);
+        }
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(imageUrl);
+            URL url = new URL(path);
             connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
