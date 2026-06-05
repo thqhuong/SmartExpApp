@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="smart_background">#F9F9F9</color>
+    <color name="smart_surface">#FFFFFF</color>
+    <color name="smart_surface_container">#F1F5F9</color>
+    <color name="smart_surface_container_low">#F8FAFC</color>
+    <color name="smart_surface_variant">#E2E8F0</color>
+    <color name="smart_on_surface">#1A1C1C</color>
+    <color name="smart_secondary">#5F5E5E</color>
+    <color name="smart_muted">#8C8C8C</color>
+    <color name="smart_primary">#904D00</color>
+    <color name="smart_primary_container">#FF8C00</color>
+    <color name="smart_primary_soft">#1AFF8C00</color>
+    <color name="smart_primary_soft_border">#33FF8C00</color>
+    <color name="smart_on_primary">#FFFFFF</color>
+    <color name="smart_error">#BA1A1A</color>
+    <color name="smart_notification_red">#EF4444</color>
+    <color name="smart_error_container">#FFEDD5</color>
 </resources>

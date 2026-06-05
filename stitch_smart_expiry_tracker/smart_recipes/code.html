@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Smart Recipes</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#1c1b1b",
+                    "on-secondary-container": "#636262",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#5d5f5f",
+                    "surface-tint": "#904d00",
+                    "secondary": "#5f5e5e",
+                    "on-surface": "#1a1c1c",
+                    "surface-container-high": "#e8e8e8",
+                    "surface-variant": "#e2e2e2",
+                    "surface-bright": "#f9f9f9",
+                    "on-primary-fixed-variant": "#6e3900",
+                    "on-secondary-fixed-variant": "#474746",
+                    "on-tertiary-container": "#3d3f3f",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "on-primary-container": "#623200",
+                    "secondary-container": "#e2dfde",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#f0f1f1",
+                    "surface": "#f9f9f9",
+                    "primary-container": "#ff8c00",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#ffdcc3",
+                    "outline-variant": "#ddc1ae",
+                    "on-surface-variant": "#564334",
+                    "error": "#ba1a1a",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#eeeeee",
+                    "outline": "#897362",
+                    "on-primary-fixed": "#2f1500",
+                    "inverse-primary": "#ffb77d",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "on-background": "#1a1c1c",
+                    "primary-fixed-dim": "#ffb77d",
+                    "on-tertiary-fixed-variant": "#454747",
+                    "surface-container-highest": "#e2e2e2",
+                    "inverse-surface": "#2f3131",
+                    "tertiary-container": "#a9aaaa",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "background": "#f9f9f9",
+                    "surface-container-low": "#f3f3f4",
+                    "surface-dim": "#dadada",
+                    "on-error": "#ffffff",
+                    "primary": "#904d00",
+                    "tertiary-fixed": "#e2e2e2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "container-padding": "20px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "base": "8px",
+                    "lg": "24px",
+                    "gutter": "16px",
+                    "sm": "12px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "cta": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "h3": ["Inter"],
+                    "h2": ["Inter"],
+                    "h1": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "cta": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h3": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md text-body-md min-h-screen pb-[80px] md:pb-0">
+<!-- TopAppBar -->
+<header class="bg-surface text-primary font-h2 text-h2 sticky top-0 z-40 w-full flex justify-between items-center px-container-padding py-md shadow-sm transition-all duration-200">
+<button class="md:hidden flex items-center justify-center p-xs rounded-full hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined font-label-caps text-label-caps text-secondary" data-icon="menu">menu</span>
+</button>
+<div class="font-bold text-on-surface flex-1 md:flex-none text-center md:text-left">SmartExp</div>
+<!-- Web Nav Cluster (Hidden on Mobile) -->
+<nav class="hidden md:flex items-center gap-lg ml-xl font-label-caps text-label-caps">
+<a class="text-secondary hover:text-primary transition-colors flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="inventory_2">inventory_2</span> Inventory
+            </a>
+<a class="text-secondary hover:text-primary transition-colors flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="analytics">analytics</span> Stats
+            </a>
+<a class="text-secondary hover:text-primary transition-colors flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="add_circle">add_circle</span> Add
+            </a>
+<a class="text-primary font-semibold flex items-center gap-xs border-b-2 border-primary pb-xs" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="restaurant" style="font-variation-settings: 'FILL' 1;">restaurant</span> Recipes
+            </a>
+<a class="text-secondary hover:text-primary transition-colors flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="settings">settings</span> Settings
+            </a>
+</nav>
+<button class="flex items-center justify-center p-xs rounded-full hover:bg-surface-container-low transition-colors ml-auto md:ml-0">
+<span class="material-symbols-outlined font-label-caps text-label-caps text-secondary" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="max-w-5xl mx-auto px-container-padding pt-xl pb-xl">
+<!-- Header Section -->
+<div class="mb-xl text-center md:text-left">
+<h1 class="font-h1 text-h1 text-on-surface mb-base">Smart Recipes</h1>
+<h2 class="font-h2 text-h2 text-primary-container bg-surface-container-lowest inline-block px-md py-xs rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant">
+                Use these soon! <span class="material-symbols-outlined align-middle ml-xs" data-icon="bolt">bolt</span>
+</h2>
+<p class="font-body-lg text-body-lg text-secondary mt-sm max-w-2xl">We've generated these recipes based on items in your inventory that are approaching their expiration dates. Reduce waste by cooking these tonight.</p>
+</div>
+<!-- Recipe Grid / Bento Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+<!-- Featured Recipe (Spans full width on mobile, 8 cols on desktop) -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row group transition-transform duration-300 hover:-translate-y-1">
+<div class="h-56 sm:h-auto sm:w-2/5 relative overflow-hidden">
+<img alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A professional, top-down food photography shot of a rustic cast iron skillet filled with a vibrant, simmering shakshuka. Bright red tomato sauce surrounds perfectly poached eggs with deep orange yolks. The scene is illuminated by soft, natural daylight typical of a minimalist, modern light-mode kitchen setting. A sophisticated palette of crisp whites, deep earthy reds, and fresh green parsley accents dominates the frame. The mood is warm, appetizing, and efficiently organized." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZyJPCdTb_nQSjuwKKGtJlg5tup3pag8gVHYeOyrgEM7oGnpTVabcvcf9c9_sLwDP2jQsM9jj0X0I3doSzmBswM2DQSzIlZ2jo4RPp0g29yk6MLZi4dHnV0vvHGBZwgTxPGwlkuEK41_iNd7Rss91baN7HNKjT54cYno_tTfH4sEFuGDIGolKOwpL_O0l4sSpWwaN9bB2cCMPWIZ1vEqLFrJj8Ed9dKUzIutvIL9oK1BLAZzrsAi6REmwnp9BKVe4BE0Gu3i8zypkt"/>
+<div class="absolute top-sm left-sm bg-surface-container-lowest/90 backdrop-blur-sm px-sm py-xs rounded-full shadow-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="warning">warning</span>
+<span class="font-label-caps text-label-caps text-on-surface">Saves 3 Items</span>
+</div>
+</div>
+<div class="p-lg sm:w-3/5 flex flex-col justify-between">
+<div>
+<h3 class="font-h2 text-h2 text-on-surface mb-xs leading-tight">Rustic Bell Pepper &amp; Tomato Shakshuka</h3>
+<p class="font-body-md text-body-md text-secondary mb-md">A hearty, one-pan meal perfect for breakfast or dinner, maximizing your remaining fresh produce.</p>
+<div class="mb-lg">
+<span class="font-label-caps text-label-caps text-secondary block mb-sm uppercase tracking-wider">Expiring Ingredients</span>
+<div class="flex flex-col gap-xs">
+<div class="flex items-center justify-between bg-surface-container px-sm py-xs rounded border border-primary/30">
+<span class="font-body-md text-body-md text-on-surface">Red Bell Peppers</span>
+<span class="font-label-caps text-label-caps text-primary bg-primary-fixed/50 px-xs py-1 rounded">Exp. Today</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container px-sm py-xs rounded border border-primary/30">
+<span class="font-body-md text-body-md text-on-surface">Cherry Tomatoes</span>
+<span class="font-label-caps text-label-caps text-primary bg-primary-fixed/50 px-xs py-1 rounded">Exp. Tomorrow</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container px-sm py-xs rounded">
+<span class="font-body-md text-body-md text-on-surface">Eggs</span>
+<span class="font-label-caps text-label-caps text-secondary">3 Days Left</span>
+</div>
+</div>
+</div>
+</div>
+<button class="bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-cta text-cta py-sm px-lg rounded-lg w-full transition-colors shadow-[0_4px_10px_rgba(144,77,0,0.2)] flex items-center justify-center gap-sm">
+                        View Recipe <span class="material-symbols-outlined text-[20px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Secondary Recipe 1 -->
+<div class="md:col-span-4 bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col group transition-transform duration-300 hover:-translate-y-1">
+<div class="h-40 relative overflow-hidden">
+<img alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A clean, minimalist presentation of a vibrant green smoothie bowl on a stark white marble countertop. The bowl is neatly arranged with geometric slices of bananas, chia seeds, and a sprinkle of coconut flakes. Lighting is bright, high-key, and even, reflecting a modern light-mode interface aesthetic. The color palette relies on crisp whites, soft greys, and striking emerald greens with a tiny hint of warm yellow. The overall feeling is healthy, organized, and frictionless." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMoFABWlUyhpS2pWJVD6KKhTErC-uc_SvZDcCotYs9ZigAXErqwCzmBOcWXs9aChqq-M2RJS-OJVBFhxAQw1DkCRz6YQniFeG2PdAm7EXkWYsLiJ2iHtGgqgg1rdS7karFYzGt_g9LMUBm8xEX6hh908Y0E-V_IB3PSmuqq9Qg11Yhn8CXWop-rnreuH0-zAOZ7p0d2Sbdg6XRsML-ioZ8hOMJWuWLLEPykUTXYCpREqEP6S0NBqBWIUlPDQBMzXG5MyLuw4RNhLWe"/>
+</div>
+<div class="p-md flex flex-col flex-1">
+<h3 class="font-h3 text-h3 text-on-surface mb-xs leading-tight">Super-Green Power Smoothie</h3>
+<p class="font-body-md text-body-md text-secondary mb-md flex-1">Quick blend to save your leafy greens.</p>
+<div class="mt-auto">
+<span class="font-label-caps text-label-caps text-secondary block mb-xs uppercase tracking-wider">Expiring:</span>
+<div class="flex flex-wrap gap-xs mb-md">
+<span class="bg-surface border border-primary text-primary font-body-md text-body-md px-sm py-1 rounded-full text-[13px]">Spinach (1 Day)</span>
+<span class="bg-surface border border-surface-variant text-on-surface font-body-md text-body-md px-sm py-1 rounded-full text-[13px]">Banana</span>
+</div>
+<button class="bg-surface text-on-surface border border-surface-variant hover:bg-surface-container font-cta text-cta py-xs px-md rounded-lg w-full transition-colors">Make It</button>
+</div>
+</div>
+</div>
+<!-- Secondary Recipe 2 -->
+<div class="md:col-span-4 bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col group transition-transform duration-300 hover:-translate-y-1">
+<div class="h-40 relative overflow-hidden">
+<img alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A meticulously composed overhead shot of a fresh mixed salad in a shallow, matte white bowl. The salad features crisp romaine, thinly sliced radishes, and toasted almonds. The lighting is diffused and cool, characteristic of a premium, minimalist kitchen environment. The visual style uses a stark white background to make the vivid greens and subtle purples of the vegetables pop, aligning with a clean, utility-first design system. The mood is crisp and refreshing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSGP10nY1NR11NnCXQxaB6ZBucl8difhAi22kmblSesgryTTQiQXEgE0Uxi72Nb-S-eDAoKVRo8_SdBpuNjvs4EZs9MhJWdoshaEYgc2woJc6_D-DD1WkvbadJ_K_zcZc3gXUxhkWQXKasc3rXIjIAbETOWtsf2jI7hoLUmgDZRCw-3u9B5hf13jKddrdm1Zxr3rf70hVfPADxXHnamMoxK9QnPZPsplFwpxj2Yvv2vrIwU190DyWdfVGMgLmecGYl14SYvC6_JtaS"/>
+</div>
+<div class="p-md flex flex-col flex-1">
+<h3 class="font-h3 text-h3 text-on-surface mb-xs leading-tight">Crispy Radish &amp; Romaine Salad</h3>
+<p class="font-body-md text-body-md text-secondary mb-md flex-1">A simple side to refresh your palette.</p>
+<div class="mt-auto">
+<span class="font-label-caps text-label-caps text-secondary block mb-xs uppercase tracking-wider">Expiring:</span>
+<div class="flex flex-wrap gap-xs mb-md">
+<span class="bg-surface border border-primary text-primary font-body-md text-body-md px-sm py-1 rounded-full text-[13px]">Romaine (2 Days)</span>
+</div>
+<button class="bg-surface text-on-surface border border-surface-variant hover:bg-surface-container font-cta text-cta py-xs px-md rounded-lg w-full transition-colors">Make It</button>
+</div>
+</div>
+</div>
+<!-- Secondary Recipe 3 -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row group transition-transform duration-300 hover:-translate-y-1">
+<div class="h-48 sm:h-auto sm:w-1/3 relative overflow-hidden">
+<img alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A close-up, high-contrast image of a golden-brown grilled cheese sandwich on a minimalist grey ceramic plate. The cheese is perfectly melted, stretching slightly from a cut half. The scene is brightly lit with a soft white glow, ensuring deep shadows are minimized to maintain a clean, modern UI aesthetic. The color palette revolves around warm golden-oranges and stark whites against subtle grey tones. The vibe is comforting yet highly organized and efficient." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9x9R6u5mo3ZI_jYqz85wLRdT4fCYXLdRAmUr_cTBNRZipVLp539up6-PW8m1h5-lYU-9BkaZyobYfMsHJTRdaYsVma9vog4oLSdY8f_aSVZIwlD_tM1UUhu12URGh5OzqvNaTAnsyKtLZV9nbVjz1c5eh1qArxSNl1NfWYo1fyKcM3TkiZLl8_oBokc-lPRYEh4ljApCXeXrbVRfruDiu28yU50mqIFLpC-PlLmKuJ6hF7ebiJZkwzWdDb3w9Ai9KZZ0ms0HB8Xng"/>
+</div>
+<div class="p-md sm:w-2/3 flex flex-col justify-between">
+<div>
+<h3 class="font-h2 text-h2 text-on-surface mb-xs leading-tight">Ultimate Grilled Cheddar &amp; Tomato</h3>
+<p class="font-body-md text-body-md text-secondary mb-md">A classic comfort food that perfectly utilizes dairy and bread before they turn.</p>
+<div class="flex items-center gap-md mb-md border-t border-surface-variant pt-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary uppercase">Expiring</span>
+<span class="font-body-md text-body-md text-primary font-semibold">Cheddar Block (2 Days)</span>
+</div>
+<div class="w-px h-8 bg-surface-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary uppercase">Expiring</span>
+<span class="font-body-md text-body-md text-primary font-semibold">Sourdough Loaf (3 Days)</span>
+</div>
+</div>
+</div>
+<button class="bg-surface-container text-on-surface border border-surface-variant hover:bg-surface-variant font-cta text-cta py-sm px-lg rounded-lg w-full sm:w-auto self-start transition-colors flex items-center justify-center gap-sm">
+                        View Recipe
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-gutter py-base h-[72px] docked full-width rounded-t-xl border-t border-surface-variant bg-surface shadow-lg">
+<!-- Inventory -->
+<button class="hover:text-primary transition-transform duration-150 active:scale-90 flex flex-col items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-caps text-label-caps">Inventory</span>
+</button>
+<!-- Stats -->
+<button class="hover:text-primary transition-transform duration-150 active:scale-90 flex flex-col items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-label-caps">Stats</span>
+</button>
+<!-- Add -->
+<button class="hover:text-primary transition-transform duration-150 active:scale-90 flex flex-col items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-label-caps text-label-caps">Add</span>
+</button>
+<!-- Recipes (Active) -->
+<button class="flex flex-col items-center justify-center text-primary font-semibold transition-transform duration-150 active:scale-90">
+<span class="material-symbols-outlined" data-icon="restaurant" data-weight="fill" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+<span class="font-label-caps text-label-caps">Recipes</span>
+</button>
+<!-- Settings -->
+<button class="hover:text-primary transition-transform duration-150 active:scale-90 flex flex-col items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</button>
+</nav>
+</body></html>
