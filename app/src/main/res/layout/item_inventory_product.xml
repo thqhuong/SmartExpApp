@@ -36,13 +36,12 @@
                     android:background="@drawable/bg_item_media"
                     android:clipToOutline="true">
 
-                    <ImageView
-                        android:id="@+id/productIcon"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:scaleType="centerCrop"
-                        app:tint="@color/smart_secondary" />
+                <ImageView
+                    android:id="@+id/productIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:scaleType="centerCrop" />
                 </FrameLayout>
 
                 <LinearLayout
@@ -53,13 +52,29 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/productName"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/smart_on_surface"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:id="@+id/categoryDot"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_category_dot"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/productName"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textColor="@color/smart_on_surface"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/productMeta"

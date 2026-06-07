@@ -181,36 +181,85 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/sectionExpiredTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Expiring Soonest"
-                    android:textColor="@color/smart_on_surface"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/viewAllInventory"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="VIEW ALL"
-                    android:textColor="@color/smart_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                android:text="Expired"
+                android:textColor="@color/smart_error"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/sectionExpiredCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/smart_surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="@color/smart_error"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:id="@+id/expiredList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/sectionUrgentTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Urgent"
+                android:textColor="@color/smart_primary_container"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/sectionUrgentCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/smart_surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="@color/smart_primary_container"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:id="@+id/urgentList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/sectionSoonTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Soon"
+                android:textColor="@color/smart_on_surface"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/sectionSoonCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
                 app:cardBackgroundColor="@color/smart_surface"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
@@ -219,11 +268,53 @@
                 app:strokeWidth="1dp">
 
                 <LinearLayout
-                    android:id="@+id/dashboardExpiringList"
+                    android:id="@+id/soonList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
             </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/sectionSafeTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Safe"
+                android:textColor="@color/smart_on_surface"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/sectionSafeCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/smart_surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="@color/smart_surface_variant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:id="@+id/safeList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/viewAllInventory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_gravity="center_horizontal"
+                android:text="VIEW ALL INVENTORY"
+                android:textColor="@color/smart_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

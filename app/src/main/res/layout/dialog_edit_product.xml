@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/smart_surface"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit Product"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="20dp"
+        android:text="Update the product details."
+        android:textColor="@color/smart_secondary"
+        android:textSize="14sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PRODUCT NAME"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/editName"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_surface_low"
+        android:hint="e.g., Organic Milk"
+        android:inputType="textCapWords"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:singleLine="true"
+        android:textColor="@color/smart_on_surface"
+        android:textColorHint="@color/smart_secondary"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="QUANTITY"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/editQuantity"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_surface_low"
+            android:inputType="numberDecimal"
+            android:hint="1"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:singleLine="true"
+            android:textColor="@color/smart_on_surface"
+            android:textColorHint="@color/smart_secondary"
+            android:textSize="16sp" />
+
+        <Spinner
+            android:id="@+id/editUnitSpinner"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_surface_low"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CATEGORY"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Spinner
+            android:id="@+id/editCategorySpinner"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_surface_low"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editBtnManageCategories"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:text="Manage"
+            android:textColor="@color/smart_error"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/smart_error_container"
+            app:cornerRadius="24dp" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/editCustomCategory"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="-8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_surface_low"
+        android:hint="Enter custom category"
+        android:inputType="textCapWords"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:singleLine="true"
+        android:textColor="@color/smart_on_surface"
+        android:textColorHint="@color/smart_secondary"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="STORAGE METHOD"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/editStorageGroup"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_toggle_group"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="6dp"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:id="@+id/editStorageRoom"
+            style="@style/SmartExpStorageOption">
+
+            <ImageView
+                style="@style/SmartExpStorageIcon"
+                android:src="@drawable/ic_storage_room"
+                app:tint="@color/storage_option_tint" />
+
+            <TextView
+                style="@style/SmartExpStorageLabel"
+                android:text="ROOM\nTEMP" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/editStorageFridge"
+            style="@style/SmartExpStorageOption">
+
+            <ImageView
+                style="@style/SmartExpStorageIcon"
+                android:src="@drawable/ic_storage_fridge"
+                app:tint="@color/storage_option_tint" />
+
+            <TextView
+                style="@style/SmartExpStorageLabel"
+                android:text="REFRIGERATOR" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/editStorageFreezer"
+            style="@style/SmartExpStorageOption">
+
+            <ImageView
+                style="@style/SmartExpStorageIcon"
+                android:src="@drawable/ic_storage_freeze"
+                app:tint="@color/storage_option_tint" />
+
+            <TextView
+                style="@style/SmartExpStorageLabel"
+                android:text="FREEZE" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="EXPIRY DATE"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/editExpiryDate"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_surface_low"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:text="Select expiry date"
+        android:textColor="@color/smart_secondary"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PHOTO (optional)"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/editPhotoPreview"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="@drawable/bg_surface_low"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:id="@+id/editProductPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/editPhotoPlaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    android:tint="@color/smart_muted" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Tap to add photo"
+                    android:textColor="@color/smart_muted"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/editIconOverlay"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="3dp"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/bg_surface_high"
+                android:padding="4dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:tint="@color/smart_primary_container"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editBtnRemovePhoto"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="Remove Photo"
+            android:textAllCaps="false"
+            android:textColor="@color/smart_error"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:backgroundTint="@color/smart_error_container"
+            app:cornerRadius="20dp"
+            app:icon="@android:drawable/ic_menu_delete"
+            app:iconGravity="textStart"
+            app:iconTint="@color/smart_error" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="@string/cancel"
+            android:textColor="@color/smart_secondary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConfirm"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:text="@string/edit_product"
+            android:textAllCaps="false"
+            android:textColor="@color/smart_on_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/smart_primary_container"
+            app:cornerRadius="24dp" />
+    </LinearLayout>
+</LinearLayout>
