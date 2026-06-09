@@ -20,5 +20,6 @@
     <color name="category_produce">#E67E22</color>
     <color name="category_pantry">#9B59B6</color>
     <color name="category_vegetables">#27AE60</color>
+    <color name="category_meat">#E74C3C</color>
     <color name="category_general">#7F8C8D</color>
 </resources>
