@@ -3,19 +3,15 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_glass_screen"
-    android:orientation="vertical"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:background="@color/smart_background"
+    android:orientation="vertical">
 
     <include layout="@layout/include_top_bar" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipChildren="false"
-        android:clipToPadding="false">
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -24,81 +20,7 @@
             android:paddingStart="20dp"
             android:paddingTop="24dp"
             android:paddingEnd="20dp"
-            android:paddingBottom="24dp"
-            android:clipChildren="false"
-            android:clipToPadding="false">
-
-            <!-- Gemini Live Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:layout_marginBottom="28dp"
-                android:paddingTop="8dp"
-                android:clipChildren="false"
-                android:clipToPadding="false">
-
-                <!-- Pulsing Button Wrapper -->
-                <FrameLayout
-                    android:layout_width="128dp"
-                    android:layout_height="128dp"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="12dp"
-                    android:clipChildren="false"
-                    android:clipToPadding="false">
-
-                    <!-- Pulse Glow Ring -->
-                    <View
-                        android:id="@+id/geminiLivePulseView"
-                        android:layout_width="128dp"
-                        android:layout_height="128dp"
-                        android:background="@drawable/bg_gemini_pulse"
-                        android:alpha="0.2" />
-
-                    <!-- Main Glass Button -->
-                    <FrameLayout
-                        android:id="@+id/geminiLiveButton"
-                        android:layout_width="112dp"
-                        android:layout_height="112dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_gemini_button"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackgroundBorderless">
-
-                        <ImageView
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_gemini_sparkles" />
-                    </FrameLayout>
-                </FrameLayout>
-
-                <!-- Gradient Gemini Live Title -->
-                <TextView
-                    android:id="@+id/geminiLiveTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Gemini Live"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="Your AI culinary assistant. Tap the microphone to start talking about what to cook."
-                    android:textColor="@color/smart_secondary"
-                    android:textSize="15sp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/smart_glass_stroke"
-                android:layout_marginBottom="28dp" />
+            android:paddingBottom="24dp">
 
             <TextView
                 android:layout_width="match_parent"
@@ -113,27 +35,26 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_primary_soft_badge"
-                android:paddingStart="16dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="8dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_neutral_badge"
+                android:paddingStart="12dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="6dp"
                 android:text="Use these soon!"
-                android:textColor="@color/smart_primary_container"
-                android:textSize="18sp"
+                android:textColor="@color/smart_primary"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/recipesDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="20dp"
                 android:gravity="center"
                 android:text="We've generated these recipes based on items in your inventory that are approaching expiration."
                 android:textColor="@color/smart_secondary"
-                android:textSize="15sp" />
+                android:textSize="16sp" />
 
             <LinearLayout
                 android:id="@+id/recipeList"

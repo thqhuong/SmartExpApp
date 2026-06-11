@@ -1,20 +1,11 @@
 package com.example.smartexpapp;
 
-import android.graphics.Color;
-import android.graphics.LinearGradient;
-import android.graphics.Shader;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.ScaleAnimation;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.smartexpapp.data.SampleData;
 import com.example.smartexpapp.model.Recipe;
@@ -28,70 +19,7 @@ public class RecipesActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipes);
         setupChrome(R.id.nav_recipes);
-        setupGeminiLive();
         bindRecipes();
-    }
-
-    private void setupGeminiLive() {
-        TextView titleView = findViewById(R.id.geminiLiveTitle);
-        if (titleView != null) {
-            titleView.post(() -> {
-                int width = titleView.getWidth();
-                if (width <= 0) {
-                    width = (int) titleView.getPaint().measureText(titleView.getText().toString());
-                }
-                if (width > 0) {
-                    Shader textShader = new LinearGradient(
-                            0, 0, width, 0,
-                            new int[]{
-                                    Color.parseColor("#4285F4"),
-                                    Color.parseColor("#9B72CB"),
-                                    Color.parseColor("#D96570")
-                            },
-                            null,
-                            Shader.TileMode.CLAMP
-                    );
-                    titleView.getPaint().setShader(textShader);
-                    titleView.invalidate();
-                }
-            });
-        }
-
-        View geminiLiveButton = findViewById(R.id.geminiLiveButton);
-        if (geminiLiveButton != null) {
-            geminiLiveButton.setOnClickListener(v -> {
-                Toast.makeText(this, "Gemini Live starting...", Toast.LENGTH_SHORT).show();
-            });
-        }
-
-        startPulseAnimation();
-    }
-
-    private void startPulseAnimation() {
-        View pulseView = findViewById(R.id.geminiLivePulseView);
-        if (pulseView == null) return;
-
-        ScaleAnimation scaleAnim = new ScaleAnimation(
-                1.0f, 1.4f,
-                1.0f, 1.4f,
-                Animation.RELATIVE_TO_SELF, 0.5f,
-                Animation.RELATIVE_TO_SELF, 0.5f
-        );
-        scaleAnim.setDuration(1600);
-        scaleAnim.setRepeatCount(Animation.INFINITE);
-        scaleAnim.setRepeatMode(Animation.RESTART);
-
-        AlphaAnimation alphaAnim = new AlphaAnimation(0.5f, 0.0f);
-        alphaAnim.setDuration(1600);
-        alphaAnim.setRepeatCount(Animation.INFINITE);
-        alphaAnim.setRepeatMode(Animation.RESTART);
-
-        AnimationSet animSet = new AnimationSet(true);
-        animSet.setInterpolator(new AccelerateDecelerateInterpolator());
-        animSet.addAnimation(scaleAnim);
-        animSet.addAnimation(alphaAnim);
-
-        pulseView.startAnimation(animSet);
     }
 
     private void bindRecipes() {

@@ -29,14 +29,4 @@ export interface Recipe {
   imageUrl?: string;
 }
 
-export type AppView = 
-  | 'inventory' 
-  | 'stats' 
-  | 'add' 
-  | 'recipes' 
-  | 'settings' 
-  | 'signin' 
-  | 'help-support' 
-  | 'notification-settings' 
-  | 'account-details';
-
+export type AppView = 'inventory' | 'stats' | 'add' | 'recipes' | 'settings';

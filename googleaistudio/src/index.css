@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-@variant dark (&:where(.dark, .dark *));
-
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   
@@ -18,111 +16,9 @@
 
 @layer base {
   body {
-    @apply font-sans bg-slate-50 text-slate-900 antialiased dark:bg-zinc-950 dark:text-zinc-100 transition-colors duration-300;
+    @apply font-sans bg-surface-low text-slate-900 antialiased;
     -webkit-tap-highlight-color: transparent;
   }
-}
-
-@utility glass-card {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.02);
-}
-
-:where(.dark) .glass-card {
-  background: rgba(30, 30, 35, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
-}
-
-@utility glass-panel {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-}
-
-:where(.dark) .glass-panel {
-  background: rgba(19, 19, 22, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-@utility blob {
-  position: fixed;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  filter: blur(100px);
-  z-index: -1;
-  opacity: 0.2;
-  pointer-events: none;
-}
-
-:where(.dark) .blob {
-  opacity: 0.15;
-  filter: blur(80px);
-}
-
-@utility blob-1 {
-  background: radial-gradient(circle, #ff8c00 0%, transparent 70%);
-  top: -10%;
-  right: -10%;
-}
-
-@utility blob-2 {
-  background: radial-gradient(circle, #818cf8 0%, transparent 70%);
-  bottom: 10%;
-  left: -15%;
-}
-
-@utility blob-3 {
-  background: radial-gradient(circle, #f472b6 0%, transparent 70%);
-  top: 40%;
-  left: 10%;
-  opacity: 0.1;
-}
-
-@utility gemini-glow {
-  position: fixed;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  filter: blur(80px);
-  z-index: -1;
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-@utility glow-1 {
-  top: -100px;
-  left: -100px;
-  background: radial-gradient(circle, #ff8da1 0%, transparent 70%);
-}
-
-@utility glow-2 {
-  top: 200px;
-  right: -150px;
-  background: radial-gradient(circle, #a188ff 0%, transparent 70%);
-}
-
-@utility glow-3 {
-  bottom: 100px;
-  left: 10%;
-  background: radial-gradient(circle, #7cc9ff 0%, transparent 70%);
-}
-
-@utility gemini-gradient-text {
-  background: linear-gradient(90deg, #4285F4, #9B72CB, #D96570);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .scrollbar-hide::-webkit-scrollbar {

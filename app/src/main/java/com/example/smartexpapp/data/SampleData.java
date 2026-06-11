@@ -74,11 +74,10 @@ public final class SampleData {
 
     public static List<SettingItem> settings() {
         return Arrays.asList(
-                new SettingItem("Notification Settings", "Manage expiry alerts and emails", android.R.drawable.ic_dialog_info, false),
+                new SettingItem("Notification Settings", "Manage expiry alerts and emails", android.R.drawable.ic_dialog_info, true),
                 new SettingItem("Storage Preferences", "Default locations and categories", android.R.drawable.ic_menu_upload, false),
                 new SettingItem("Account Details", "Password, billing, and data", android.R.drawable.ic_menu_myplaces, false),
-                new SettingItem("Help & Support", "FAQs and contact information", android.R.drawable.ic_menu_help, false),
-                new SettingItem("Dark Mode", "Toggle dark theme across the application", android.R.drawable.ic_menu_compass, true)
+                new SettingItem("Help & Support", "FAQs and contact information", android.R.drawable.ic_menu_help, false)
         );
     }
 }
