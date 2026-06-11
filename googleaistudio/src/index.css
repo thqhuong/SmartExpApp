@@ -18,8 +18,44 @@
 
 @layer base {
   body {
-    @apply font-sans bg-slate-50 text-slate-900 antialiased dark:bg-zinc-950 dark:text-zinc-100 transition-colors duration-300;
+    @apply font-sans bg-slate-50 text-slate-900 antialiased dark:bg-[#131316] dark:text-[#FFFFFF] transition-colors duration-300;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.8;
+  }
+  :where(.dark) body::before {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    opacity: 0.3; /* Subtle mesh layer at 3% effective opacity */
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  select {
+    @apply w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all text-sm backdrop-blur-md;
+  }
+  :where(.dark) input[type="text"],
+  :where(.dark) input[type="number"],
+  :where(.dark) input[type="email"],
+  :where(.dark) input[type="password"],
+  :where(.dark) input[type="date"],
+  :where(.dark) select {
+    background: rgba(0, 0, 0, 0.4); /* #000000 at 40% opacity */
+    border: 1px solid rgba(255, 255, 255, 0.15); /* #FFFFFF at 15% opacity */
+    color: #FFFFFF;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 }
 
@@ -28,15 +64,48 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.02);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 4px 24px 0 rgba(0, 0, 0, 0.02);
 }
 
 :where(.dark) .glass-card {
-  background: rgba(30, 30, 35, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+  background: rgba(27, 27, 30, 0.6); /* #1B1B1E at 60% opacity */
+  backdrop-filter: blur(14px); /* 12px - 16px blur */
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* #FFFFFF at 10% opacity */
+  /* Inner shadow: White, 10% opacity, 0px offset, 1px blur */
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 8px 32px 0 rgba(0, 0, 0, 0.24);
+}
+
+@utility glass-card-urgent {
+  background: rgba(255, 140, 0, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 140, 0, 0.3);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 24px 0 rgba(255, 140, 0, 0.05);
+}
+
+:where(.dark) .glass-card-urgent {
+  background: rgba(255, 140, 0, 0.15); /* #FF8C00 at 15% opacity */
+  backdrop-filter: blur(20px); /* 20px blur */
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(255, 140, 0, 0.4); /* #FF8C00 at 40% opacity */
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(255, 140, 0, 0.1), 0 8px 32px 0 rgba(255, 140, 0, 0.15);
+}
+
+@utility glass-card-expired {
+  background: rgba(239, 68, 68, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 24px 0 rgba(239, 68, 68, 0.05);
+}
+
+:where(.dark) .glass-card-expired {
+  background: rgba(239, 68, 68, 0.15); /* Expired red at 15% opacity */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(239, 68, 68, 0.15), 0 8px 32px 0 rgba(239, 68, 68, 0.15);
 }
 
 @utility glass-panel {
@@ -48,46 +117,62 @@
 }
 
 :where(.dark) .glass-panel {
-  background: rgba(19, 19, 22, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(19, 19, 22, 0.8); /* #131316 at 80% opacity */
+  backdrop-filter: blur(24px); /* 24px blur */
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05); /* top/bottom border only, 5% white */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: none;
+  border-right: none;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 @utility blob {
   position: fixed;
-  width: 400px;
-  height: 400px;
+  width: 450px;
+  height: 450px;
   border-radius: 50%;
   filter: blur(100px);
   z-index: -1;
-  opacity: 0.2;
   pointer-events: none;
 }
 
-:where(.dark) .blob {
+@utility blob-1 {
+  background: radial-gradient(circle, #ff8c00 0%, transparent 70%); /* Primary Orange */
+  top: -10%;
+  right: -10%;
   opacity: 0.15;
+}
+
+:where(.dark) .blob-1 {
+  opacity: 0.18; /* 15-20% opacity */
   filter: blur(80px);
 }
 
-@utility blob-1 {
-  background: radial-gradient(circle, #ff8c00 0%, transparent 70%);
-  top: -10%;
-  right: -10%;
-}
-
 @utility blob-2 {
-  background: radial-gradient(circle, #818cf8 0%, transparent 70%);
+  background: radial-gradient(circle, #4285F4 0%, transparent 70%); /* Gemini Blue in light mode */
   bottom: 10%;
   left: -15%;
+  opacity: 0.1;
+}
+
+:where(.dark) .blob-2 {
+  background: radial-gradient(circle, #93000a 0%, transparent 70%); /* Red in dark mode */
+  opacity: 0.15; /* 15% opacity to make it visible */
+  filter: blur(80px);
 }
 
 @utility blob-3 {
-  background: radial-gradient(circle, #f472b6 0%, transparent 70%);
+  background: radial-gradient(circle, #00b5fc 0%, transparent 70%); /* Blue instead of Purple */
   top: 40%;
   left: 10%;
-  opacity: 0.1;
+  opacity: 0.08;
+}
+
+:where(.dark) .blob-3 {
+  background: radial-gradient(circle, #00b5fc 0%, transparent 70%);
+  opacity: 0.15; /* More prominent blue in dark mode */
+  filter: blur(80px);
 }
 
 @utility gemini-glow {

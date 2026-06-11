@@ -104,12 +104,12 @@ export default function InventoryScreen({ products, onUpdateProducts }: Inventor
               <div
                 key={product.id}
                 onClick={() => setSelectedProduct(product)}
-                className={`glass-card rounded-2xl p-4 flex flex-col gap-4 shadow-sm relative overflow-hidden cursor-pointer select-none transition-all active:scale-[0.99] border hover:border-white/80 dark:hover:border-white/20 ${
+                className={`rounded-2xl p-4 flex flex-col gap-4 shadow-sm relative overflow-hidden cursor-pointer select-none transition-all active:scale-[0.99] transition-colors duration-300 ${
                   isExpired
-                    ? 'border-red-500/40 dark:border-red-500/30'
+                    ? 'glass-card-expired'
                     : isUrgent
-                    ? 'border-brand-primary/40 dark:border-brand-primary/30'
-                    : 'border-white/50 dark:border-white/10'
+                    ? 'glass-card-urgent'
+                    : 'glass-card'
                 }`}
               >
                 {/* Expiring Soon / Expired status badge */}

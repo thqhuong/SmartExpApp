@@ -80,9 +80,13 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (btnToggleLightMode != null) {
             btnToggleLightMode.setOnClickListener(v -> {
                 if (isNightMode) {
+                    v.setEnabled(false);
                     prefs.edit().putBoolean("dark_mode", false).apply();
-                    androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                            androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+                    }, 150);
                 }
             });
         }
@@ -90,9 +94,13 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (btnToggleDarkMode != null) {
             btnToggleDarkMode.setOnClickListener(v -> {
                 if (!isNightMode) {
+                    v.setEnabled(false);
                     prefs.edit().putBoolean("dark_mode", true).apply();
-                    androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                            androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+                    }, 150);
                 }
             });
         }

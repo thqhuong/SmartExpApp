@@ -25,14 +25,6 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="My Inventory"
-                android:textColor="@color/smart_on_surface"
-                android:textSize="32sp"
-                android:textStyle="bold" />
-
             <!-- Search Input (Glass style) -->
             <EditText
                 android:id="@+id/searchInput"

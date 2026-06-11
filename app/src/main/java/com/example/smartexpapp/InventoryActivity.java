@@ -308,8 +308,11 @@ public class InventoryActivity extends BaseActivity {
         expiryStatus.setText(product.getExpiryStatus());
         progress.setProgress(product.getExpiryProgress());
 
+        float density = getResources().getDisplayMetrics().density;
         if (product.isExpired()) {
-            card.setStrokeColor(getColor(R.color.smart_error));
+            card.setCardBackgroundColor(getColor(R.color.smart_glass_error));
+            card.setStrokeColor(getColor(R.color.smart_glass_error_stroke));
+            card.setStrokeWidth((int) (1.5f * density));
             urgentBadge.setVisibility(View.VISIBLE);
             urgentBadge.setBackgroundResource(R.drawable.bg_error_soft_badge);
             urgentBadge.setText("EXPIRED");
@@ -317,13 +320,22 @@ public class InventoryActivity extends BaseActivity {
             expiryStatus.setTextColor(getColor(R.color.smart_error));
             progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
         } else if (product.isExpiringSoon()) {
-            card.setStrokeColor(getColor(R.color.smart_primary_container));
+            card.setCardBackgroundColor(getColor(R.color.smart_glass_urgent));
+            card.setStrokeColor(getColor(R.color.smart_glass_urgent_stroke));
+            card.setStrokeWidth((int) (1.5f * density));
             urgentBadge.setVisibility(View.VISIBLE);
             urgentBadge.setBackgroundResource(R.drawable.bg_primary_soft_badge);
             urgentBadge.setText("EXPIRING SOON");
             urgentBadge.setTextColor(getColor(R.color.smart_primary_container));
             expiryStatus.setTextColor(getColor(R.color.smart_primary_container));
             progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
+        } else {
+            card.setCardBackgroundColor(getColor(R.color.smart_glass_surface));
+            card.setStrokeColor(getColor(R.color.smart_glass_stroke));
+            card.setStrokeWidth((int) (1.0f * density));
+            urgentBadge.setVisibility(View.GONE);
+            expiryStatus.setTextColor(getColor(R.color.smart_on_surface));
+            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_gray));
         }
 
         card.setOnClickListener(v -> openEditDialog(product));

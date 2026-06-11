@@ -1,8 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/smart_glass_surface" />
-    <stroke
-        android:width="1dp"
-        android:color="@color/smart_glass_stroke" />
-    <corners android:radius="16dp" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer glass background -->
+    <item>
+        <shape>
+            <solid android:color="@color/smart_glass_surface" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    <!-- Inner edge white glow (simulated using inset white stroke) -->
+    <item android:left="1dp" android:right="1dp" android:top="1dp" android:bottom="1dp">
+        <shape>
+            <stroke
+                android:width="1dp"
+                android:color="@color/smart_glass_inner_glow" />
+            <corners android:radius="15dp" />
+        </shape>
+    </item>
+    <!-- Main outer border -->
+    <item>
+        <shape>
+            <stroke
+                android:width="1dp"
+                android:color="@color/smart_glass_stroke" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+</layer-list>
