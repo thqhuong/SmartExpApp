@@ -77,32 +77,31 @@ public abstract class BaseActivity extends AppCompatActivity {
             }
         }
 
+        View themeTogglePill = findViewById(R.id.themeTogglePill);
+        View.OnClickListener toggleThemeListener = v -> {
+            boolean nextNightMode = !isNightMode;
+            if (btnToggleLightMode != null) btnToggleLightMode.setEnabled(false);
+            if (btnToggleDarkMode != null) btnToggleDarkMode.setEnabled(false);
+            if (themeTogglePill != null) themeTogglePill.setEnabled(false);
+
+            prefs.edit().putBoolean("dark_mode", nextNightMode).apply();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                        nextNightMode ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+            }, 150);
+        };
+
         if (btnToggleLightMode != null) {
-            btnToggleLightMode.setOnClickListener(v -> {
-                if (isNightMode) {
-                    v.setEnabled(false);
-                    prefs.edit().putBoolean("dark_mode", false).apply();
-                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
-                    }, 150);
-                }
-            });
+            btnToggleLightMode.setOnClickListener(toggleThemeListener);
         }
 
         if (btnToggleDarkMode != null) {
-            btnToggleDarkMode.setOnClickListener(v -> {
-                if (!isNightMode) {
-                    v.setEnabled(false);
-                    prefs.edit().putBoolean("dark_mode", true).apply();
-                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
-                    }, 150);
-                }
-            });
+            btnToggleDarkMode.setOnClickListener(toggleThemeListener);
+        }
+
+        if (themeTogglePill != null) {
+            themeTogglePill.setOnClickListener(toggleThemeListener);
         }
 
         if (searchButton != null) {

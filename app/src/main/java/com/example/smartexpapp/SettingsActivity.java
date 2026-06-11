@@ -24,6 +24,13 @@ public class SettingsActivity extends BaseActivity {
         setupChrome(R.id.nav_settings);
         ImageLoader.load(findViewById(R.id.profileImage), "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=200");
         bindSettings();
+        
+        findViewById(R.id.btnEditProfile).setOnClickListener(v -> {
+            Intent intent = new Intent(this, AccountDetailsActivity.class);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+        });
+
         findViewById(R.id.signOutButton).setOnClickListener(v -> {
             Intent intent = new Intent(this, SignInActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -104,6 +104,13 @@ public class AddProductActivity extends BaseActivity {
         photoPreview = findViewById(R.id.photoPreview);
         btnOcrScan = findViewById(R.id.btnOcrScan);
 
+        findViewById(R.id.btnLaunchGeminiLive).setOnClickListener(v -> {
+            Intent intent = new Intent(this, RecipesActivity.class);
+            intent.putExtra("start_gemini_live", true);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+        });
+
         photoPreview.setOnClickListener(v -> pickPhotoLauncher.launch("image/*"));
         btnOcrScan.setOnClickListener(v -> ocrPhotoLauncher.launch(null));
         btnRemovePhoto.setOnClickListener(v -> confirmRemovePhoto());

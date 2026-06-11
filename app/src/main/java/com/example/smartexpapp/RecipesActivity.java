@@ -30,6 +30,13 @@ public class RecipesActivity extends BaseActivity {
         setupChrome(R.id.nav_recipes);
         setupGeminiLive();
         bindRecipes();
+
+        if (getIntent().getBooleanExtra("start_gemini_live", false)) {
+            View geminiLiveButton = findViewById(R.id.geminiLiveButton);
+            if (geminiLiveButton != null) {
+                geminiLiveButton.performClick();
+            }
+        }
     }
 
     private void setupGeminiLive() {
