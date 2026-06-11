@@ -5,6 +5,8 @@ import android.content.Context;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 @Database(
         entities = {
@@ -16,12 +18,18 @@ import androidx.room.RoomDatabase;
                 AgentMessageEntity.class,
                 UserSettingsEntity.class
         },
-        version = 1,
+        version = 2,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "smartexp_local.db";
     private static volatile AppDatabase instance;
+    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            // Schema is unchanged; this keeps existing installs on a monotonic Room version.
+        }
+    };
 
     public abstract ProductDao productDao();
 
@@ -47,6 +55,8 @@ public abstract class AppDatabase extends RoomDatabase {
                                     DATABASE_NAME
                             )
                             .allowMainThreadQueries()
+                            .addMigrations(MIGRATION_1_2)
+                            .fallbackToDestructiveMigrationOnDowngrade(true)
                             .build();
                 }
             }

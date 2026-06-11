@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -36,6 +37,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public class InventoryActivity extends BaseActivity {
+    private static final String TAG = "InventoryActivity";
+
     private LinearLayout productList;
     private LinearLayout emptyState;
     private TextView emptyTitle;
@@ -199,6 +202,7 @@ public class InventoryActivity extends BaseActivity {
             bindProducts(products);
             hideLoading();
         } catch (Exception e) {
+            Log.e(TAG, "Failed to render products", e);
             hideLoading();
             productList.setVisibility(View.GONE);
             emptyState.setVisibility(View.GONE);
