@@ -304,7 +304,7 @@ public class InventoryActivity extends BaseActivity {
             ViewUtils.setIcon(icon, product.getIconRes(), tintColor);
         }
         ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
-        ((TextView) item.findViewById(R.id.productMeta)).setText(product.getCategory() + " \u2022 " + product.getAmount());
+        ((TextView) item.findViewById(R.id.productMeta)).setText(product.getCategory() + " \u2022 " + product.getStorage() + " \u2022 " + product.getAmount());
         expiryStatus.setText(product.getExpiryStatus());
         progress.setProgress(product.getExpiryProgress());
 

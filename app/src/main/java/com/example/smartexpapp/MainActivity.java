@@ -131,7 +131,7 @@ public class MainActivity extends BaseActivity {
 
             ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
             ((TextView) item.findViewById(R.id.productMeta)).setText(
-                    product.getStorage() + " \u2022 " + product.getAmount());
+                    product.getCategory() + " \u2022 " + product.getStorage() + " \u2022 " + product.getAmount());
 
             TextView badge = item.findViewById(R.id.expiryBadge);
             badge.setText(product.getDashboardBadge());

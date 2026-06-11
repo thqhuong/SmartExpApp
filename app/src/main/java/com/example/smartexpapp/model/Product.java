@@ -1,6 +1,8 @@
 package com.example.smartexpapp.model;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -238,21 +240,26 @@ public class Product {
         return ProductStatus.EXPIRED.equals(status) || getDaysUntilExpiry() < 0;
     }
 
+    public String getFormattedExpiryDate() {
+        return new SimpleDateFormat("MMM d, yyyy", Locale.US).format(new Date(expiryDateMillis));
+    }
+
     public String getExpiryStatus() {
         int daysUntilExpiry = getDaysUntilExpiry();
+        String date = getFormattedExpiryDate();
         if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
-            return "Expired";
+            return date + " (Expired)";
         }
         if (daysUntilExpiry == 0) {
-            return "Today";
+            return date + " (Today)";
         }
         if (daysUntilExpiry == 1) {
-            return "1 Day";
+            return date + " (Tomorrow)";
         }
         if (daysUntilExpiry >= 60) {
-            return Math.max(1, daysUntilExpiry / 30) + " Months";
+            return date + " (" + Math.max(1, daysUntilExpiry / 30) + " Months)";
         }
-        return daysUntilExpiry + " Days";
+        return date + " (" + daysUntilExpiry + " Days)";
     }
 
     public String getDashboardBadge() {
