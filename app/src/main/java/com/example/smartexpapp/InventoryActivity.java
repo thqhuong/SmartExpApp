@@ -1,7 +1,7 @@
 package com.example.smartexpapp;
 
 import android.app.AlertDialog;
-import android.net.Uri;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,8 +15,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.content.res.AppCompatResources;
 
 import com.example.smartexpapp.data.ProductRepository;
@@ -28,7 +26,6 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -52,10 +49,6 @@ public class InventoryActivity extends BaseActivity {
     private String currentSort = "date";
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
-    private EditProductDialog currentEditDialog;
-
-    private final ActivityResultLauncher<String> pickPhotoLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onPhotoPicked);
     private Runnable searchRunnable;
 
     @Override
@@ -246,13 +239,13 @@ public class InventoryActivity extends BaseActivity {
         List<Product> sorted = new ArrayList<>(products);
         switch (currentSort) {
             case "name":
-                Collections.sort(sorted, Comparator.comparing(Product::getName, String.CASE_INSENSITIVE_ORDER));
+                sorted.sort(Comparator.comparing(Product::getName, String.CASE_INSENSITIVE_ORDER));
                 break;
             case "newest":
-                Collections.sort(sorted, (a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
+                sorted.sort((a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
                 break;
             default:
-                Collections.sort(sorted, Comparator.comparingInt(Product::getDaysUntilExpiry));
+                sorted.sort(Comparator.comparingInt(Product::getDaysUntilExpiry));
                 break;
         }
         return sorted;
@@ -300,7 +293,7 @@ public class InventoryActivity extends BaseActivity {
                 product.isExpiringSoon() || product.isExpired() ? R.color.smart_primary_container : R.color.smart_secondary);
         ImageLoader.load(item.findViewById(R.id.productIcon), product.getImageUrl());
         ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
-        ((TextView) item.findViewById(R.id.productMeta)).setText(product.getCategory() + " \u2022 " + product.getAmount());
+        ((TextView) item.findViewById(R.id.productMeta)).setText(getString(R.string.product_meta_format, product.getCategory(), product.getAmount()));
         expiryStatus.setText(product.getExpiryStatus());
         progress.setProgress(product.getExpiryProgress());
 
@@ -308,7 +301,7 @@ public class InventoryActivity extends BaseActivity {
             card.setStrokeColor(getColor(R.color.smart_error));
             urgentBadge.setVisibility(View.VISIBLE);
             urgentBadge.setBackgroundResource(R.drawable.bg_error_badge);
-            urgentBadge.setText("EXPIRED");
+            urgentBadge.setText(R.string.status_expired);
             urgentBadge.setTextColor(getColor(R.color.smart_error));
             expiryStatus.setTextColor(getColor(R.color.smart_error));
             progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
@@ -316,7 +309,7 @@ public class InventoryActivity extends BaseActivity {
             card.setStrokeColor(getColor(R.color.smart_primary_container));
             urgentBadge.setVisibility(View.VISIBLE);
             urgentBadge.setBackgroundResource(R.drawable.bg_primary_badge);
-            urgentBadge.setText("EXPIRING SOON");
+            urgentBadge.setText(R.string.status_expiring);
             urgentBadge.setTextColor(getColor(R.color.smart_on_primary));
             expiryStatus.setTextColor(getColor(R.color.smart_primary_container));
             progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
@@ -328,11 +321,9 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void openEditDialog(Product product) {
-        currentEditDialog = new EditProductDialog(product,
-                this::renderProducts,
-                () -> pickPhotoLauncher.launch("image/*")
-        );
-        currentEditDialog.show(this);
+        Intent intent = new Intent(this, AddProductActivity.class);
+        intent.putExtra(AddProductActivity.EXTRA_PRODUCT_ID, product.getId());
+        startActivity(intent);
     }
 
     private void confirmDelete(Product product) {
@@ -346,13 +337,5 @@ public class InventoryActivity extends BaseActivity {
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
-    }
-
-    private void onPhotoPicked(Uri uri) {
-        if (uri == null || currentEditDialog == null) return;
-        String path = saveImageToInternalStorage(uri);
-        if (path != null) {
-            currentEditDialog.setPhotoPath(path);
-        }
     }
 }
