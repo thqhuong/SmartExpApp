@@ -3,5 +3,5 @@
     <solid android:color="@color/smart_primary_container" />
     <stroke
         android:width="3dp"
-        android:color="#FFFFFF" />
+        android:color="@color/bottom_nav_add_border" />
 </shape>

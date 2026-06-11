@@ -24,6 +24,10 @@
     <color name="category_meat">#EC7063</color>
     <color name="category_general">#95A5A6</color>
 
+    <!-- Bottom Nav Add Button Styles -->
+    <color name="bottom_nav_add_border">#131316</color>
+    <color name="bottom_nav_add_icon">#131316</color>
+
     <!-- Glassmorphism and vibrant background colors (Dark Mode) -->
     <color name="smart_glass_surface">#CC1B1B1E</color>
     <color name="smart_glass_surface_strong">#E627272A</color>

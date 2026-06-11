@@ -8,14 +8,8 @@
     android:clipChildren="false"
     android:clipToPadding="false">
 
-    <!-- Glow Shadow for Center Add Button (aligned to bottom) -->
-    <View
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_orange_glow_shadow"
-        android:alpha="0.8" />
+
+
 
     <!-- Bottom Bar Container -->
     <LinearLayout
@@ -94,6 +88,15 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Glow Shadow for Center Add Button (aligned to bottom) -->
+    <View
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="-2dp"
+        android:background="@drawable/bg_orange_glow_shadow"
+        android:alpha="0.95" />
+
     <!-- Center Floating Action Button (Add Product, aligned to bottom) -->
     <FrameLayout
         android:id="@+id/nav_add"
@@ -112,6 +115,6 @@
             android:layout_height="26dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_plus"
-            app:tint="#FFFFFF" />
+            app:tint="@color/bottom_nav_add_icon" />
     </FrameLayout>
 </FrameLayout>

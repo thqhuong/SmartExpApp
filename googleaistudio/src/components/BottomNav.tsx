@@ -33,7 +33,7 @@ export default function BottomNav({ activeView, onViewChange }: BottomNavProps) 
             <div key={item.id} className="relative -top-8 select-none">
               <button
                 onClick={() => onViewChange('add')}
-                className="flex items-center justify-center bg-brand-primary text-white rounded-full h-16 w-16 shadow-[0_8px_32px_rgba(255,140,0,0.4)] dark:shadow-[0_8px_32px_rgba(255,140,0,0.6)] hover:scale-105 active:scale-90 transition-all border-4 border-slate-50 dark:border-zinc-950"
+                className="flex items-center justify-center bg-brand-primary text-white dark:text-zinc-950 rounded-full h-16 w-16 shadow-[0_8px_32px_rgba(255,140,0,0.4)] dark:shadow-[0_0_18px_rgba(255,140,0,0.7)] hover:scale-105 active:scale-90 transition-all border-4 border-slate-50 dark:border-zinc-950"
               >
                 <span className="material-symbols-outlined text-3xl font-bold">add</span>
               </button>
