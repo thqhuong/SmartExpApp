@@ -2,8 +2,8 @@
     <style name="Base.Theme.SmartExpApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Changed 'sans' to 'sans-serif' to ensure the layout preview can resolve the system font correctly and avoid NPE when attempting to load it as an asset -->
         <item name="android:fontFamily">sans-serif</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/smart_surface</item>
         <item name="android:windowNoTitle">true</item>

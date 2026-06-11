@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="smart_background">#0E0E11</color>
+    <color name="smart_surface">#131316</color>
+    <color name="smart_surface_container">#1F1F22</color>
+    <color name="smart_surface_container_low">#1B1B1E</color>
+    <color name="smart_surface_variant">#353438</color>
+    <color name="smart_on_surface">#E4E1E6</color>
+    <color name="smart_secondary">#C6C6C7</color>
+    <color name="smart_muted">#8C8C8C</color>
+    <color name="smart_primary">#FFB77D</color>
+    <color name="smart_primary_container">#FF8C00</color>
+    <color name="smart_primary_soft">#33FF8C00</color>
+    <color name="smart_primary_soft_border">#4DFF8C00</color>
+    <color name="smart_on_primary">#4D2600</color>
+    <color name="smart_error">#FFB4AB</color>
+    <color name="smart_notification_red">#EF4444</color>
+    <color name="smart_error_container">#93000A</color>
+
+    <color name="category_dairy">#5DADE2</color>
+    <color name="category_produce">#EB984E</color>
+    <color name="category_pantry">#AF7AC5</color>
+    <color name="category_vegetables">#58D68D</color>
+    <color name="category_meat">#EC7063</color>
+    <color name="category_general">#95A5A6</color>
+
+    <!-- Bottom Nav Add Button Styles -->
+    <color name="bottom_nav_add_border">#131316</color>
+    <color name="bottom_nav_add_icon">#131316</color>
+
+    <!-- Glassmorphism and vibrant background colors (Dark Mode) -->
+    <color name="smart_glass_surface">#CC1B1B1E</color>
+    <color name="smart_glass_surface_strong">#E627272A</color>
+    <color name="smart_glass_urgent">#B33D2100</color>
+    <color name="smart_glass_error">#B33C0A0A</color>
+    <color name="smart_glass_stroke">#33FFFFFF</color>
+    <color name="smart_gemini_purple">#B6C4FF</color>
+    <color name="smart_gemini_pink">#FFB7D5</color>
+    <color name="smart_glass_wash_start">#140F26</color>
+    <color name="smart_glass_wash_mid">#0C081A</color>
+    <color name="smart_glass_wash_end">#071220</color>
+</resources>

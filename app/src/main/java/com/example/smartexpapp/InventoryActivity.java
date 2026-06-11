@@ -7,11 +7,16 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,17 +24,18 @@ import androidx.appcompat.content.res.AppCompatResources;
 
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 public class InventoryActivity extends BaseActivity {
+    private static final String TAG = "InventoryActivity";
+
     private LinearLayout productList;
     private LinearLayout emptyState;
     private TextView emptyTitle;
@@ -37,16 +43,14 @@ public class InventoryActivity extends BaseActivity {
     private TextView errorState;
     private ProgressBar loadingIndicator;
     private EditText searchInput;
-    private ChipGroup expiryFilterGroup;
-    private ChipGroup categoryFilterGroup;
-    private Chip sortDate;
-    private Chip sortName;
-    private Chip sortNewest;
+    private Spinner expirySpinner;
+    private Spinner storageSpinner;
+    private Spinner sortSpinner;
 
     private String currentSearch = "";
     private String currentFilter = "All";
-    private String currentCategory = "All";
-    private String currentSort = "date";
+    private String currentStorage = "All";
+    private String currentSort = "oldest";
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
@@ -64,16 +68,12 @@ public class InventoryActivity extends BaseActivity {
         errorState = findViewById(R.id.errorState);
         loadingIndicator = findViewById(R.id.loadingIndicator);
         searchInput = findViewById(R.id.searchInput);
-        expiryFilterGroup = findViewById(R.id.expiryFilterGroup);
-        categoryFilterGroup = findViewById(R.id.categoryFilterGroup);
-        sortDate = findViewById(R.id.sortDate);
-        sortName = findViewById(R.id.sortName);
-        sortNewest = findViewById(R.id.sortNewest);
+        expirySpinner = findViewById(R.id.expirySpinner);
+        storageSpinner = findViewById(R.id.storageSpinner);
+        sortSpinner = findViewById(R.id.sortSpinner);
 
         setupSearch();
-        setupFilters();
-        setupCategoryFilter();
-        setupSort();
+        setupSpinners();
 
         showLoading();
         renderProducts();
@@ -109,69 +109,70 @@ public class InventoryActivity extends BaseActivity {
         });
     }
 
-    private void setupFilters() {
-        expiryFilterGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            int checkedId = checkedIds.isEmpty() ? R.id.filterAll : checkedIds.get(0);
-            if (checkedId == R.id.filterAll) {
-                currentFilter = "All";
-            } else if (checkedId == R.id.filterExpiring) {
-                currentFilter = "Expiring";
-            } else if (checkedId == R.id.filterExpired) {
-                currentFilter = "Expired";
-            } else if (checkedId == R.id.filterRoom) {
-                currentFilter = "Room Temp";
-            } else if (checkedId == R.id.filterCool) {
-                currentFilter = "Cool";
-            } else if (checkedId == R.id.filterFrozen) {
-                currentFilter = "Frozen";
+    private void setupSpinners() {
+        ArrayAdapter<CharSequence> expiryAdapter = ArrayAdapter.createFromResource(this,
+                R.array.expiry_filter_options, android.R.layout.simple_spinner_item);
+        expiryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        expirySpinner.setAdapter(expiryAdapter);
+        expirySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selected = parent.getItemAtPosition(position).toString();
+                if ("Still good".equals(selected)) {
+                    currentFilter = "StillGood";
+                } else if ("Expired".equals(selected)) {
+                    currentFilter = "Expired";
+                } else {
+                    currentFilter = "All";
+                }
+                renderProducts();
             }
-            renderProducts();
-        });
-    }
 
-    private void setupCategoryFilter() {
-        categoryFilterGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            int checkedId = checkedIds.isEmpty() ? R.id.filterCatAll : checkedIds.get(0);
-            if (checkedId == R.id.filterCatAll) {
-                currentCategory = "All";
-            } else if (checkedId == R.id.filterCatDairy) {
-                currentCategory = "Dairy";
-            } else if (checkedId == R.id.filterCatProduce) {
-                currentCategory = "Produce";
-            } else if (checkedId == R.id.filterCatPantry) {
-                currentCategory = "Pantry";
-            } else if (checkedId == R.id.filterCatVegetables) {
-                currentCategory = "Vegetables";
-            } else if (checkedId == R.id.filterCatGeneral) {
-                currentCategory = "General";
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
             }
-            renderProducts();
         });
-    }
 
-    private void setupSort() {
-        View.OnClickListener sortListener = v -> {
-            if (v == sortDate) {
-                currentSort = "date";
-                sortDate.setChecked(true);
-                sortName.setChecked(false);
-                sortNewest.setChecked(false);
-            } else if (v == sortName) {
-                currentSort = "name";
-                sortDate.setChecked(false);
-                sortName.setChecked(true);
-                sortNewest.setChecked(false);
-            } else if (v == sortNewest) {
-                currentSort = "newest";
-                sortDate.setChecked(false);
-                sortName.setChecked(false);
-                sortNewest.setChecked(true);
+        ArrayAdapter<CharSequence> storageAdapter = ArrayAdapter.createFromResource(this,
+                R.array.storage_filter_options, android.R.layout.simple_spinner_item);
+        storageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        storageSpinner.setAdapter(storageAdapter);
+        storageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                currentStorage = parent.getItemAtPosition(position).toString();
+                renderProducts();
             }
-            renderProducts();
-        };
-        sortDate.setOnClickListener(sortListener);
-        sortName.setOnClickListener(sortListener);
-        sortNewest.setOnClickListener(sortListener);
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                currentStorage = "All";
+                renderProducts();
+            }
+        });
+
+        ArrayAdapter<CharSequence> sortAdapter = ArrayAdapter.createFromResource(this,
+                R.array.sort_options, android.R.layout.simple_spinner_item);
+        sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sortSpinner.setAdapter(sortAdapter);
+        sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selected = parent.getItemAtPosition(position).toString();
+                if ("Name".equals(selected)) {
+                    currentSort = "name";
+                } else if ("Newest".equals(selected)) {
+                    currentSort = "newest";
+                } else {
+                    currentSort = "oldest";
+                }
+                renderProducts();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
     }
 
     private void showLoading() {
@@ -194,6 +195,7 @@ public class InventoryActivity extends BaseActivity {
             bindProducts(products);
             hideLoading();
         } catch (Exception e) {
+            Log.e(TAG, "Failed to render products", e);
             hideLoading();
             productList.setVisibility(View.GONE);
             emptyState.setVisibility(View.GONE);
@@ -204,35 +206,25 @@ public class InventoryActivity extends BaseActivity {
     private List<Product> filterProducts(List<Product> products) {
         List<Product> filtered = new ArrayList<>();
         for (Product product : products) {
-            if (matchesFilter(product) && matchesCategory(product)) {
+            if (matchesFilter(product) && matchesStorage(product)) {
                 filtered.add(product);
             }
         }
         return filtered;
     }
 
-    private boolean matchesCategory(Product product) {
-        return "All".equals(currentCategory) || currentCategory.equals(product.getCategory());
+    private boolean matchesStorage(Product product) {
+        return "All".equals(currentStorage) || currentStorage.equals(product.getStorage());
     }
 
     private boolean matchesFilter(Product product) {
         if ("All".equals(currentFilter)) {
             return true;
         }
-        switch (currentFilter) {
-            case "Expiring":
-                return product.isExpiringSoon();
-            case "Expired":
-                return product.isExpired();
-            case "Room Temp":
-                return "Room Temp".equals(product.getStorage());
-            case "Cool":
-                return "Refrigerator".equals(product.getStorage());
-            case "Frozen":
-                return "Freeze".equals(product.getStorage());
-            default:
-                return true;
+        if ("StillGood".equals(currentFilter)) {
+            return !product.isExpired();
         }
+        return product.isExpired();
     }
 
     private List<Product> sortProducts(List<Product> products) {
@@ -289,9 +281,21 @@ public class InventoryActivity extends BaseActivity {
         ProgressBar progress = item.findViewById(R.id.expiryProgress);
         View deleteBtn = item.findViewById(R.id.btnDelete);
 
-        ViewUtils.setIcon(item.findViewById(R.id.productIcon), product.getIconRes(),
-                product.isExpiringSoon() || product.isExpired() ? R.color.smart_primary_container : R.color.smart_secondary);
-        ImageLoader.load(item.findViewById(R.id.productIcon), product.getImageUrl());
+        View categoryDot = item.findViewById(R.id.categoryDot);
+        categoryDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(product.getCategory())));
+        categoryDot.setVisibility(View.VISIBLE);
+
+        ImageView icon = item.findViewById(R.id.productIcon);
+        String imgUrl = product.getImageUrl();
+        if (imgUrl != null && !imgUrl.isEmpty()) {
+            icon.setImageTintList(null);
+            ImageLoader.load(icon, imgUrl);
+        } else {
+            int tintColor = product.isExpiringSoon() || product.isExpired()
+                    ? R.color.smart_primary_container : R.color.smart_secondary;
+            icon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(tintColor)));
+            ViewUtils.setIcon(icon, product.getIconRes(), tintColor);
+        }
         ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
         ((TextView) item.findViewById(R.id.productMeta)).setText(getString(R.string.product_meta_format, product.getCategory(), product.getAmount()));
         expiryStatus.setText(product.getExpiryStatus());
@@ -300,7 +304,7 @@ public class InventoryActivity extends BaseActivity {
         if (product.isExpired()) {
             card.setStrokeColor(getColor(R.color.smart_error));
             urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_error_badge);
+            urgentBadge.setBackgroundResource(R.drawable.bg_error_soft_badge);
             urgentBadge.setText(R.string.status_expired);
             urgentBadge.setTextColor(getColor(R.color.smart_error));
             expiryStatus.setTextColor(getColor(R.color.smart_error));
@@ -308,9 +312,9 @@ public class InventoryActivity extends BaseActivity {
         } else if (product.isExpiringSoon()) {
             card.setStrokeColor(getColor(R.color.smart_primary_container));
             urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_primary_badge);
+            urgentBadge.setBackgroundResource(R.drawable.bg_primary_soft_badge);
             urgentBadge.setText(R.string.status_expiring);
-            urgentBadge.setTextColor(getColor(R.color.smart_on_primary));
+            urgentBadge.setTextColor(getColor(R.color.smart_primary_container));
             expiryStatus.setTextColor(getColor(R.color.smart_primary_container));
             progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
         }
