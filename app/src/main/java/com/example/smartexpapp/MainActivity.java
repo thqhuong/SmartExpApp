@@ -133,9 +133,15 @@ public class MainActivity extends BaseActivity {
 
             TextView badge = item.findViewById(R.id.expiryBadge);
             badge.setText(product.getDashboardBadge());
-            if ("Expired".equals(groupName) || "Urgent".equals(groupName)) {
-                badge.setBackgroundResource(R.drawable.bg_error_badge);
-                badge.setTextColor(getColor(badgeColorRes));
+            if ("Expired".equals(groupName)) {
+                badge.setBackgroundResource(R.drawable.bg_error_soft_badge);
+                badge.setTextColor(getColor(R.color.smart_error));
+            } else if ("Urgent".equals(groupName)) {
+                badge.setBackgroundResource(R.drawable.bg_primary_soft_badge);
+                badge.setTextColor(getColor(R.color.smart_primary_container));
+            } else {
+                badge.setBackgroundResource(R.drawable.bg_neutral_badge);
+                badge.setTextColor(getColor(R.color.smart_on_surface));
             }
 
             ((TextView) item.findViewById(R.id.expiryStatus)).setText(product.getExpiryStatus());

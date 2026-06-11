@@ -1,86 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/bottomNavigation"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/smart_surface"
-    android:elevation="8dp"
-    android:gravity="center"
-    android:minHeight="88dp"
-    android:orientation="horizontal"
-    android:paddingStart="24dp"
-    android:paddingTop="10dp"
-    android:paddingEnd="24dp"
-    android:paddingBottom="10dp">
+    android:layout_height="90dp"
+    android:background="@android:color/transparent"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
+    <!-- Glow Shadow for Center Add Button (aligned to bottom) -->
+    <View
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_orange_glow_shadow"
+        android:alpha="0.8" />
+
+    <!-- Bottom Bar Container -->
     <LinearLayout
-        android:id="@+id/nav_inventory"
-        style="@style/SmartExpBottomNavItem">
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_bottom_nav_bar"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
 
-        <ImageView
-            style="@style/SmartExpBottomNavIcon"
-            android:src="@drawable/ic_nav_items"
-            app:tint="@color/bottom_nav_item" />
+        <LinearLayout
+            android:id="@+id/nav_inventory"
+            style="@style/SmartExpBottomNavItem">
 
-        <TextView
-            style="@style/SmartExpBottomNavLabel"
-            android:text="ITEMS" />
+            <ImageView
+                style="@style/SmartExpBottomNavIcon"
+                android:src="@drawable/ic_nav_inventory"
+                app:tint="@color/bottom_nav_item" />
+
+            <TextView
+                style="@style/SmartExpBottomNavLabel"
+                android:text="Inventory" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_stats"
+            style="@style/SmartExpBottomNavItem">
+
+            <ImageView
+                style="@style/SmartExpBottomNavIcon"
+                android:src="@drawable/ic_nav_stats"
+                app:tint="@color/bottom_nav_item" />
+
+            <TextView
+                style="@style/SmartExpBottomNavLabel"
+                android:text="Stats" />
+        </LinearLayout>
+
+        <!-- Placeholder Spacer for Center FAB -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.2"
+            android:visibility="invisible" />
+
+        <LinearLayout
+            android:id="@+id/nav_recipes"
+            style="@style/SmartExpBottomNavItem">
+
+            <ImageView
+                style="@style/SmartExpBottomNavIcon"
+                android:src="@drawable/ic_nav_agent"
+                app:tint="@color/bottom_nav_item" />
+
+            <TextView
+                style="@style/SmartExpBottomNavLabel"
+                android:text="Agent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_settings"
+            style="@style/SmartExpBottomNavItem">
+
+            <ImageView
+                style="@style/SmartExpBottomNavIcon"
+                android:src="@drawable/ic_nav_settings_gear"
+                app:tint="@color/bottom_nav_item" />
+
+            <TextView
+                style="@style/SmartExpBottomNavLabel"
+                android:text="Settings" />
+        </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/nav_stats"
-        style="@style/SmartExpBottomNavItem">
-
-        <ImageView
-            style="@style/SmartExpBottomNavIcon"
-            android:src="@drawable/ic_nav_home"
-            app:tint="@color/bottom_nav_item" />
-
-        <TextView
-            style="@style/SmartExpBottomNavLabel"
-            android:text="HOME" />
-    </LinearLayout>
-
-    <LinearLayout
+    <!-- Center Floating Action Button (Add Product, aligned to bottom) -->
+    <FrameLayout
         android:id="@+id/nav_add"
-        style="@style/SmartExpBottomNavItem">
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="18dp"
+        android:background="@drawable/bg_bottom_nav_add"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:elevation="6dp">
 
         <ImageView
-            style="@style/SmartExpBottomNavIcon"
-            android:src="@drawable/ic_nav_add"
-            app:tint="@color/bottom_nav_item" />
-
-        <TextView
-            style="@style/SmartExpBottomNavLabel"
-            android:text="ADD" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/nav_recipes"
-        style="@style/SmartExpBottomNavItem">
-
-        <ImageView
-            style="@style/SmartExpBottomNavIcon"
-            android:src="@drawable/ic_nav_meals"
-            app:tint="@color/bottom_nav_item" />
-
-        <TextView
-            style="@style/SmartExpBottomNavLabel"
-            android:text="MEALS" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/nav_settings"
-        style="@style/SmartExpBottomNavItem">
-
-        <ImageView
-            style="@style/SmartExpBottomNavIcon"
-            android:src="@drawable/ic_nav_profile"
-            app:tint="@color/bottom_nav_item" />
-
-        <TextView
-            style="@style/SmartExpBottomNavLabel"
-            android:text="PROFILE" />
-    </LinearLayout>
-</LinearLayout>
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_plus"
+            app:tint="#FFFFFF" />
+    </FrameLayout>
+</FrameLayout>

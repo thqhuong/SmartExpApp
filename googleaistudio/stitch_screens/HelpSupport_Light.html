@@ -1,0 +1,304 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
+<title>Help &amp; Support - SmartExpApp</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#e2e2e2",
+                    "on-surface": "#1a1c1c",
+                    "inverse-primary": "#ffb77d",
+                    "inverse-on-surface": "#f0f1f1",
+                    "on-primary-fixed": "#2f1500",
+                    "secondary": "#5f5e5e",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "background": "#f9f9f9",
+                    "surface-variant": "#e2e2e2",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "secondary-fixed": "#e5e2e1",
+                    "secondary-container": "#e2dfde",
+                    "outline": "#897362",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#454747",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-dim": "#dadada",
+                    "on-secondary-container": "#636262",
+                    "tertiary-container": "#a9aaaa",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "surface-container": "#eeeeee",
+                    "outline-variant": "#ddc1ae",
+                    "on-tertiary-container": "#3d3f3f",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#ffb77d",
+                    "on-primary-fixed-variant": "#6e3900",
+                    "surface-tint": "#904d00",
+                    "inverse-surface": "#2f3131",
+                    "surface": "#f9f9f9",
+                    "primary-fixed": "#ffdcc3",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#e8e8e8",
+                    "on-background": "#1a1c1c",
+                    "on-surface-variant": "#564334",
+                    "surface-bright": "#f9f9f9",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#623200",
+                    "primary-container": "#ff8c00",
+                    "on-secondary-fixed-variant": "#474746",
+                    "on-error": "#ffffff",
+                    "tertiary": "#5d5f5f",
+                    "on-primary": "#ffffff",
+                    "surface-container-low": "#f3f3f4",
+                    "primary": "#904d00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "xs": "4px",
+                    "sm": "12px",
+                    "md": "16px",
+                    "container-padding": "20px",
+                    "gutter": "16px",
+                    "xl": "32px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "h1": ["Inter"],
+                    "cta": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h2": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "h3": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "cta": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h3": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f9f9;
+            overflow-x: hidden;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .soft-glow-1 {
+            position: fixed;
+            top: -10%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(255, 140, 0, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+            z-index: -1;
+            filter: blur(60px);
+        }
+        .soft-glow-2 {
+            position: fixed;
+            bottom: 10%;
+            left: -10%;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(144, 77, 0, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+            z-index: -1;
+            filter: blur(40px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<div class="soft-glow-1"></div>
+<div class="soft-glow-2"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md shadow-sm">
+<div class="flex justify-between items-center px-container-padding h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-h2 text-h2 font-bold text-primary">Help &amp; Support</h1>
+</div>
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined text-primary">bubble_chart</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-container-padding max-w-4xl mx-auto space-y-xl">
+<!-- Search Section -->
+<section class="space-y-md">
+<div class="relative group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+<input class="w-full h-14 pl-12 pr-4 bg-white/50 border-0 rounded-xl focus:ring-2 focus:ring-primary-container shadow-sm transition-all text-body-lg placeholder:text-outline-variant glass-card" placeholder="Search for FAQs..." type="text">
+</div>
+</section>
+<!-- FAQ Categories - Bento Grid Style -->
+<section class="space-y-md">
+<h2 class="font-h3 text-h3 text-on-surface">Categories</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<button class="glass-card p-lg rounded-xl flex flex-col items-center justify-center gap-sm text-center hover:bg-white/80 transition-all active:scale-95 group">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center group-hover:bg-primary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-white">rocket_launch</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface">Getting Started</span>
+</button>
+<button class="glass-card p-lg rounded-xl flex flex-col items-center justify-center gap-sm text-center hover:bg-white/80 transition-all active:scale-95 group">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center group-hover:bg-primary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-white">inventory_2</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface">Managing Inventory</span>
+</button>
+<button class="glass-card p-lg rounded-xl flex flex-col items-center justify-center gap-sm text-center hover:bg-white/80 transition-all active:scale-95 group">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center group-hover:bg-primary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-white">smart_toy</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface">Gemini AI</span>
+</button>
+<button class="glass-card p-lg rounded-xl flex flex-col items-center justify-center gap-sm text-center hover:bg-white/80 transition-all active:scale-95 group">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center group-hover:bg-primary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-white">build</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface">Technical Issues</span>
+</button>
+</div>
+</section>
+<!-- Contact Section -->
+<section class="space-y-md">
+<h2 class="font-h3 text-h3 text-on-surface">Contact Support</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Chat with Support -->
+<div class="glass-card p-md rounded-xl space-y-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary text-h2" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<div>
+<h3 class="font-cta text-cta">Chat with Support</h3>
+<p class="font-body-md text-body-md text-secondary">Instant help 24/7</p>
+</div>
+</div>
+<button class="w-full py-sm bg-primary-container text-white rounded-lg font-cta text-cta active:scale-95 transition-transform">Start Chat</button>
+</div>
+<!-- Email Us -->
+<div class="glass-card p-md rounded-xl space-y-sm hover:shadow-md transition-shadow">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary text-h2" style="font-variation-settings: 'FILL' 1;">mail</span>
+<div>
+<h3 class="font-cta text-cta">Email Us</h3>
+<p class="font-body-md text-body-md text-secondary">Response within 24h</p>
+</div>
+</div>
+<button class="w-full py-sm border border-outline text-on-surface rounded-lg font-cta text-cta hover:bg-surface-container active:scale-95 transition-all">Send Email</button>
+</div>
+<!-- Community Forum -->
+<div class="glass-card p-md rounded-xl space-y-sm hover:shadow-md transition-shadow">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary text-h2" style="font-variation-settings: 'FILL' 1;">groups</span>
+<div>
+<h3 class="font-cta text-cta">Community Forum</h3>
+<p class="font-body-md text-body-md text-secondary">Ask the experts</p>
+</div>
+</div>
+<button class="w-full py-sm border border-outline text-on-surface rounded-lg font-cta text-cta hover:bg-surface-container active:scale-95 transition-all">Visit Forum</button>
+</div>
+</div>
+</section>
+<!-- Illustration / Visual Break -->
+<section class="py-lg">
+<div class="glass-card rounded-2xl overflow-hidden relative h-64 flex items-center justify-between px-xl">
+<div class="max-w-xs space-y-sm z-10">
+<h2 class="font-h2 text-h2 text-on-surface">We're here to help you reduce waste.</h2>
+<p class="font-body-md text-body-md text-secondary">Explore our documentation to master inventory tracking with Gemini AI.</p>
+</div>
+<div class="hidden md:block w-1/2 h-full relative">
+<img class="absolute inset-0 w-full h-full object-cover rounded-l-3xl" data-alt="A clean and bright minimalist illustration of an organized pantry with labeled jars and smart digital tablets showing inventory stats. The color palette features whites, soft greys, and vibrant pops of orange. The lighting is bright and cheerful, suggesting a well-managed and high-tech kitchen environment consistent with a professional productivity app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtVSrSL_nxLSzifkyOT1c5K2oYaRyluQc9of3EQn2th4gFcwIW5Ie3xUWolbPchvAibCBPskurpzRKiJpR_aQPkSIENcMIWOZY0P0smqx-o4apQkVuySPwcaowXYq1f-YBYMAudzAFDgMY4j2Awj4t-_opaCNmjBnk9DEhheZyw8cKaijCuNO-F_tRfXJbrNMr9PbcqVfYZrpx-kRApj0-J4voNQTOyBBr-4_mieK9KEjno9algOVCQ8EYBY55k34OfY4hZjXKjSnP">
+</div>
+</div>
+</section>
+<!-- Bug Report Section -->
+<section class="flex flex-col items-center text-center space-y-md py-lg">
+<p class="font-body-md text-body-md text-secondary">Found something not working correctly?</p>
+<button class="px-xl py-md bg-error/10 text-error rounded-full font-cta text-cta flex items-center gap-sm hover:bg-error/20 transition-colors active:scale-95">
+<span class="material-symbols-outlined">bug_report</span>
+                Report a Bug
+            </button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface/80 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-outline-variant/30"><div class="flex justify-around items-center w-full max-w-7xl mx-auto relative">
+  <button class="flex flex-col items-center justify-center gap-1 text-secondary hover:text-primary transition-colors p-2">
+    <span class="material-symbols-outlined">inventory_2</span>
+    <span class="text-[10px] font-label-caps">Inventory</span>
+  </button>
+  <button class="flex flex-col items-center justify-center gap-1 text-secondary hover:text-primary transition-colors p-2">
+    <span class="material-symbols-outlined">insights</span>
+    <span class="text-[10px] font-label-caps">Stats</span>
+  </button>
+  <div class="relative -top-6">
+    <button class="w-14 h-14 bg-primary-container text-white rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform glass-card border-0">
+      <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">add</span>
+    </button>
+  </div>
+  <button class="flex flex-col items-center justify-center gap-1 text-secondary hover:text-primary transition-colors p-2">
+    <span class="material-symbols-outlined">smart_toy</span>
+    <span class="text-[10px] font-label-caps">Agent</span>
+  </button>
+  <button class="flex flex-col items-center justify-center gap-1 text-primary p-2">
+    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+    <span class="text-[10px] font-label-caps">Settings</span>
+  </button>
+</div></nav>
+<script>
+        // Simple micro-interactions
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.style.transform = 'scale(0.96)';
+            });
+            button.addEventListener('mouseup', () => {
+                button.style.transform = '';
+            });
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = '';
+            });
+        });
+
+        // Search highlight effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.01]');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.01]');
+        });
+    </script>
+
+
+</body></html>

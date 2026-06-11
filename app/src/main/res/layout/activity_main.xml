@@ -4,8 +4,10 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smart_background"
-    android:orientation="vertical">
+    android:background="@drawable/bg_glass_screen"
+    android:orientation="vertical"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <include layout="@layout/include_top_bar" />
 
@@ -24,146 +26,119 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/smart_surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardUseCompatPadding="true"
-                app:strokeColor="@color/smart_surface_variant"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Items Expiring Soon"
-                            android:textColor="@color/smart_on_surface"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Requires immediate attention"
-                            android:textColor="@color/smart_secondary"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/urgentCount"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/bg_error_badge"
-                        android:gravity="center"
-                        android:textColor="@color/smart_primary_container"
-                        android:textSize="24sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
+            <!-- Items Expiring Soon (Glass Panel) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_glass_panel"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Items Expiring Soon"
+                        android:textColor="@color/smart_on_surface"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Requires immediate attention"
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/urgentCount"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:background="@drawable/bg_error_soft_badge"
+                    android:gravity="center"
+                    android:textColor="@color/smart_error"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Grid for Total Tracked and Waste Prevented -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
                 android:orientation="horizontal">
 
-                <com.google.android.material.card.MaterialCardView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    app:cardBackgroundColor="@color/smart_surface"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:cardUseCompatPadding="true"
-                    app:strokeColor="@color/smart_surface_variant"
-                    app:strokeWidth="1dp">
+                    android:background="@drawable/bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <LinearLayout
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@android:drawable/ic_menu_save"
+                        app:tint="@color/smart_secondary" />
+
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                        android:layout_marginTop="10dp"
+                        android:text="Total Tracked"
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="14sp" />
 
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:src="@android:drawable/ic_menu_save"
-                            app:tint="@color/smart_secondary" />
+                    <TextView
+                        android:id="@+id/totalTracked"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/smart_on_surface"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:text="Total Tracked"
-                            android:textColor="@color/smart_secondary"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/totalTracked"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/smart_on_surface"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    app:cardBackgroundColor="@color/smart_surface"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:cardUseCompatPadding="true"
-                    app:strokeColor="@color/smart_surface_variant"
-                    app:strokeWidth="1dp">
+                    android:background="@drawable/bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <LinearLayout
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@android:drawable/ic_menu_myplaces"
+                        app:tint="@color/smart_secondary" />
+
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                        android:layout_marginTop="10dp"
+                        android:text="Waste Prevented"
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="14sp" />
 
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:src="@android:drawable/ic_menu_myplaces"
-                            app:tint="@color/smart_secondary" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:text="Waste Prevented"
-                            android:textColor="@color/smart_secondary"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="3.2 kg"
-                            android:textColor="@color/smart_on_surface"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="3.2 kg"
+                        android:textColor="@color/smart_on_surface"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
 
             <TextView
@@ -179,8 +154,10 @@
                 android:id="@+id/storageSummaryList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:orientation="vertical" />
 
+            <!-- Group Lists -->
             <TextView
                 android:id="@+id/sectionExpiredTitle"
                 android:layout_width="match_parent"
@@ -192,25 +169,22 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:id="@+id/sectionExpiredCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="@color/smart_surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardUseCompatPadding="true"
-                app:strokeColor="@color/smart_error"
-                app:strokeWidth="1dp">
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="4dp"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:id="@+id/expiredList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/sectionUrgentTitle"
@@ -223,25 +197,22 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:id="@+id/sectionUrgentCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="@color/smart_surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardUseCompatPadding="true"
-                app:strokeColor="@color/smart_primary_container"
-                app:strokeWidth="1dp">
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="4dp"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:id="@+id/urgentList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/sectionSoonTitle"
@@ -254,25 +225,22 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:id="@+id/sectionSoonCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="@color/smart_surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardUseCompatPadding="true"
-                app:strokeColor="@color/smart_surface_variant"
-                app:strokeWidth="1dp">
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="4dp"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:id="@+id/soonList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/sectionSafeTitle"
@@ -285,36 +253,34 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:id="@+id/sectionSafeCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="@color/smart_surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardUseCompatPadding="true"
-                app:strokeColor="@color/smart_surface_variant"
-                app:strokeWidth="1dp">
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="4dp"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:id="@+id/safeList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/viewAllInventory"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="24dp"
                 android:layout_gravity="center_horizontal"
                 android:text="VIEW ALL INVENTORY"
                 android:textColor="@color/smart_primary"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:padding="12dp" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

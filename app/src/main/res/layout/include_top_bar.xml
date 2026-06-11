@@ -4,13 +4,14 @@
     android:id="@+id/topBar"
     android:layout_width="match_parent"
     android:layout_height="64dp"
-    android:background="@color/smart_background"
-    android:elevation="0dp"
+    android:background="@color/smart_glass_surface"
+    android:elevation="4dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
 
+    <!-- Menu Button (Vibrant Orange) -->
     <ImageButton
         android:id="@+id/topActionMenu"
         android:layout_width="44dp"
@@ -19,26 +20,101 @@
         android:contentDescription="Menu"
         android:padding="10dp"
         android:scaleType="center"
-        android:src="@drawable/ic_menu_three_lines" />
+        android:src="@drawable/ic_menu_three_lines"
+        app:tint="@color/smart_primary_container" />
 
+    <!-- Title (Vibrant Orange "SmartExpApp") -->
     <TextView
         android:id="@+id/topTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="center"
-        android:text="SmartExp"
-        android:textColor="@color/smart_on_surface"
+        android:layout_marginStart="8dp"
+        android:text="SmartExpApp"
+        android:textColor="@color/smart_primary_container"
         android:textSize="20sp"
         android:textStyle="bold" />
 
-    <ImageButton
-        android:id="@+id/topActionNotifications"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Notifications"
-        android:padding="9dp"
-        android:scaleType="center"
-        android:src="@drawable/ic_notification_bell" />
+    <!-- Theme Toggle Pill Container -->
+    <LinearLayout
+        android:id="@+id/themeTogglePill"
+        android:layout_width="72dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_theme_toggle_pill"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="2dp">
+
+        <!-- Light Mode Button (Sun) -->
+        <FrameLayout
+            android:id="@+id/btnToggleLightMode"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <!-- Active Orange Circle Background -->
+            <View
+                android:id="@+id/themeToggleSunBg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_theme_active_circle"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/themeToggleSunIcon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:padding="6dp"
+                android:src="@drawable/ic_theme_sun" />
+        </FrameLayout>
+
+        <!-- Dark Mode Button (Moon) -->
+        <FrameLayout
+            android:id="@+id/btnToggleDarkMode"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <!-- Active Orange Circle Background -->
+            <View
+                android:id="@+id/themeToggleMoonBg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_theme_active_circle"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/themeToggleMoonIcon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:padding="6dp"
+                android:src="@drawable/ic_theme_moon" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Search Button (Far Right Circle) -->
+    <FrameLayout
+        android:id="@+id/topActionSearch"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_search_circle"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackgroundBorderless">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_menu_search"
+            app:tint="@color/smart_on_surface" />
+    </FrameLayout>
+
 </LinearLayout>
