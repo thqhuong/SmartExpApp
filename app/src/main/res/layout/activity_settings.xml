@@ -4,10 +4,8 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_glass_screen"
-    android:orientation="vertical"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:background="@color/smart_background"
+    android:orientation="vertical">
 
     <include layout="@layout/include_top_bar" />
 
@@ -25,14 +23,13 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <!-- Profile Hero Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_glass_panel"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp">
 
                 <ImageView
                     android:id="@+id/profileImage"
@@ -71,42 +68,44 @@
                     android:textAllCaps="false"
                     android:textColor="@color/smart_on_surface"
                     android:textStyle="bold"
-                    app:backgroundTint="@color/smart_glass_surface"
+                    app:backgroundTint="@color/smart_surface_container_low"
                     app:cornerRadius="24dp"
-                    app:strokeColor="@color/smart_glass_stroke"
+                    app:strokeColor="@color/smart_surface_variant"
                     app:strokeWidth="1dp" />
             </LinearLayout>
 
-            <!-- Settings List Panel -->
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="20dp"
-                android:background="@drawable/bg_glass_panel"
-                android:orientation="vertical"
-                android:padding="8dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="20dp"
-                    android:paddingTop="16dp"
-                    android:paddingEnd="20dp"
-                    android:paddingBottom="12dp"
-                    android:text="PREFERENCES"
-                    android:textColor="@color/smart_secondary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="22dp"
+                app:cardBackgroundColor="@color/smart_surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="@color/smart_surface_variant"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:id="@+id/settingsList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" />
-            </LinearLayout>
+                    android:orientation="vertical">
 
-            <!-- Sign Out Button -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="20dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="12dp"
+                        android:text="PREFERENCES"
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/signOutButton"
                 android:layout_width="match_parent"
@@ -115,8 +114,8 @@
                 android:textAllCaps="false"
                 android:textColor="@color/smart_error"
                 android:textStyle="bold"
-                app:backgroundTint="@color/smart_glass_surface"
-                app:cornerRadius="12dp"
+                app:backgroundTint="@color/smart_surface"
+                app:cornerRadius="8dp"
                 app:icon="@android:drawable/ic_menu_revert"
                 app:iconGravity="textStart"
                 app:iconTint="@color/smart_error"
