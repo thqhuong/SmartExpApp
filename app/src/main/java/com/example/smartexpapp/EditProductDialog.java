@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class EditProductDialog {
     private final Product product;
@@ -495,8 +494,6 @@ public class EditProductDialog {
             storage = "Room Temp";
         }
 
-        long diff = selectedDate.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
-        int days = Math.max(0, (int) Math.ceil(diff / (double) TimeUnit.DAYS.toMillis(1)));
         int icon;
         if ("Freeze".equals(storage)) {
             icon = R.drawable.ic_storage_freeze;

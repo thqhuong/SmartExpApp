@@ -11,6 +11,7 @@ import com.example.smartexpapp.data.local.StorageLocationEntity;
 import com.example.smartexpapp.data.local.UserSettingsEntity;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.model.ProductStatus;
+import com.example.smartexpapp.util.NotificationHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +47,7 @@ public final class ProductRepository {
 
     public static void addProduct(Context context, Product product) {
         addProduct(AppDatabase.getInstance(context), product);
+        NotificationHelper.scheduleExpiryNotification(context, product);
     }
 
     public static void addProduct(AppDatabase database, Product product) {
@@ -54,7 +56,11 @@ public final class ProductRepository {
     }
 
     public static boolean updateProduct(Context context, Product product) {
-        return updateProduct(AppDatabase.getInstance(context), product);
+        Product old = getProductById(context, product.getId());
+        if (old != null) NotificationHelper.cancelNotification(context, old);
+        boolean result = updateProduct(AppDatabase.getInstance(context), product);
+        NotificationHelper.scheduleExpiryNotification(context, product);
+        return result;
     }
 
     public static boolean updateProduct(AppDatabase database, Product product) {
@@ -63,6 +69,8 @@ public final class ProductRepository {
     }
 
     public static boolean deleteProduct(Context context, String id) {
+        Product product = getProductById(context, id);
+        if (product != null) NotificationHelper.cancelNotification(context, product);
         return deleteProduct(AppDatabase.getInstance(context), id);
     }
 
@@ -114,6 +122,8 @@ public final class ProductRepository {
     }
 
     public static boolean markConsumed(Context context, String id) {
+        Product p = getProductById(context, id);
+        if (p != null) NotificationHelper.cancelNotification(context, p);
         return markConsumed(AppDatabase.getInstance(context), id, null);
     }
 
@@ -122,6 +132,8 @@ public final class ProductRepository {
     }
 
     public static boolean markWasted(Context context, String id) {
+        Product p = getProductById(context, id);
+        if (p != null) NotificationHelper.cancelNotification(context, p);
         return markWasted(AppDatabase.getInstance(context), id, null);
     }
 
@@ -130,6 +142,8 @@ public final class ProductRepository {
     }
 
     public static boolean markDonated(Context context, String id) {
+        Product p = getProductById(context, id);
+        if (p != null) NotificationHelper.cancelNotification(context, p);
         return markDonated(AppDatabase.getInstance(context), id, null);
     }
 
@@ -138,6 +152,8 @@ public final class ProductRepository {
     }
 
     public static boolean markExpired(Context context, String id) {
+        Product p = getProductById(context, id);
+        if (p != null) NotificationHelper.cancelNotification(context, p);
         return markExpired(AppDatabase.getInstance(context), id, null);
     }
 

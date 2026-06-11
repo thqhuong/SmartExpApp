@@ -13,6 +13,7 @@ import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
+import com.example.smartexpapp.util.NotificationHelper;
 import com.example.smartexpapp.util.ViewUtils;
 
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setupChrome(R.id.nav_stats);
+        NotificationHelper.createNotificationChannel(this);
+        NotificationHelper.rescheduleAll(this);
         bindDashboard();
     }
 
