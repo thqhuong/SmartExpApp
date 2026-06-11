@@ -21,13 +21,24 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.example.smartexpapp.data.ProductRepository;
+import com.example.smartexpapp.data.local.AppDatabase;
+import com.example.smartexpapp.data.local.ExpiryScanEntity;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
+import com.example.smartexpapp.util.DateParser;
 import com.example.smartexpapp.util.ImageLoader;
 import com.google.android.material.button.MaterialButton;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.Text;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
@@ -55,15 +66,20 @@ public class AddProductActivity extends BaseActivity {
     private ImageView productPhoto;
     private LinearLayout photoPlaceholder;
     private ImageView editIconOverlay;
+    private android.widget.ImageButton btnOcrScan;
     private MaterialButton btnRemovePhoto;
     private FrameLayout photoPreview;
 
     private String editingProductId;
     private String selectedPhotoPath;
+    private ExpiryScanEntity pendingExpiryScan;
     private final Set<String> pendingCategories = new HashSet<>();
 
     private final ActivityResultLauncher<String> pickPhotoLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), this::onPhotoPicked);
+
+    private final ActivityResultLauncher<Void> ocrPhotoLauncher =
+            registerForActivityResult(new ActivityResultContracts.TakePicturePreview(), this::onOcrPhotoPicked);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,8 +102,17 @@ public class AddProductActivity extends BaseActivity {
         editIconOverlay = findViewById(R.id.editIconOverlay);
         btnRemovePhoto = findViewById(R.id.btnRemovePhoto);
         photoPreview = findViewById(R.id.photoPreview);
+        btnOcrScan = findViewById(R.id.btnOcrScan);
+
+        findViewById(R.id.btnLaunchGeminiLive).setOnClickListener(v -> {
+            Intent intent = new Intent(this, RecipesActivity.class);
+            intent.putExtra("start_gemini_live", true);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+        });
 
         photoPreview.setOnClickListener(v -> pickPhotoLauncher.launch("image/*"));
+        btnOcrScan.setOnClickListener(v -> ocrPhotoLauncher.launch(null));
         btnRemovePhoto.setOnClickListener(v -> confirmRemovePhoto());
 
         setupUnitSpinner();
@@ -100,6 +125,77 @@ public class AddProductActivity extends BaseActivity {
         if (editingProductId != null) {
             populateForEdit(editingProductId);
         }
+    }
+
+    private void onOcrPhotoPicked(android.graphics.Bitmap bitmap) {
+        if (bitmap == null) return;
+        try {
+            InputImage image = InputImage.fromBitmap(bitmap, 0);
+            TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+            
+            Toast.makeText(this, "Scanning for dates...", Toast.LENGTH_SHORT).show();
+            
+            recognizer.process(image)
+                    .addOnSuccessListener(visionText -> {
+                        String rawText = visionText.getText();
+                        List<Long> detectedDates = DateParser.extractDates(rawText);
+                        if (detectedDates.isEmpty()) {
+                            Toast.makeText(this, "No dates found in image.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            showDetectedDatesDialog(detectedDates, rawText);
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "OCR failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnCompleteListener(task -> {
+                        recognizer.close();
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showDetectedDatesDialog(List<Long> dates, String rawText) {
+        String[] dateStrings = new String[dates.size()];
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy", Locale.US);
+        for (int i = 0; i < dates.size(); i++) {
+            dateStrings[i] = sdf.format(new java.util.Date(dates.get(i)));
+        }
+
+        final int[] selectedIndex = {0};
+
+        new AlertDialog.Builder(this)
+                .setTitle("Select Expiry Date")
+                .setSingleChoiceItems(dateStrings, selectedIndex[0], (dialog, which) -> {
+                    selectedIndex[0] = which;
+                })
+                .setPositiveButton("OK", (dialog, which) -> {
+                    long selectedMillis = dates.get(selectedIndex[0]);
+                    selectedDate.setTimeInMillis(selectedMillis);
+                    selectedDate.set(Calendar.HOUR_OF_DAY, 23);
+                    selectedDate.set(Calendar.MINUTE, 59);
+                    selectedDate.set(Calendar.SECOND, 59);
+                    selectedDate.set(Calendar.MILLISECOND, 999);
+                    long finalSelectedMillis = selectedDate.getTimeInMillis();
+
+                    hasSelectedDate = true;
+                    expiryDateInput.setText(dateStrings[selectedIndex[0]]);
+                    expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
+                    
+                    pendingExpiryScan = new ExpiryScanEntity();
+                    pendingExpiryScan.id = UUID.randomUUID().toString();
+                    pendingExpiryScan.rawText = rawText;
+                    pendingExpiryScan.detectedDateMillis = finalSelectedMillis;
+                    pendingExpiryScan.confidence = 1.0f;
+                    pendingExpiryScan.scannedAt = System.currentTimeMillis();
+                })
+                .setNeutralButton("Edit", (dialog, which) -> {
+                    showDatePicker();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void onPhotoPicked(Uri uri) {
@@ -500,16 +596,16 @@ public class AddProductActivity extends BaseActivity {
         String storage = selectedStorage();
         int icon = iconForStorage(storage);
 
+        Product productToSave = null;
         String category = selectedCategory.isEmpty() ? "General" : selectedCategory;
 
         String quantity = quantityInput.getText().toString().trim();
         if (quantity.isEmpty()) quantity = "1";
         String unit = unitSpinner.getSelectedItem().toString();
-
         if (editingProductId != null) {
             Product existing = ProductRepository.getProductById(this, editingProductId);
             if (existing != null) {
-                Product updated = new Product(
+                productToSave = new Product(
                         editingProductId,
                         name,
                         category,
@@ -529,12 +625,21 @@ public class AddProductActivity extends BaseActivity {
                         existing.getSyncStatus(),
                         existing.getLastSyncedAt()
                 );
-                ProductRepository.updateProduct(this, updated);
+                ProductRepository.updateProduct(this, productToSave);
                 Toast.makeText(this, R.string.product_updated, Toast.LENGTH_SHORT).show();
             }
         } else {
-            ProductRepository.addProduct(this, new Product(name, category, quantity, unit, storage, selectedDate.getTimeInMillis(), icon, selectedPhotoPath));
+            productToSave = new Product(name, category, quantity, unit, storage, selectedDate.getTimeInMillis(), icon, selectedPhotoPath);
+            ProductRepository.addProduct(this, productToSave);
             Toast.makeText(this, name + " added.", Toast.LENGTH_SHORT).show();
+        }
+
+        if (productToSave != null && pendingExpiryScan != null) {
+            pendingExpiryScan.productId = productToSave.getId();
+            pendingExpiryScan.createdAt = System.currentTimeMillis();
+            pendingExpiryScan.updatedAt = System.currentTimeMillis();
+            AppDatabase.getInstance(this).expiryScanDao().insert(pendingExpiryScan);
+            pendingExpiryScan = null;
         }
 
         startActivity(new Intent(this, InventoryActivity.class));

@@ -30,7 +30,7 @@
                 android:id="@+id/searchInput"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/bg_glass_input"
                 android:drawableStart="@android:drawable/ic_menu_search"
                 android:drawablePadding="12dp"

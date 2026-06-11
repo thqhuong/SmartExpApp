@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.room.runtime)
+    implementation("com.google.mlkit:text-recognition:16.0.0")
     annotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.test.core)

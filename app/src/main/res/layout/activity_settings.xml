@@ -34,16 +34,42 @@
                 android:orientation="vertical"
                 android:padding="24dp">
 
-                <ImageView
-                    android:id="@+id/profileImage"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp"
-                    android:background="@drawable/bg_avatar"
-                    android:clipToOutline="true"
-                    android:contentDescription="Alex Johnson"
-                    android:scaleType="centerCrop"
-                    android:src="@android:drawable/ic_menu_myplaces"
-                    app:tint="@color/smart_primary" />
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/profileImage"
+                        android:layout_width="96dp"
+                        android:layout_height="96dp"
+                        android:background="@drawable/bg_avatar"
+                        android:clipToOutline="true"
+                        android:contentDescription="Alex Johnson"
+                        android:scaleType="centerCrop"
+                        android:src="@android:drawable/ic_menu_myplaces"
+                        app:tint="@color/smart_primary" />
+
+                    <FrameLayout
+                        android:id="@+id/btnEditProfile"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="bottom|end"
+                        android:layout_marginEnd="2dp"
+                        android:layout_marginBottom="2dp"
+                        android:background="@drawable/bg_edit_profile_avatar"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:elevation="4dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@android:drawable/ic_menu_edit"
+                            app:tint="@color/edit_profile_avatar_icon" />
+                    </FrameLayout>
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="match_parent"
@@ -59,22 +85,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="alex.johnson@example.com"
+                    android:text="alex.johnson@smartexp.io"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="16dp"
-                    android:text="Edit Profile"
-                    android:textAllCaps="false"
-                    android:textColor="@color/smart_on_surface"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/smart_glass_surface"
-                    app:cornerRadius="24dp"
-                    app:strokeColor="@color/smart_glass_stroke"
-                    app:strokeWidth="1dp" />
             </LinearLayout>
 
             <!-- Settings List Panel -->

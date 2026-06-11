@@ -46,4 +46,5 @@
     <color name="smart_glass_wash_mid">#131316</color>
     <color name="smart_glass_wash_end">#2693000A</color>
     <color name="smart_glass_glow_mid_left">#2600B5FC</color>
+    <color name="edit_profile_avatar_icon">@color/smart_on_primary</color>
 </resources>
