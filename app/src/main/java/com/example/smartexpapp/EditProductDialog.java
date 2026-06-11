@@ -285,36 +285,41 @@ public class EditProductDialog {
             name.setTextColor(activity.getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
             name.setPadding(dpToPx(activity, 12), 0, 0, 0);
 
-            row.addView(dot);
-            row.addView(name);
-
-            if (!builtin) {
-                ImageButton editBtn = new ImageButton(activity);
-                int btnSize = dpToPx(activity, 48);
-                editBtn.setLayoutParams(new LinearLayout.LayoutParams(btnSize, btnSize));
-                editBtn.setPadding(pad8, pad8, pad8, pad8);
-                editBtn.setImageResource(editColors[0]);
-                editBtn.setScaleType(ImageView.ScaleType.CENTER);
-                editBtn.setColorFilter(activity.getColor(editColors[1]), android.graphics.PorterDuff.Mode.SRC_IN);
-                editBtn.setOnClickListener(v -> {
+            ImageButton editBtn = new ImageButton(activity);
+            int btnSize = dpToPx(activity, 48);
+            editBtn.setLayoutParams(new LinearLayout.LayoutParams(btnSize, btnSize));
+            editBtn.setPadding(pad8, pad8, pad8, pad8);
+            editBtn.setImageResource(editColors[0]);
+            editBtn.setScaleType(ImageView.ScaleType.CENTER);
+            editBtn.setColorFilter(activity.getColor(editColors[1]), android.graphics.PorterDuff.Mode.SRC_IN);
+            editBtn.setOnClickListener(v -> {
+                if (builtin) {
+                    Toast.makeText(activity, "\"" + cat + "\" is a built-in category", Toast.LENGTH_SHORT).show();
+                } else {
                     manageDialogHolder[0].dismiss();
                     showRenameCategoryDialog(activity, cat, () -> showManageCategoriesDialog(activity));
-                });
+                }
+            });
 
-                ImageButton deleteBtn = new ImageButton(activity);
-                deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(btnSize, btnSize));
-                deleteBtn.setPadding(pad8, pad8, pad8, pad8);
-                deleteBtn.setImageResource(deleteColors[0]);
-                deleteBtn.setScaleType(ImageView.ScaleType.CENTER);
-                deleteBtn.setColorFilter(activity.getColor(deleteColors[1]), android.graphics.PorterDuff.Mode.SRC_IN);
-                deleteBtn.setOnClickListener(v -> {
+            ImageButton deleteBtn = new ImageButton(activity);
+            deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(btnSize, btnSize));
+            deleteBtn.setPadding(pad8, pad8, pad8, pad8);
+            deleteBtn.setImageResource(deleteColors[0]);
+            deleteBtn.setScaleType(ImageView.ScaleType.CENTER);
+            deleteBtn.setColorFilter(activity.getColor(deleteColors[1]), android.graphics.PorterDuff.Mode.SRC_IN);
+            deleteBtn.setOnClickListener(v -> {
+                if (builtin) {
+                    Toast.makeText(activity, "\"" + cat + "\" is a built-in category", Toast.LENGTH_SHORT).show();
+                } else {
                     manageDialogHolder[0].dismiss();
                     showDeleteCategoryDialog(activity, cat, () -> showManageCategoriesDialog(activity));
-                });
+                }
+            });
 
-                row.addView(editBtn);
-                row.addView(deleteBtn);
-            }
+            row.addView(dot);
+            row.addView(name);
+            row.addView(editBtn);
+            row.addView(deleteBtn);
             content.addView(row);
         }
 
@@ -330,18 +335,31 @@ public class EditProductDialog {
             final EditText input = new EditText(activity);
             input.setHint("Category name");
             input.setPadding(pad16, dpToPx(activity, 8), pad16, dpToPx(activity, 8));
+            final boolean[] handled = {false};
             builder.setTitle("Add new category")
                     .setView(input)
                     .setPositiveButton("Add", (d, w) -> {
+                        handled[0] = true;
                         String newCat = input.getText().toString().trim();
                         if (!newCat.isEmpty() && !isBuiltIn(newCat)) {
+                            if (pendingCategories.contains(newCat) || categoryExistsInProducts(activity, newCat)) {
+                                Toast.makeText(activity, "Category \"" + newCat + "\" already exists", Toast.LENGTH_SHORT).show();
+                                showManageCategoriesDialog(activity);
+                                return;
+                            }
                             pendingCategories.add(newCat);
                             selectedCategory = newCat;
                             refreshCategorySpinner(activity);
                             showManageCategoriesDialog(activity);
                         }
                     })
-                    .setNegativeButton("Cancel", (d, w) -> showManageCategoriesDialog(activity))
+                    .setNegativeButton("Cancel", (d, w) -> {
+                        handled[0] = true;
+                        showManageCategoriesDialog(activity);
+                    })
+                    .setOnDismissListener(d -> {
+                        if (!handled[0]) showManageCategoriesDialog(activity);
+                    })
                     .show();
         });
         content.addView(addBtn);
@@ -360,9 +378,11 @@ public class EditProductDialog {
         input.setSelection(oldName.length());
         int pad16 = dpToPx(activity, 16);
         input.setPadding(pad16, dpToPx(activity, 8), pad16, dpToPx(activity, 8));
-        builder.setTitle("Rename category")
+        final boolean[] handled = {false};
+        android.app.AlertDialog dialog = builder.setTitle("Rename category")
                 .setView(input)
                 .setPositiveButton("Rename", (d, w) -> {
+                    handled[0] = true;
                     String newName = input.getText().toString().trim();
                     if (newName.isEmpty() || isBuiltIn(newName) || newName.equals(oldName)) {
                         onDone.run();
@@ -383,20 +403,35 @@ public class EditProductDialog {
                             ProductRepository.updateProduct(activity, updated);
                         }
                     }
+                    if (pendingCategories.remove(oldName)) pendingCategories.add(newName);
                     if (selectedCategory.equals(oldName)) selectedCategory = newName;
                     refreshCategorySpinner(activity);
                     onDone.run();
                 })
-                .setNegativeButton("Cancel", (d, w) -> onDone.run())
-                .setOnDismissListener(d -> onDone.run())
+                .setNegativeButton("Cancel", (d, w) -> {
+                    handled[0] = true;
+                    onDone.run();
+                })
+                .setOnDismissListener(d -> {
+                    if (!handled[0]) onDone.run();
+                })
                 .show();
     }
 
     private void showDeleteCategoryDialog(BaseActivity activity, String catToDelete, Runnable onDone) {
+        int productCount = 0;
+        for (Product p : ProductRepository.getProducts(activity)) {
+            if (catToDelete.equals(p.getCategory())) productCount++;
+        }
+        String message = productCount > 0
+                ? "Products in this category will be moved to \"General\"."
+                : "Are you sure you want to delete this category?";
+        final boolean[] handled = {false};
         new AlertDialog.Builder(activity)
                 .setTitle("Delete \"" + catToDelete + "\"?")
-                .setMessage("Products in this category will be moved to \"General\".")
+                .setMessage(message)
                 .setPositiveButton("Delete", (d, w) -> {
+                    handled[0] = true;
                     pendingCategories.remove(catToDelete);
                     List<Product> all = ProductRepository.getProducts(activity);
                     for (Product p : all) {
@@ -417,8 +452,13 @@ public class EditProductDialog {
                     refreshCategorySpinner(activity);
                     onDone.run();
                 })
-                .setNegativeButton("Cancel", (d, w) -> onDone.run())
-                .setOnDismissListener(d -> onDone.run())
+                .setNegativeButton("Cancel", (d, w) -> {
+                    handled[0] = true;
+                    onDone.run();
+                })
+                .setOnDismissListener(d -> {
+                    if (!handled[0]) onDone.run();
+                })
                 .show();
     }
 
@@ -430,6 +470,13 @@ public class EditProductDialog {
         return "Dairy".equals(category) || "General".equals(category)
                 || "Meat".equals(category) || "Pantry".equals(category)
                 || "Produce".equals(category) || "Vegetables".equals(category);
+    }
+
+    private boolean categoryExistsInProducts(BaseActivity activity, String cat) {
+        for (Product p : ProductRepository.getProducts(activity)) {
+            if (cat.equals(p.getCategory())) return true;
+        }
+        return false;
     }
 
     private void confirm(BaseActivity activity) {

@@ -11,9 +11,14 @@ public class CategoryColorHelper {
     private static final Map<String, Integer> categoryColors = new HashMap<>();
     private static final Map<String, Integer> customColors = new HashMap<>();
     private static int nextColorIndex;
-    private static final int[] palette = {
+    private static final int[] builtinPalette = {
             R.color.category_dairy, R.color.category_produce, R.color.category_pantry,
             R.color.category_vegetables, R.color.category_general, R.color.category_meat
+    };
+    private static final int[] customPalette = {
+            R.color.category_custom_teal, R.color.category_custom_pink,
+            R.color.category_custom_cyan, R.color.category_custom_yellow,
+            R.color.category_custom_deep_orange, R.color.category_custom_brown
     };
 
     static {
@@ -33,9 +38,9 @@ public class CategoryColorHelper {
         if (color != null) return color;
         Integer assigned = customColors.get(category);
         if (assigned != null) return assigned;
-        int idx = nextColorIndex % palette.length;
+        int idx = nextColorIndex % customPalette.length;
         nextColorIndex++;
-        customColors.put(category, palette[idx]);
-        return palette[idx];
+        customColors.put(category, customPalette[idx]);
+        return customPalette[idx];
     }
 }

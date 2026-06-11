@@ -92,7 +92,7 @@
                     android:contentDescription="Delete"
                     android:padding="8dp"
                     android:scaleType="center"
-                    android:src="@drawable/ic_notification_bell"
+                    android:src="@android:drawable/ic_menu_delete"
                     android:tint="@color/smart_error" />
             </LinearLayout>
 
