@@ -4,8 +4,10 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smart_background"
-    android:orientation="vertical">
+    android:background="@drawable/bg_glass_screen"
+    android:orientation="vertical"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <include layout="@layout/include_top_bar" />
 
@@ -31,12 +33,13 @@
                 android:textSize="32sp"
                 android:textStyle="bold" />
 
+            <!-- Search Input (Glass style) -->
             <EditText
                 android:id="@+id/searchInput"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/bg_surface_high"
+                android:layout_height="52dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_glass_input"
                 android:drawableStart="@android:drawable/ic_menu_search"
                 android:drawablePadding="12dp"
                 android:hint="@string/search_hint"
@@ -49,155 +52,95 @@
                 android:textColorHint="@color/smart_muted"
                 android:textSize="16sp" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/expiryFilterGroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                app:singleLine="true"
-                app:singleSelection="true">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterAll"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="@string/all" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterExpiring"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/filter_expiring" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterExpired"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/filter_expired" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterRoom"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Room Temp" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterCool"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cool" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterFrozen"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Frozen" />
-            </com.google.android.material.chip.ChipGroup>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="CATEGORY"
-                android:textColor="@color/smart_secondary"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/categoryFilterGroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                app:singleLine="true"
-                app:singleSelection="true">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterCatAll"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="@string/all" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterCatDairy"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dairy" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterCatProduce"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Produce" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterCatPantry"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Pantry" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterCatVegetables"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Vegetables" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterCatGeneral"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="General" />
-            </com.google.android.material.chip.ChipGroup>
-
+            <!-- Filters Panel (Glass Card containing selectors) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/bg_glass_panel"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Expiry Filter Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/sort_by"
-                    android:textColor="@color/smart_secondary"
-                    android:textSize="14sp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/sortDate"
-                    style="@style/Widget.Material3.Chip.Assist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:checked="true"
-                    android:text="@string/sort_date" />
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Expiry"
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/sortName"
-                    style="@style/Widget.Material3.Chip.Assist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/sort_name" />
+                    <Spinner
+                        android:id="@+id/expirySpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_glass_input"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp" />
+                </LinearLayout>
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/sortNewest"
-                    style="@style/Widget.Material3.Chip.Assist"
-                    android:layout_width="wrap_content"
+                <!-- Storage Filter Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/sort_newest" />
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/storage_type_label"
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/storageSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_glass_input"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp" />
+                </LinearLayout>
+
+                <!-- Sort Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sort_by"
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/sortSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_glass_input"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp" />
+                </LinearLayout>
             </LinearLayout>
 
             <ProgressBar
@@ -206,16 +149,16 @@
                 android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="48dp"
-                android:indeterminateTint="@color/smart_primary_container"
+                android:indeterminateTint="@color/smart_primary"
                 android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/productList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:orientation="vertical" />
 
+            <!-- Empty State -->
             <LinearLayout
                 android:id="@+id/emptyState"
                 android:layout_width="match_parent"

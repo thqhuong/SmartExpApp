@@ -22,4 +22,41 @@
     <string name="product_updated">Product updated</string>
     <string name="product_deleted">Product deleted</string>
     <string name="error_load">Failed to load products</string>
+    <string name="filter_still_good">Still good</string>
+    <string name="storage_type_label">Storage Type</string>
+    <string name="filter_storage_room">Room Temp</string>
+    <string name="filter_storage_fridge">Refrigerator</string>
+    <string name="filter_storage_freeze">Freeze</string>
+
+    <string-array name="expiry_filter_options">
+        <item>All</item>
+        <item>Still good</item>
+        <item>Expired</item>
+    </string-array>
+
+    <string-array name="storage_filter_options">
+        <item>All</item>
+        <item>Room Temp</item>
+        <item>Refrigerator</item>
+        <item>Freeze</item>
+    </string-array>
+
+    <string-array name="sort_options">
+        <item>Oldest</item>
+        <item>Name</item>
+        <item>Newest</item>
+    </string-array>
+
+    <string-array name="unit_options">
+        <item>pcs</item>
+        <item>g</item>
+        <item>kg</item>
+        <item>ml</item>
+        <item>l</item>
+        <item>oz</item>
+        <item>lb</item>
+        <item>cup</item>
+        <item>tbsp</item>
+        <item>tsp</item>
+    </string-array>
 </resources>

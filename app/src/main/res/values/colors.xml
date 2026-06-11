@@ -16,4 +16,22 @@
     <color name="smart_error">#BA1A1A</color>
     <color name="smart_notification_red">#EF4444</color>
     <color name="smart_error_container">#FFEDD5</color>
+    <color name="category_dairy">#3498DB</color>
+    <color name="category_produce">#E67E22</color>
+    <color name="category_pantry">#9B59B6</color>
+    <color name="category_vegetables">#27AE60</color>
+    <color name="category_meat">#E74C3C</color>
+    <color name="category_general">#7F8C8D</color>
+
+    <!-- Glassmorphism and vibrant background colors -->
+    <color name="smart_glass_surface">#CCFFFFFF</color>
+    <color name="smart_glass_surface_strong">#E6FFFFFF</color>
+    <color name="smart_glass_urgent">#B3FFF5EB</color>
+    <color name="smart_glass_error">#B3FFEBEE</color>
+    <color name="smart_glass_stroke">#66FFFFFF</color>
+    <color name="smart_gemini_purple">#8EA4FF</color>
+    <color name="smart_gemini_pink">#FFB7D5</color>
+    <color name="smart_glass_wash_start">#FFEAE0</color>
+    <color name="smart_glass_wash_mid">#E4ECFA</color>
+    <color name="smart_glass_wash_end">#F7E5FC</color>
 </resources>

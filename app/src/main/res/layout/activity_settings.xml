@@ -4,8 +4,10 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smart_background"
-    android:orientation="vertical">
+    android:background="@drawable/bg_glass_screen"
+    android:orientation="vertical"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <include layout="@layout/include_top_bar" />
 
@@ -23,13 +25,14 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
+            <!-- Profile Hero Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/bg_glass_panel"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingTop="16dp"
-                android:paddingBottom="16dp">
+                android:padding="24dp">
 
                 <ImageView
                     android:id="@+id/profileImage"
@@ -68,44 +71,42 @@
                     android:textAllCaps="false"
                     android:textColor="@color/smart_on_surface"
                     android:textStyle="bold"
-                    app:backgroundTint="@color/smart_surface_container_low"
+                    app:backgroundTint="@color/smart_glass_surface"
                     app:cornerRadius="24dp"
-                    app:strokeColor="@color/smart_surface_variant"
+                    app:strokeColor="@color/smart_glass_stroke"
                     app:strokeWidth="1dp" />
             </LinearLayout>
 
-            <com.google.android.material.card.MaterialCardView
+            <!-- Settings List Panel -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:layout_marginBottom="22dp"
-                app:cardBackgroundColor="@color/smart_surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardUseCompatPadding="true"
-                app:strokeColor="@color/smart_surface_variant"
-                app:strokeWidth="1dp">
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp"
+                android:background="@drawable/bg_glass_panel"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="12dp"
+                    android:text="PREFERENCES"
+                    android:textColor="@color/smart_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:id="@+id/settingsList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical" />
+            </LinearLayout>
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="20dp"
-                        android:paddingTop="16dp"
-                        android:paddingEnd="20dp"
-                        android:paddingBottom="12dp"
-                        android:text="PREFERENCES"
-                        android:textColor="@color/smart_secondary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
+            <!-- Sign Out Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/signOutButton"
                 android:layout_width="match_parent"
@@ -114,8 +115,8 @@
                 android:textAllCaps="false"
                 android:textColor="@color/smart_error"
                 android:textStyle="bold"
-                app:backgroundTint="@color/smart_surface"
-                app:cornerRadius="8dp"
+                app:backgroundTint="@color/smart_glass_surface"
+                app:cornerRadius="12dp"
                 app:icon="@android:drawable/ic_menu_revert"
                 app:iconGravity="textStart"
                 app:iconTint="@color/smart_error"

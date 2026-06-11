@@ -269,6 +269,14 @@ public class Product {
         return "IN " + daysUntilExpiry + " DAYS";
     }
 
+    public String getGroup() {
+        if (isExpired()) return "Expired";
+        int days = getDaysUntilExpiry();
+        if (days <= 1) return "Urgent";
+        if (days <= 7) return "Soon";
+        return "Safe";
+    }
+
     public int getExpiryProgress() {
         int daysUntilExpiry = getDaysUntilExpiry();
         if (daysUntilExpiry <= 0) {
