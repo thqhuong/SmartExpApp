@@ -37,4 +37,6 @@
     <string name="cat_pantry">Pantry</string>
     <string name="cat_vegetables">Vegetables</string>
     <string name="cat_general">General</string>
+    <string name="select_expiry_date">Select expiry date</string>
+    <string name="scan_with_camera">Scan with Camera</string>
 </resources>

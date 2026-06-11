@@ -54,7 +54,7 @@ public class DateParser {
                         cal.setTime(date);
                         int year = cal.get(Calendar.YEAR);
                         // Sanity check for valid expiry years
-                        if (year > 2000 && year < 2100) {
+                        if (year >= 2000 && year < 2100) {
                             uniqueDates.add(date.getTime());
                             break;
                         }

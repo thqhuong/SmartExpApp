@@ -116,6 +116,9 @@ public class AddProductActivity extends BaseActivity {
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(this, "OCR failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnCompleteListener(task -> {
+                        recognizer.close();
                     });
         } catch (Exception e) {
             e.printStackTrace();
@@ -140,6 +143,12 @@ public class AddProductActivity extends BaseActivity {
                 .setPositiveButton("OK", (dialog, which) -> {
                     long selectedMillis = dates.get(selectedIndex[0]);
                     selectedDate.setTimeInMillis(selectedMillis);
+                    selectedDate.set(Calendar.HOUR_OF_DAY, 23);
+                    selectedDate.set(Calendar.MINUTE, 59);
+                    selectedDate.set(Calendar.SECOND, 59);
+                    selectedDate.set(Calendar.MILLISECOND, 999);
+                    long finalSelectedMillis = selectedDate.getTimeInMillis();
+
                     hasSelectedDate = true;
                     expiryDateInput.setText(dateStrings[selectedIndex[0]]);
                     expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
@@ -147,7 +156,7 @@ public class AddProductActivity extends BaseActivity {
                     pendingExpiryScan = new ExpiryScanEntity();
                     pendingExpiryScan.id = UUID.randomUUID().toString();
                     pendingExpiryScan.rawText = rawText;
-                    pendingExpiryScan.detectedDateMillis = selectedMillis;
+                    pendingExpiryScan.detectedDateMillis = finalSelectedMillis;
                     pendingExpiryScan.confidence = 1.0f;
                     pendingExpiryScan.scannedAt = System.currentTimeMillis();
                 })
