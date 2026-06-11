@@ -1,0 +1,340 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>SmartExpApp - Profile &amp; Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-dim": "#131316",
+            "secondary": "#c6c6c7",
+            "surface-bright": "#39393c",
+            "surface-container-lowest": "#0e0e11",
+            "on-secondary-fixed": "#1a1c1d",
+            "primary-container": "#ff8c00",
+            "on-primary-fixed-variant": "#6e3900",
+            "tertiary-fixed": "#c7e7ff",
+            "tertiary": "#85cfff",
+            "secondary-container": "#454748",
+            "on-background": "#e4e1e6",
+            "on-tertiary-fixed-variant": "#004c6c",
+            "inverse-primary": "#904d00",
+            "inverse-surface": "#e4e1e6",
+            "tertiary-container": "#00b5fc",
+            "primary": "#ffb77d",
+            "on-tertiary-fixed": "#001e2e",
+            "secondary-fixed-dim": "#c6c6c7",
+            "surface-container-highest": "#353438",
+            "on-primary": "#4d2600",
+            "surface-tint": "#ffb77d",
+            "surface": "#131316",
+            "on-secondary": "#2f3132",
+            "surface-container-low": "#1b1b1e",
+            "on-error-container": "#ffdad6",
+            "on-surface": "#e4e1e6",
+            "on-surface-variant": "#ddc1ae",
+            "primary-fixed": "#ffdcc3",
+            "outline": "#a48c7a",
+            "on-tertiary": "#00344c",
+            "surface-container": "#1f1f22",
+            "on-primary-fixed": "#2f1500",
+            "on-error": "#690005",
+            "surface-variant": "#353438",
+            "on-primary-container": "#623200",
+            "error-container": "#93000a",
+            "on-secondary-container": "#b4b5b6",
+            "outline-variant": "#564334",
+            "inverse-on-surface": "#303033",
+            "secondary-fixed": "#e2e2e3",
+            "on-tertiary-container": "#004360",
+            "surface-container-high": "#2a2a2d",
+            "tertiary-fixed-dim": "#85cfff",
+            "background": "#0e0e11",
+            "on-secondary-fixed-variant": "#454748",
+            "primary-fixed-dim": "#ffb77d",
+            "error": "#ffb4ab"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "1rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-mobile": "16px",
+            "base": "8px",
+            "sm": "8px",
+            "margin-desktop": "40px",
+            "lg": "24px",
+            "gutter": "16px",
+            "xl": "32px",
+            "md": "16px",
+            "xs": "4px"
+          },
+          "fontFamily": {
+            "headline-md": ["Inter"],
+            "label-sm": ["Inter"],
+            "headline-lg": ["Inter"],
+            "body-lg": ["Inter"],
+            "headline-lg-mobile": ["Inter"],
+            "body-md": ["Inter"],
+            "label-md": ["Inter"]
+          },
+          "fontSize": {
+            "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+            "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "500"}],
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body {
+      background-color: #0e0e11;
+      color: #e4e1e6;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .glass-card { 
+        background: rgba(31, 31, 34, 0.45); 
+        backdrop-filter: blur(12px); 
+        border: 1px solid rgba(255, 255, 255, 0.08); 
+        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #131316;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #353438;
+      border-radius: 10px;
+    }
+    .blob {
+        position: fixed;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        filter: blur(80px);
+        z-index: -1;
+        opacity: 0.15;
+    }
+    .blob-primary { background: #ff8c00; top: 10%; right: -50px; }
+    .blob-error { background: #93000a; bottom: 15%; left: -50px; }
+    .blob-tertiary { background: #00b5fc; top: 40%; left: 10%; opacity: 0.08; }
+
+    .red-glow {
+        box-shadow: 0 0 30px rgba(147, 0, 10, 0.4);
+    }
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background min-h-screen flex flex-col items-center">
+<!-- Background Decorative Orbs -->
+<div class="blob blob-primary"></div>
+<div class="blob blob-error"></div>
+<div class="blob blob-tertiary"></div>
+<!-- Top Navigation Shell -->
+<header class="bg-surface/60 backdrop-blur-md flex justify-between items-center px-margin-mobile h-16 w-full border-b border-white/10 fixed top-0 z-50">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">SmartExpApp</h1>
+</div>
+<div class="flex items-center gap-2"><label class="relative inline-flex items-center cursor-pointer group/theme">
+  <input type="checkbox" class="sr-only peer">
+  <div class="w-16 h-8 bg-white/5 peer-focus:outline-none rounded-full peer transition-all duration-300 border border-white/10 flex items-center px-1 justify-between relative">
+    <span class="material-symbols-outlined text-[18px] text-primary z-10" data-icon="light_mode">light_mode</span>
+    <span class="material-symbols-outlined text-[18px] text-secondary/50 z-10" data-icon="dark_mode">dark_mode</span>
+    <div class="absolute left-1 w-6 h-6 bg-primary-container rounded-full transition-all duration-300 peer-checked:translate-x-8"></div>
+  </div>
+</label>
+<button class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+  <span class="material-symbols-outlined text-on-surface" data-icon="search">search</span>
+</button></div>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-full max-w-[1280px] pt-20 pb-28 px-margin-mobile md:px-margin-desktop space-y-xl custom-scrollbar relative z-10">
+<!-- User Profile Hero Section -->
+<section class="glass-card rounded-xl p-lg flex flex-col md:flex-row items-center md:items-start gap-lg">
+<div class="relative">
+<div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-primary-container/40 p-1 bg-white/5">
+<img alt="Alex Johnson" class="w-full h-full object-cover rounded-full" data-alt="A professional headshot of Alex Johnson, a man in his early 30s with a warm, confident expression. He is photographed against a minimalist, dark studio background that uses charcoal and deep orange lighting accents to match the high-end financial UI style. The lighting is soft and cinematic, highlighting his facial features with a premium, executive aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNTMBFUmSIR5PdZh7UJTe1c57dQJCQebC5Goo5mXw5Q8oNbOPzUer4FtLGcSbX974Umm99SDIGO5LwSH8bpy33aLSYAKTBYeRWMGtW95_Z2CNWR8UYvT8oGwJsYoXYJmwf2Qy-E-4dFnLvZmvCYM773LeMp4p8hOBdubPhCxnLs05suu96cusJ_FIPclX08nDiYFalMNaKamSNXEyrXv1BiK7H0sdT5EURjgwxlhI6HsgQQSCRK4wF1Ay1Y7qYb-AyvPJy32Zx-d8e">
+</div>
+<div class="absolute bottom-1 right-1 bg-primary-container text-on-primary-fixed p-1.5 rounded-full shadow-lg border-2 border-[#131316]">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+</div>
+</div>
+<div class="text-center md:text-left flex flex-col justify-center">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Alex Johnson</h2>
+<p class="font-body-md text-body-md text-secondary">alex.johnson@smartexp.io</p>
+<div class="mt-4 flex flex-wrap justify-center md:justify-start gap-sm">
+<span class="bg-white/5 px-3 py-1 rounded-full text-label-sm font-label-sm text-primary flex items-center gap-1 border border-white/10">
+<span class="material-symbols-outlined text-[14px]" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+            Pro Member
+          </span>
+<span class="bg-white/5 px-3 py-1 rounded-full text-label-sm font-label-sm text-secondary flex items-center gap-1 border border-white/10">
+<span class="material-symbols-outlined text-[14px]" data-icon="location_on">location_on</span>
+            New York, NY
+          </span>
+</div>
+</div>
+</section><div class="glass-card rounded-xl p-md flex flex-col justify-between hover:bg-white/10 transition-colors cursor-pointer group">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-md">
+      <div class="p-3 bg-primary-container/10 rounded-lg text-primary border border-primary-container/20">
+        <span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+      </div>
+      <div>
+        <h3 class="font-headline-md text-headline-md text-on-surface">Gemini Live Quota</h3>
+        <p class="font-body-md text-body-md text-secondary/80">Daily usage tracking</p>
+      </div>
+    </div>
+    <span class="material-symbols-outlined text-secondary/60 group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+  </div>
+  <div class="mt-4 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+    <div class="h-full bg-primary-container shadow-[0_0_8px_rgba(255,140,0,0.4)]" style="width: 90%;"></div>
+  </div>
+  <p class="mt-2 text-label-sm font-label-sm text-secondary/60">90% used</p>
+</div>
+<!-- Settings Grid / Bento Layout -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Notifications Section -->
+<div class="glass-card rounded-xl p-md flex flex-col justify-between hover:bg-white/10 transition-colors group">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-md">
+<div class="p-3 bg-primary-container/10 rounded-lg text-primary border border-primary-container/20">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Notification Settings</h3>
+<p class="font-body-md text-body-md text-secondary/80">Manage alerts and activity</p>
+</div>
+</div>
+<!-- Toggle Component -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox">
+<div class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<!-- Storage Section -->
+<div class="glass-card rounded-xl p-md flex flex-col justify-between hover:bg-white/10 transition-colors cursor-pointer group">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-md">
+<div class="p-3 bg-tertiary-container/10 rounded-lg text-tertiary border border-tertiary-container/20">
+<span class="material-symbols-outlined" data-icon="cloud">cloud</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Storage Preferences</h3>
+<p class="font-body-md text-body-md text-secondary/80">Cloud sync and local cache</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/60 group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="mt-4 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container shadow-[0_0_8px_rgba(0,181,252,0.4)]" style="width: 65%;"></div>
+</div>
+<p class="mt-2 text-label-sm font-label-sm text-secondary/60">6.5 GB of 10 GB used</p>
+</div>
+<!-- Account Details Section -->
+<div class="glass-card rounded-xl p-md flex flex-col justify-between hover:bg-white/10 transition-colors cursor-pointer group">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-md">
+<div class="p-3 bg-white/5 rounded-lg text-secondary border border-white/10">
+<span class="material-symbols-outlined" data-icon="manage_accounts">manage_accounts</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Account Details</h3>
+<p class="font-body-md text-body-md text-secondary/80">Privacy and security controls</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/60 group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Help & Support Section -->
+<div class="glass-card rounded-xl p-md flex flex-col justify-between hover:bg-white/10 transition-colors cursor-pointer group">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-md">
+<div class="p-3 bg-primary-container/10 rounded-lg text-primary border border-primary-container/20">
+<span class="material-symbols-outlined" data-icon="help_center">help_center</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Help &amp; Support</h3>
+<p class="font-body-md text-body-md text-secondary/80">FAQs and direct contact</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/60 group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Sign Out Action -->
+<div class="pt-8 flex flex-col items-center">
+<button class="w-full max-w-sm flex items-center justify-center gap-2 py-4 px-6 bg-error-container text-on-error-container rounded-xl font-bold transition-all active:scale-95 hover:bg-error hover:text-on-error shadow-[0_8px_32px_rgba(147,0,10,0.4)] border border-error/20">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+        Sign Out
+      </button>
+<p class="mt-4 text-label-sm font-label-sm text-secondary/50">Version 2.4.1 (Build 890)</p>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center h-20 px-4 pb-safe bg-[#131316]/60 backdrop-blur-xl border-t border-white/10"><button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-colors duration-150 active:scale-95 w-16 gap-1">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-sm text-[10px] font-medium tracking-wide">Inventory</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-colors duration-150 active:scale-95 w-16 gap-1">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="font-label-sm text-[10px] font-medium tracking-wide">Stats</span>
+</button>
+<!-- Floating Action Button in Nav -->
+<button class="flex items-center justify-center text-surface-container-lowest bg-[#ff8c00] rounded-full h-16 w-16 shadow-[0_8px_32px_rgba(255,140,0,0.4)] hover:shadow-[0_12px_40px_rgba(255,140,0,0.6)] hover:opacity-95 transition-all duration-300 active:scale-90 -translate-y-8 border-4 border-[#131316]">
+<span class="material-symbols-outlined text-3xl font-bold" data-icon="add">add</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-colors duration-150 active:scale-95 w-16 gap-1">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-sm text-[10px] font-medium tracking-wide">Agent</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary transition-colors duration-150 active:scale-95 w-16 gap-1">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-label-sm text-[10px] font-semibold tracking-wide">Settings</span>
+</button></nav>
+<script>
+    // Subtle interactivity for the toggle
+    const toggles = document.querySelectorAll('input[type="checkbox"]');
+    toggles.forEach(toggle => {
+      toggle.addEventListener('change', function() {
+        console.log('Notification setting changed to:', this.checked);
+      });
+    });
+
+    // Tap feedback for interactive glass elements
+    document.querySelectorAll('.glass-card').forEach(card => {
+      card.addEventListener('mousedown', function(e) {
+        if(this.classList.contains('cursor-pointer') || this.querySelector('label')) {
+            this.style.transition = 'transform 0.1s ease';
+            this.style.transform = 'scale(0.98)';
+        }
+      });
+      document.addEventListener('mouseup', function(e) {
+        card.style.transform = 'scale(1)';
+      });
+    });
+  </script>
+
+
+</body></html>

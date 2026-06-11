@@ -1,0 +1,348 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-variant": "#e2e2e2",
+            "tertiary-fixed-dim": "#c6c6c7",
+            "secondary-fixed-dim": "#c8c6c5",
+            "tertiary": "#5d5f5f",
+            "secondary-fixed": "#e5e2e1",
+            "on-secondary-fixed-variant": "#474746",
+            "on-surface": "#1a1c1c",
+            "inverse-primary": "#ffb77d",
+            "on-secondary-fixed": "#1c1b1b",
+            "on-error-container": "#93000a",
+            "on-error": "#ffffff",
+            "on-secondary": "#ffffff",
+            "tertiary-fixed": "#e2e2e2",
+            "on-tertiary-fixed": "#1a1c1c",
+            "surface-bright": "#f9f9f9",
+            "inverse-on-surface": "#f0f1f1",
+            "surface-container-high": "#e8e8e8",
+            "secondary-container": "#e2dfde",
+            "surface-dim": "#dadada",
+            "surface-container-highest": "#e2e2e2",
+            "primary": "#904d00",
+            "on-background": "#1a1c1c",
+            "outline": "#897362",
+            "inverse-surface": "#2f3131",
+            "on-primary-fixed": "#2f1500",
+            "surface-container": "#eeeeee",
+            "error-container": "#ffdad6",
+            "on-primary-fixed-variant": "#6e3900",
+            "on-tertiary-container": "#3d3f3f",
+            "on-secondary-container": "#636262",
+            "surface-container-low": "#f3f3f4",
+            "outline-variant": "#ddc1ae",
+            "on-primary-container": "#623200",
+            "background": "#f9f9f9",
+            "on-primary": "#ffffff",
+            "primary-fixed-dim": "#ffb77d",
+            "primary-fixed": "#ffdcc3",
+            "on-tertiary": "#ffffff",
+            "tertiary-container": "#a9aaaa",
+            "secondary": "#5f5e5e",
+            "on-surface-variant": "#564334",
+            "error": "#ba1a1a",
+            "on-tertiary-fixed-variant": "#454747",
+            "surface-container-lowest": "#ffffff",
+            "primary-container": "#ff8c00",
+            "surface": "#f9f9f9",
+            "surface-tint": "#904d00"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "1rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "container-padding": "20px",
+            "xl": "32px",
+            "lg": "24px",
+            "md": "16px",
+            "sm": "12px",
+            "gutter": "16px",
+            "xs": "4px",
+            "base": "8px",
+            "margin-mobile": "16px",
+            "margin-desktop": "40px"
+          },
+          "fontFamily": {
+            "h2": ["Inter"],
+            "body-md": ["Inter"],
+            "label-caps": ["Inter"],
+            "h3": ["Inter"],
+            "body-lg": ["Inter"],
+            "cta": ["Inter"],
+            "h1": ["Inter"],
+            "headline-md": ["Inter"],
+            "label-sm": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-lg": ["Inter"]
+          },
+          "fontSize": {
+            "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}],
+            "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+            "h3": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+            "cta": ["16px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+            "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+            "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "500"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-card { 
+      background: rgba(255, 255, 255, 0.7); 
+      backdrop-filter: blur(12px); 
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.5); 
+      box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.05);
+    }
+    .glass-card-urgent {
+      background: rgba(255, 245, 235, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 140, 0, 0.2);
+      box-shadow: 0 4px 24px -1px rgba(255, 140, 0, 0.1);
+    }
+    .blob {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    .blob-primary { background: #ff8c00; top: -50px; right: -100px; }
+    .blob-secondary { background: #ff8da1; bottom: 10%; left: -100px; }
+    .blob-tertiary { background: #a188ff; top: 30%; left: 10%; opacity: 0.1; }
+    
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-24 overflow-x-hidden">
+<!-- Background Orbs -->
+<div class="blob blob-primary"></div>
+<div class="blob blob-secondary"></div>
+<div class="blob blob-tertiary"></div>
+<!-- TopAppBar Shell -->
+<header class="flex justify-between items-center px-margin-mobile h-16 w-full docked full-width top-0 bg-white/60 backdrop-blur-md border-b border-black/5 z-50 sticky">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary-container" data-icon="menu">menu</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary-container">SmartExpApp</h1>
+</div>
+<div class="flex items-center gap-2"><div class="flex items-center gap-2 mr-2">
+  <span class="material-symbols-outlined text-primary-container cursor-pointer text-[20px]" data-icon="light_mode">light_mode</span>
+  <label class="relative inline-flex items-center cursor-pointer">
+    <input type="checkbox" class="sr-only peer">
+    <div class="w-9 h-5 bg-black/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+  </label>
+  <span class="material-symbols-outlined text-on-surface-variant/60 cursor-pointer hover:text-primary-container transition-colors text-[20px]" data-icon="dark_mode">dark_mode</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-white/50 overflow-hidden shadow-sm">
+<img alt="User Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvtLI9lUUFjm4Xi_Bg-wgkEZtgaS7axrci87f_MW6GtaMN0hagk7srO8JRhoVV2e2jx8ymf-p60hxjzIOT9xFzD1qEWyiJc1WSNCFSEgj1qdViVZiXoJ_lUqwfOo6Bm9-qaDFN2gkI7ccfLtsXA4ZNuFvaawXiCIaxACUoY8Vl8-1j7-xnu7nYBt5AIoqDAzCFQuofxS3iCzHaOLQhxcLrwttZHN-K3efgYYKHVT72pWnL4nmCMme5--3j63qmmpHDYhYd_h6erjGM">
+</div>
+</div>
+</header>
+<main class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-base">
+<!-- Filter Section -->
+<div class="mt-lg mb-xl">
+<button class="flex items-center gap-2 px-md py-xs rounded-full glass-card text-on-surface hover:bg-white/90 transition-all active:scale-95" id="filter-btn">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+<span class="font-label-md">Filter</span>
+</button>
+</div>
+<!-- Items List -->
+<div class="flex flex-col gap-gutter">
+<!-- Card 1: Fresh Milk -->
+<div class="glass-card-urgent p-lg rounded-xl relative overflow-hidden flex flex-col justify-between">
+<div class="absolute top-0 right-0 bg-primary-container text-white font-label-sm px-sm py-xs rounded-bl-xl font-bold">Expiring Soon</div>
+<div class="flex items-center gap-4 mb-lg mt-2">
+<div class="bg-primary-container/10 p-sm rounded-lg w-12 h-12 flex items-center justify-center border border-primary-container/10">
+<span class="material-symbols-outlined text-primary-container" data-icon="opacity">opacity</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Fresh Milk</h3>
+<p class="text-secondary text-body-md">Dairy • 1 Gal</p>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="text-secondary text-label-sm uppercase tracking-wider font-semibold">Expires in</span>
+<span class="text-primary-container font-bold">1 Day</span>
+</div>
+<div class="w-full bg-black/5 h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 90%"></div>
+</div>
+</div>
+</div>
+<!-- Card 2: Whole Wheat Bread -->
+<div class="glass-card p-lg rounded-xl flex flex-col justify-between">
+<div class="flex items-center gap-4 mb-lg">
+<div class="bg-black/5 p-sm rounded-lg w-12 h-12 flex items-center justify-center border border-white/50">
+<span class="material-symbols-outlined text-secondary" data-icon="bakery_dining">bakery_dining</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Whole Wheat Bread</h3>
+<p class="text-secondary text-body-md">Pantry • 1 Loaf</p>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="text-secondary text-label-sm uppercase tracking-wider font-semibold">Expires in</span>
+<span class="text-on-surface font-bold">5 Days</span>
+</div>
+<div class="w-full bg-black/5 h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container/60 h-full" style="width: 40%"></div>
+</div>
+</div>
+</div>
+<!-- Card 3: Eggs -->
+<div class="glass-card p-lg rounded-xl flex flex-col justify-between">
+<div class="flex items-center gap-4 mb-lg">
+<div class="bg-black/5 p-sm rounded-lg w-12 h-12 flex items-center justify-center border border-white/50">
+<span class="material-symbols-outlined text-secondary" data-icon="egg">egg</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Eggs</h3>
+<p class="text-secondary text-body-md">Cool • 1 Dozen</p>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="text-secondary text-label-sm uppercase tracking-wider font-semibold">Expires in</span>
+<span class="text-on-surface font-bold">12 Days</span>
+</div>
+<div class="w-full bg-black/5 h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container/40 h-full" style="width: 20%"></div>
+</div>
+</div>
+</div>
+<!-- Card 4: Spinach -->
+<div class="glass-card-urgent p-lg rounded-xl relative overflow-hidden flex flex-col justify-between">
+<div class="absolute top-0 right-0 bg-primary-container text-white font-label-sm px-sm py-xs rounded-bl-xl font-bold">Expiring Soon</div>
+<div class="flex items-center gap-4 mb-lg mt-2">
+<div class="bg-primary-container/10 p-sm rounded-lg w-12 h-12 flex items-center justify-center border border-primary-container/10">
+<span class="material-symbols-outlined text-primary-container" data-icon="eco">eco</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Spinach</h3>
+<p class="text-secondary text-body-md">Produce • 1 Bag</p>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="text-secondary text-label-sm uppercase tracking-wider font-semibold">Expires in</span>
+<span class="text-primary-container font-bold">2 Days</span>
+</div>
+<div class="w-full bg-black/5 h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 85%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Summary Section -->
+<section class="mt-xl space-y-lg">
+<div class="glass-card p-lg rounded-xl relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-primary-container/10 rounded-full blur-3xl"></div>
+<h4 class="font-label-md text-primary-container mb-sm uppercase tracking-widest font-bold">STORAGE EFFICIENCY</h4>
+<p class="font-headline-md text-headline-md text-on-surface leading-tight">Your inventory is 72% fresh. 2 items require immediate attention.</p>
+</div>
+<div class="glass-card p-lg rounded-xl flex items-center justify-between">
+<div>
+<h4 class="font-label-md text-secondary mb-sm uppercase tracking-widest font-bold">TOTAL ITEMS</h4>
+<p class="font-headline-lg text-headline-lg text-primary-container">24</p>
+</div>
+<div class="h-12 w-[1px] bg-black/5"></div>
+<div>
+<h4 class="font-label-md text-secondary mb-sm uppercase tracking-widest font-bold">WASTE PREVENTED</h4>
+<p class="font-headline-lg text-headline-lg text-tertiary">12.4 kg</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center h-20 px-4 pb-safe bg-white/80 backdrop-blur-xl border-t border-black/5 shadow-2xl"><button class="flex flex-col items-center justify-center text-primary-container transition-colors duration-150 active:scale-95 w-16 gap-1">
+<span class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-label-sm text-[10px] font-semibold tracking-wide uppercase">Inventory</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary-container transition-colors duration-150 active:scale-95 w-16 gap-1">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="font-label-sm text-[10px] font-medium tracking-wide uppercase">Stats</span>
+</button>
+<button class="flex items-center justify-center text-white bg-primary-container rounded-full h-16 w-16 shadow-lg shadow-primary-container/30 hover:shadow-primary-container/40 hover:opacity-95 transition-all duration-300 active:scale-90 -translate-y-8 border-4 border-background glass-card">
+<span class="material-symbols-outlined text-3xl font-bold" data-icon="add">add</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary-container transition-colors duration-150 active:scale-95 w-16 gap-1">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-sm text-[10px] font-medium tracking-wide uppercase">Agent</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary-container transition-colors duration-150 active:scale-95 w-16 gap-1">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-sm text-[10px] font-medium tracking-wide uppercase">Settings</span>
+</button></nav>
+<!-- Filter Modal -->
+<div class="fixed inset-0 z-[60] hidden flex items-center justify-center p-margin-mobile bg-black/20 backdrop-blur-sm" id="filter-modal">
+<div class="glass-card w-full max-w-md rounded-xl p-lg shadow-2xl">
+<div class="flex justify-between items-center mb-lg">
+<h2 class="font-headline-md text-on-surface">Filter &amp; Sort</h2>
+<button class="text-secondary" id="close-filter"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="space-y-lg">
+<div class="space-y-sm">
+<h3 class="font-label-md text-primary-container uppercase tracking-widest font-bold">CATEGORIES</h3>
+<div class="flex flex-wrap gap-2">
+<button class="px-md py-xs rounded-full bg-primary-container text-white text-label-sm font-semibold">Dairy</button>
+<button class="px-md py-xs rounded-full bg-black/5 text-on-surface-variant border border-black/5 text-label-sm">Bakery</button>
+<button class="px-md py-xs rounded-full bg-black/5 text-on-surface-variant border border-black/5 text-label-sm">Produce</button>
+</div>
+</div>
+<div class="space-y-sm">
+<h3 class="font-label-md text-primary-container uppercase tracking-widest font-bold">STORAGE</h3>
+<div class="flex flex-wrap gap-2">
+<button class="px-md py-xs rounded-full bg-black/5 text-on-surface-variant border border-black/5 text-label-sm">Room Temp</button>
+<button class="px-md py-xs rounded-full bg-black/5 text-on-surface-variant border border-black/5 text-label-sm">Cool</button>
+<button class="px-md py-xs rounded-full bg-black/5 text-on-surface-variant border border-black/5 text-label-sm">Frozen</button>
+</div>
+</div>
+<button class="w-full bg-primary-container text-white py-md rounded-xl font-bold mt-lg shadow-lg shadow-primary-container/20 active:scale-[0.98] transition-transform">Apply Filters</button>
+</div>
+</div>
+</div>
+<script>
+    const filterBtn = document.getElementById('filter-btn');
+    const filterModal = document.getElementById('filter-modal');
+    const closeFilter = document.getElementById('close-filter');
+
+    filterBtn?.addEventListener('click', () => filterModal?.classList.remove('hidden'));
+    closeFilter?.addEventListener('click', () => filterModal?.classList.add('hidden'));
+    filterModal?.addEventListener('click', (e) => {
+        if(e.target === filterModal) filterModal.classList.add('hidden');
+    });
+  </script>
+
+
+</body></html>

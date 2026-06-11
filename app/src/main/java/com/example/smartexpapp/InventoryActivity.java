@@ -311,7 +311,7 @@ public class InventoryActivity extends BaseActivity {
         if (product.isExpired()) {
             card.setStrokeColor(getColor(R.color.smart_error));
             urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_error_badge);
+            urgentBadge.setBackgroundResource(R.drawable.bg_error_soft_badge);
             urgentBadge.setText("EXPIRED");
             urgentBadge.setTextColor(getColor(R.color.smart_error));
             expiryStatus.setTextColor(getColor(R.color.smart_error));
@@ -319,9 +319,9 @@ public class InventoryActivity extends BaseActivity {
         } else if (product.isExpiringSoon()) {
             card.setStrokeColor(getColor(R.color.smart_primary_container));
             urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_primary_badge);
+            urgentBadge.setBackgroundResource(R.drawable.bg_primary_soft_badge);
             urgentBadge.setText("EXPIRING SOON");
-            urgentBadge.setTextColor(getColor(R.color.smart_on_primary));
+            urgentBadge.setTextColor(getColor(R.color.smart_primary_container));
             expiryStatus.setTextColor(getColor(R.color.smart_primary_container));
             progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
         }
