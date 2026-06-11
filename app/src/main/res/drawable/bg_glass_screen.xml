@@ -1,8 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient
-        android:angle="135"
-        android:startColor="@color/smart_glass_wash_start"
-        android:centerColor="@color/smart_glass_wash_mid"
-        android:endColor="@color/smart_glass_wash_end" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Solid Base Layer -->
+    <item>
+        <shape>
+            <solid android:color="@color/smart_background" />
+        </shape>
+    </item>
+
+    <!-- Top Right Orange Glow -->
+    <item>
+        <shape>
+            <gradient
+                android:type="radial"
+                android:gradientRadius="450dp"
+                android:centerX="1.0"
+                android:centerY="0.0"
+                android:startColor="@color/smart_glass_wash_start"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Middle Left Blue Glow (Night Mode) / Pink Glow (Light Mode) -->
+    <item>
+        <shape>
+            <gradient
+                android:type="radial"
+                android:gradientRadius="400dp"
+                android:centerX="0.0"
+                android:centerY="0.4"
+                android:startColor="@color/smart_glass_glow_mid_left"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Bottom Left Red Glow (Night Mode) / Indigo Glow (Light Mode) -->
+    <item>
+        <shape>
+            <gradient
+                android:type="radial"
+                android:gradientRadius="400dp"
+                android:centerX="0.0"
+                android:centerY="0.85"
+                android:startColor="@color/smart_glass_wash_end"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+</layer-list>

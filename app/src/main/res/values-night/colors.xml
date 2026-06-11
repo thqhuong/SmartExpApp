@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="smart_background">#0E0E11</color>
+    <color name="smart_background">#131316</color>
     <color name="smart_surface">#131316</color>
-    <color name="smart_surface_container">#1F1F22</color>
-    <color name="smart_surface_container_low">#1B1B1E</color>
+    <color name="smart_surface_container">#1B1B1E</color>
+    <color name="smart_surface_container_low">#171719</color>
     <color name="smart_surface_variant">#353438</color>
-    <color name="smart_on_surface">#E4E1E6</color>
-    <color name="smart_secondary">#C6C6C7</color>
+    <color name="smart_on_surface">#FFFFFF</color>
+    <color name="smart_secondary">#A0A0A5</color>
     <color name="smart_muted">#8C8C8C</color>
     <color name="smart_primary">#FFB77D</color>
     <color name="smart_primary_container">#FF8C00</color>
-    <color name="smart_primary_soft">#33FF8C00</color>
-    <color name="smart_primary_soft_border">#4DFF8C00</color>
+    <color name="smart_primary_soft">#26FF8C00</color>
+    <color name="smart_primary_soft_border">#66FF8C00</color>
     <color name="smart_on_primary">#4D2600</color>
     <color name="smart_error">#FFB4AB</color>
     <color name="smart_notification_red">#EF4444</color>
     <color name="smart_error_container">#93000A</color>
+    <color name="smart_success">#4CAF50</color>
 
     <color name="category_dairy">#5DADE2</color>
     <color name="category_produce">#EB984E</color>
@@ -29,14 +30,20 @@
     <color name="bottom_nav_add_icon">#131316</color>
 
     <!-- Glassmorphism and vibrant background colors (Dark Mode) -->
-    <color name="smart_glass_surface">#CC1B1B1E</color>
-    <color name="smart_glass_surface_strong">#E627272A</color>
-    <color name="smart_glass_urgent">#B33D2100</color>
-    <color name="smart_glass_error">#B33C0A0A</color>
-    <color name="smart_glass_stroke">#33FFFFFF</color>
+    <color name="smart_glass_surface">#991B1B1E</color>
+    <color name="smart_glass_surface_strong">#CC131316</color>
+    <color name="smart_glass_urgent">#26FF8C00</color>
+    <color name="smart_glass_urgent_stroke">#66FF8C00</color>
+    <color name="smart_glass_error">#26EF4444</color>
+    <color name="smart_glass_error_stroke">#66EF4444</color>
+    <color name="smart_glass_stroke">#1AFFFFFF</color>
+    <color name="smart_glass_inner_glow">#1AFFFFFF</color>
+    <color name="smart_glass_input_bg">#66000000</color>
+    <color name="smart_glass_input_stroke">#26FFFFFF</color>
     <color name="smart_gemini_purple">#B6C4FF</color>
     <color name="smart_gemini_pink">#FFB7D5</color>
-    <color name="smart_glass_wash_start">#140F26</color>
-    <color name="smart_glass_wash_mid">#0C081A</color>
-    <color name="smart_glass_wash_end">#071220</color>
+    <color name="smart_glass_wash_start">#26FF8C00</color>
+    <color name="smart_glass_wash_mid">#131316</color>
+    <color name="smart_glass_wash_end">#2693000A</color>
+    <color name="smart_glass_glow_mid_left">#2600B5FC</color>
 </resources>

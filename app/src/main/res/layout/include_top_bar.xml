@@ -4,7 +4,7 @@
     android:id="@+id/topBar"
     android:layout_width="match_parent"
     android:layout_height="64dp"
-    android:background="@color/smart_glass_surface"
+    android:background="@drawable/bg_glass_header"
     android:elevation="4dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"

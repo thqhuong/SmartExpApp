@@ -103,13 +103,22 @@ public class MainActivity extends BaseActivity {
         if (products.isEmpty()) return;
 
         findViewById(titleId).setVisibility(View.VISIBLE);
-        findViewById(cardId).setVisibility(View.VISIBLE);
+        View cardView = findViewById(cardId);
+        cardView.setVisibility(View.VISIBLE);
+        if ("Expired".equals(groupName)) {
+            cardView.setBackgroundResource(R.drawable.bg_glass_card_expired);
+        } else if ("Urgent".equals(groupName)) {
+            cardView.setBackgroundResource(R.drawable.bg_glass_card_urgent);
+        } else {
+            cardView.setBackgroundResource(R.drawable.bg_glass_card);
+        }
 
         LinearLayout list = findViewById(listId);
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
 
-        for (Product product : products) {
+        for (int i = 0; i < products.size(); i++) {
+            Product product = products.get(i);
             View item = inflater.inflate(R.layout.item_dashboard_expiring, list, false);
 
             ImageView icon = item.findViewById(R.id.productIcon);
@@ -147,8 +156,10 @@ public class MainActivity extends BaseActivity {
             ((TextView) item.findViewById(R.id.expiryStatus)).setText(product.getExpiryStatus());
 
             list.addView(item);
-            if (products.indexOf(product) < products.size() - 1) {
+            if (i < products.size() - 1) {
                 item.findViewById(R.id.rowDivider).setVisibility(View.VISIBLE);
+            } else {
+                item.findViewById(R.id.rowDivider).setVisibility(View.GONE);
             }
         }
     }
