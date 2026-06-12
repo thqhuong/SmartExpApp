@@ -11,6 +11,7 @@
     android:gravity="center_vertical">
 
     <FrameLayout
+        android:id="@+id/storageIconContainer"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:background="@drawable/bg_glass_shadow"

@@ -21,6 +21,7 @@ import android.view.animation.AnimationSet;
 import android.view.animation.ScaleAnimation;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -314,32 +315,47 @@ public class RecipesActivity extends BaseActivity {
 
     private void bindRecipeCard(LayoutInflater inflater, View item, Recipe recipe) {
         FrameLayout hero = item.findViewById(R.id.recipeHero);
-        hero.setBackgroundResource(recipe.isFeatured() ? R.drawable.bg_hero_primary : R.drawable.bg_hero_neutral);
-        ViewUtils.setIcon(item.findViewById(R.id.recipeIcon), recipe.getIconRes(), recipe.isFeatured() ? R.color.smart_surface : R.color.smart_secondary);
-        ImageLoader.load(item.findViewById(R.id.recipeIcon), recipe.getImageUrl());
+        if (hero != null) {
+            hero.setBackgroundResource(recipe.isFeatured() ? R.drawable.bg_hero_primary : R.drawable.bg_hero_neutral);
+        }
+        ImageView iconView = item.findViewById(R.id.recipeIcon);
+        if (iconView != null) {
+            ViewUtils.setIcon(iconView, recipe.getIconRes(), recipe.isFeatured() ? R.color.smart_surface : R.color.smart_secondary);
+            ImageLoader.load(iconView, recipe.getImageUrl());
+        }
 
         ((TextView) item.findViewById(R.id.recipeTitle)).setText(recipe.getTitle());
         ((TextView) item.findViewById(R.id.recipeSummary)).setText(recipe.getSummary());
-        MaterialButton action = item.findViewById(R.id.recipeAction);
-        action.setText(recipe.getActionText());
-        action.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(recipe.isFeatured() ? R.color.smart_primary : R.color.smart_surface_container)));
-        action.setTextColor(getColor(recipe.isFeatured() ? R.color.smart_on_primary : R.color.smart_on_surface));
-        action.setIconTint(android.content.res.ColorStateList.valueOf(getColor(recipe.isFeatured() ? R.color.smart_on_primary : R.color.smart_on_surface)));
-        action.setOnClickListener(v -> {
-            String message = recipe.getSummary();
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-            speak(message);
-        });
 
-        LinearLayout ingredients = item.findViewById(R.id.ingredientList);
-        ingredients.removeAllViews();
-        for (String ingredient : recipe.getExpiringIngredients()) {
-            TextView ingredientView = (TextView) inflater.inflate(R.layout.item_recipe_ingredient, ingredients, false);
-            ingredientView.setText(ingredient);
-            if (ingredient.contains("Today") || ingredient.contains("Tomorrow") || ingredient.contains("1 Day")) {
-                ingredientView.setTextColor(getColor(R.color.smart_primary));
-            }
-            ingredients.addView(ingredientView);
+        TextView caloriesView = item.findViewById(R.id.recipeCardCalories);
+        if (caloriesView != null) {
+            caloriesView.setText(recipe.getCalories().toUpperCase());
         }
+
+        TextView difficultyView = item.findViewById(R.id.recipeCardDifficulty);
+        if (difficultyView != null) {
+            difficultyView.setText(recipe.getDifficulty());
+        }
+
+        TextView prepTimeView = item.findViewById(R.id.recipeCardPrepTime);
+        if (prepTimeView != null) {
+            prepTimeView.setText(recipe.getPrepTime());
+        }
+
+        // Entire card is clickable to open RecipeDetailsActivity
+        item.setOnClickListener(v -> {
+            Intent intent = new Intent(this, RecipeDetailsActivity.class);
+            intent.putExtra("extra_recipe_title", recipe.getTitle());
+            intent.putExtra("extra_recipe_summary", recipe.getSummary());
+            intent.putExtra("extra_recipe_image_url", recipe.getImageUrl());
+            intent.putExtra("extra_recipe_prep_time", recipe.getPrepTime());
+            intent.putExtra("extra_recipe_difficulty", recipe.getDifficulty());
+            intent.putExtra("extra_recipe_calories", recipe.getCalories());
+            intent.putExtra("extra_recipe_smart_tip", recipe.getSmartTip());
+            intent.putStringArrayListExtra("extra_recipe_all_ingredients", new ArrayList<>(recipe.getAllIngredients()));
+            intent.putStringArrayListExtra("extra_recipe_instructions", new ArrayList<>(recipe.getInstructions()));
+            intent.putExtra("extra_recipe_featured", recipe.isFeatured());
+            startActivity(intent);
+        });
     }
 }

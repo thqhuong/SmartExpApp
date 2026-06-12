@@ -29,6 +29,9 @@
             android:name=".NotificationSettingsActivity"
             android:exported="false" />
         <activity
+            android:name=".RecipeDetailsActivity"
+            android:exported="false" />
+        <activity
             android:name=".SettingsActivity"
             android:exported="false" />
         <activity

@@ -9,7 +9,7 @@
     <item android:id="@android:id/progress">
         <clip>
             <shape>
-                <solid android:color="@color/storage_room_progress" />
+                <solid android:color="@color/storage_freezer_progress" />
                 <corners android:radius="4dp" />
             </shape>
         </clip>

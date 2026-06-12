@@ -14,9 +14,12 @@ import android.widget.Toast;
 
 import androidx.annotation.IdRes;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.example.smartexpapp.data.SettingsRepository;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,16 +34,15 @@ public abstract class BaseActivity extends AppCompatActivity {
         // when the current mode doesn't match the preference (e.g. cold start
         // or after a process death). This avoids triggering redundant activity
         // recreations.
-        android.content.SharedPreferences prefs = getSharedPreferences("smart_settings", MODE_PRIVATE);
-        boolean isNightMode = prefs.getBoolean("dark_mode", false);
+        boolean isNightMode = SettingsRepository.getCachedDarkMode(this);
         int targetMode = isNightMode
-                ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-                : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
-        int currentMode = androidx.appcompat.app.AppCompatDelegate.getDefaultNightMode();
+                ? AppCompatDelegate.MODE_NIGHT_YES
+                : AppCompatDelegate.MODE_NIGHT_NO;
+        int currentMode = AppCompatDelegate.getDefaultNightMode();
         if (currentMode != targetMode) {
             // This will recreate the activity; calling super first then returning
             // ensures the framework lifecycle is satisfied.
-            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(targetMode);
+            AppCompatDelegate.setDefaultNightMode(targetMode);
         }
         super.onCreate(savedInstanceState);
     }
@@ -60,36 +62,34 @@ public abstract class BaseActivity extends AppCompatActivity {
             menuButton.setOnClickListener(v -> Toast.makeText(this, "Menu placeholder", Toast.LENGTH_SHORT).show());
         }
 
-        android.content.SharedPreferences prefs = getSharedPreferences("smart_settings", MODE_PRIVATE);
-        boolean isNightMode = prefs.getBoolean("dark_mode", false);
-
-        if (sunBg != null && moonBg != null && sunIcon != null && moonIcon != null) {
-            if (isNightMode) {
-                moonBg.setVisibility(View.VISIBLE);
-                sunBg.setVisibility(View.GONE);
-                moonIcon.setImageTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE));
-                sunIcon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.smart_secondary)));
-            } else {
-                sunBg.setVisibility(View.VISIBLE);
-                moonBg.setVisibility(View.GONE);
-                sunIcon.setImageTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE));
-                moonIcon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.smart_secondary)));
-            }
-        }
-
         View themeTogglePill = findViewById(R.id.themeTogglePill);
+        bindThemeToggleVisuals(
+                SettingsRepository.getCachedDarkMode(this),
+                sunBg,
+                moonBg,
+                sunIcon,
+                moonIcon
+        );
         View.OnClickListener toggleThemeListener = v -> {
-            boolean nextNightMode = !isNightMode;
+            boolean nextNightMode = !SettingsRepository.getCachedDarkMode(this);
             if (btnToggleLightMode != null) btnToggleLightMode.setEnabled(false);
             if (btnToggleDarkMode != null) btnToggleDarkMode.setEnabled(false);
             if (themeTogglePill != null) themeTogglePill.setEnabled(false);
+            bindThemeToggleVisuals(nextNightMode, sunBg, moonBg, sunIcon, moonIcon);
 
-            prefs.edit().putBoolean("dark_mode", nextNightMode).apply();
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                        nextNightMode ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
-            }, 150);
+            applyDarkMode(nextNightMode, error -> {
+                if (btnToggleLightMode != null) btnToggleLightMode.setEnabled(true);
+                if (btnToggleDarkMode != null) btnToggleDarkMode.setEnabled(true);
+                if (themeTogglePill != null) themeTogglePill.setEnabled(true);
+                bindThemeToggleVisuals(
+                        SettingsRepository.getCachedDarkMode(this),
+                        sunBg,
+                        moonBg,
+                        sunIcon,
+                        moonIcon
+                );
+                Toast.makeText(this, "Could not save theme setting.", Toast.LENGTH_SHORT).show();
+            });
         };
 
         if (btnToggleLightMode != null) {
@@ -124,6 +124,38 @@ public abstract class BaseActivity extends AppCompatActivity {
         TextView topTitle = findViewById(R.id.topTitle);
         if (topTitle != null) {
             topTitle.setText(title);
+        }
+    }
+
+    protected void applyDarkMode(boolean darkMode, SettingsRepository.ErrorCallback errorCallback) {
+        SettingsRepository.setDarkModeAsync(this, darkMode, settings -> {
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            AppCompatDelegate.setDefaultNightMode(
+                    settings.isDarkMode() ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+            );
+        }, errorCallback);
+    }
+
+    private void bindThemeToggleVisuals(
+            boolean isNightMode,
+            View sunBg,
+            View moonBg,
+            ImageView sunIcon,
+            ImageView moonIcon
+    ) {
+        if (sunBg == null || moonBg == null || sunIcon == null || moonIcon == null) {
+            return;
+        }
+        if (isNightMode) {
+            moonBg.setVisibility(View.VISIBLE);
+            sunBg.setVisibility(View.GONE);
+            moonIcon.setImageTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE));
+            sunIcon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.smart_secondary)));
+        } else {
+            sunBg.setVisibility(View.VISIBLE);
+            moonBg.setVisibility(View.GONE);
+            sunIcon.setImageTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE));
+            moonIcon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.smart_secondary)));
         }
     }
 
