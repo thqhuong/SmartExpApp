@@ -47,4 +47,21 @@
     <color name="smart_glass_wash_end">#26818CF8</color>
     <color name="smart_glass_glow_mid_left">#1AF472B6</color>
     <color name="edit_profile_avatar_icon">@color/smart_primary</color>
+
+    <!-- Storage Colors (Light Mode) -->
+    <color name="storage_fridge_icon">#2196F3</color>
+    <color name="storage_fridge_bg">#E3F2FD</color>
+    <color name="storage_fridge_progress">#2196F3</color>
+
+    <color name="storage_room_icon">#FF8C00</color>
+    <color name="storage_room_bg">#FFF3E0</color>
+    <color name="storage_room_progress">#FF8C00</color>
+
+    <color name="storage_freezer_icon">#9C27B0</color>
+    <color name="storage_freezer_bg">#F3E5F5</color>
+    <color name="storage_freezer_progress">#9C27B0</color>
+
+    <!-- Urgent Badge Colors (Light Mode) -->
+    <color name="urgent_triangle_color">#FBECE5</color>
+    <color name="urgent_count_text">#BA1A1A</color>
 </resources>

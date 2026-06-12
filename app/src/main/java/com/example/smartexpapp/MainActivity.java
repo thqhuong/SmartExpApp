@@ -75,12 +75,16 @@ public class MainActivity extends BaseActivity {
         LinearLayout list = findViewById(R.id.storageSummaryList);
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-        addStorageSummary(inflater, list, products, "Refrigerator", "Refrigerator", R.drawable.ic_storage_fridge, true);
-        addStorageSummary(inflater, list, products, "Room Temp", "Room Temp", R.drawable.ic_storage_room, false);
-        addStorageSummary(inflater, list, products, "Freezer", "Freeze", R.drawable.ic_storage_freeze, false);
+        addStorageSummary(inflater, list, products, "Refrigerator", "Refrigerator",
+                R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge, R.color.storage_fridge_icon, R.drawable.progress_blue);
+        addStorageSummary(inflater, list, products, "Room Temp", "Room Temp",
+                R.drawable.ic_storage_room, R.drawable.bg_storage_icon_room, R.color.storage_room_icon, R.drawable.progress_orange);
+        addStorageSummary(inflater, list, products, "Freezer", "Freeze",
+                R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer, R.color.storage_freezer_icon, R.drawable.progress_purple);
     }
 
-    private void addStorageSummary(LayoutInflater inflater, LinearLayout list, List<Product> products, String label, String storageValue, int iconRes, boolean primaryProgress) {
+    private void addStorageSummary(LayoutInflater inflater, LinearLayout list, List<Product> products,
+                                   String label, String storageValue, int iconRes, int bgRes, int iconColorRes, int progressDrawableRes) {
         int count = 0;
         for (Product product : products) {
             if (storageValue.equals(product.getStorage())) {
@@ -90,14 +94,22 @@ public class MainActivity extends BaseActivity {
         int progress = products.isEmpty() ? 0 : Math.round(count / (float) products.size() * 100f);
 
         View item = inflater.inflate(R.layout.item_storage_summary, list, false);
-        ViewUtils.setIcon(item.findViewById(R.id.storageIcon), iconRes, R.color.smart_secondary);
+        
+        View container = item.findViewById(R.id.storageIconContainer);
+        if (container != null) {
+            container.setBackgroundResource(bgRes);
+        }
+
+        ImageView icon = item.findViewById(R.id.storageIcon);
+        ViewUtils.setIcon(icon, iconRes, iconColorRes);
+
         ((TextView) item.findViewById(R.id.storageName)).setText(label);
         ((TextView) item.findViewById(R.id.storageCount)).setText(count + " items");
+        
         ProgressBar progressBar = item.findViewById(R.id.storageProgress);
         progressBar.setProgress(progress);
-        if (primaryProgress) {
-            progressBar.setProgressDrawable(androidx.appcompat.content.res.AppCompatResources.getDrawable(this, R.drawable.progress_orange));
-        }
+        progressBar.setProgressDrawable(androidx.appcompat.content.res.AppCompatResources.getDrawable(this, progressDrawableRes));
+        
         list.addView(item);
     }
 
@@ -151,9 +163,10 @@ public class MainActivity extends BaseActivity {
                 icon.setImageTintList(null);
                 ImageLoader.load(icon, imgUrl);
             } else {
+                int tintColor = CategoryColorHelper.getColor(product.getCategory());
                 icon.setImageTintList(android.content.res.ColorStateList.valueOf(
-                        getColor(R.color.smart_secondary)));
-                ViewUtils.setIcon(icon, product.getIconRes(), R.color.smart_secondary);
+                        getColor(tintColor)));
+                ViewUtils.setIcon(icon, product.getIconRes(), tintColor);
             }
 
             View categoryDot = item.findViewById(R.id.categoryDot);

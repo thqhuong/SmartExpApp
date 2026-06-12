@@ -316,8 +316,7 @@ public class InventoryActivity extends BaseActivity {
             icon.setImageTintList(null);
             ImageLoader.load(icon, imgUrl);
         } else {
-            int tintColor = product.isExpiringSoon() || product.isExpired()
-                    ? R.color.smart_primary_container : R.color.smart_secondary;
+            int tintColor = CategoryColorHelper.getColor(product.getCategory());
             icon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(tintColor)));
             ViewUtils.setIcon(icon, product.getIconRes(), tintColor);
         }

@@ -205,7 +205,6 @@ public final class SettingsRepository {
     }
 
     public static void setDarkModeAsync(Context context, boolean darkMode, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
-        cacheDarkMode(context, darkMode);
         execute(() -> {
             setDarkMode(context, darkMode);
             return getSettings(context);

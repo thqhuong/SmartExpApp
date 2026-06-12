@@ -78,18 +78,25 @@ public class SettingsActivity extends BaseActivity {
             if (item.isSwitchRow()) {
                 switchBtn.setVisibility(View.VISIBLE);
                 if ("Dark Mode".equals(item.getTitle())) {
-                    boolean isNight = SettingsRepository.getCachedDarkMode(this);
                     switchBtn.setSaveEnabled(false);
                     switchBtn.setOnCheckedChangeListener(null);
-                    switchBtn.setChecked(isNight);
+                    switchBtn.setChecked(SettingsRepository.getCachedDarkMode(this));
                     switchBtn.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                        if (isChecked != isNight) {
-                            SettingsRepository.setDarkModeAsync(this, isChecked, null, error ->
-                                    Toast.makeText(this, "Could not save theme setting.", Toast.LENGTH_SHORT).show()
-                             );
-                            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                                    isChecked ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-                            );
+                        if (isChecked != SettingsRepository.getCachedDarkMode(this)) {
+                            switchBtn.setEnabled(false);
+                            applyDarkMode(isChecked, error -> {
+                                switchBtn.setOnCheckedChangeListener(null);
+                                switchBtn.setChecked(SettingsRepository.getCachedDarkMode(this));
+                                switchBtn.setEnabled(true);
+                                switchBtn.setOnCheckedChangeListener((retryButton, checked) -> {
+                                    if (checked != SettingsRepository.getCachedDarkMode(this)) {
+                                        applyDarkMode(checked, retryError ->
+                                                Toast.makeText(this, "Could not save theme setting.", Toast.LENGTH_SHORT).show()
+                                        );
+                                    }
+                                });
+                                Toast.makeText(this, "Could not save theme setting.", Toast.LENGTH_SHORT).show();
+                            });
                         }
                     });
                 }

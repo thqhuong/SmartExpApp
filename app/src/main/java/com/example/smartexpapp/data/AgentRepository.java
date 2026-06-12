@@ -262,6 +262,21 @@ public final class AgentRepository {
         String preferenceNote = dietaryPreferenceNote(dietaryPreferences);
 
         List<Recipe> recipes = new ArrayList<>();
+
+        // Fallback 1: Use-First Skillet
+        List<String> ingredients1 = new ArrayList<>();
+        ingredients1.add("1 unit of " + primary);
+        if (products.size() > 1) ingredients1.add("1 unit of " + secondary);
+        ingredients1.add("1 tbsp Olive Oil");
+        ingredients1.add("1 clove Garlic, minced");
+        ingredients1.add("Salt and Pepper to taste");
+
+        List<String> steps1 = new ArrayList<>();
+        steps1.add("Heat olive oil in a large skillet over medium-high heat.");
+        steps1.add("Add minced garlic and sauté for 1 minute until fragrant.");
+        steps1.add("Add " + primary + " (chopped) and cook for 5-7 minutes, stirring occasionally.");
+        steps1.add("Season with salt, pepper, and your favorite pantry spices. Serve warm!");
+
         recipes.add(new Recipe(
                 "Use-First Skillet with " + primary,
                 "A flexible one-pan meal built around your most urgent item and simple pantry seasoning." + preferenceNote,
@@ -269,8 +284,29 @@ public final class AgentRepository {
                 "Cook This",
                 android.R.drawable.ic_menu_gallery,
                 true,
-                null
+                null,
+                "15 min",
+                "Easy",
+                "350 kcal",
+                "Sauté the " + primary + " over medium heat first to unlock its flavor before adding other ingredients!",
+                ingredients1,
+                steps1
         ));
+
+        // Fallback 2: Quick Bowl
+        List<String> ingredients2 = new ArrayList<>();
+        ingredients2.add("1 unit of " + primary);
+        ingredients2.add("1 unit of " + secondary);
+        ingredients2.add("1 cup Cooked Rice or Grains");
+        ingredients2.add("2 tbsp Soy Sauce or Dressing");
+        ingredients2.add("1 tsp Sesame seeds (optional)");
+
+        List<String> steps2 = new ArrayList<>();
+        steps2.add("Prepare your cooked rice or grain base in a bowl.");
+        steps2.add("Lightly steam or sauté " + primary + " and " + secondary + " until tender.");
+        steps2.add("Arrange the prepared ingredients over the grain base.");
+        steps2.add("Drizzle with soy sauce or your favorite dressing, garnish with sesame seeds and enjoy!");
+
         recipes.add(new Recipe(
                 "Quick Bowl with " + primary + " and " + secondary,
                 "Combine the earliest-expiring ingredients with grains, noodles, or toast for a fast meal." + preferenceNote,
@@ -278,8 +314,30 @@ public final class AgentRepository {
                 "View Steps",
                 android.R.drawable.ic_menu_crop,
                 false,
-                null
+                null,
+                "20 min",
+                "Easy",
+                "420 kcal",
+                "Adding a splash of lemon juice or vinegar right at the end will brighten up the entire bowl!",
+                ingredients2,
+                steps2
         ));
+
+        // Fallback 3: No-Waste Soup or Sauce
+        List<String> ingredients3 = new ArrayList<>();
+        ingredients3.add("1 unit of " + primary);
+        if (products.size() > 1) ingredients3.add("1 unit of " + secondary);
+        if (products.size() > 2) ingredients3.add("1 unit of " + third);
+        ingredients3.add("2 cups Vegetable or Chicken broth");
+        ingredients3.add("1/2 onion, chopped");
+        ingredients3.add("1 tbsp Italian herbs seasoning");
+
+        List<String> steps3 = new ArrayList<>();
+        steps3.add("In a pot, sauté chopped onion with a bit of oil until translucent.");
+        steps3.add("Add chopped " + primary + ", " + secondary + ", and " + third + ".");
+        steps3.add("Pour in the broth and add the Italian seasoning herbs.");
+        steps3.add("Bring to a boil, then reduce heat and simmer for 20 minutes until ingredients are soft. Blend if desired.");
+
         recipes.add(new Recipe(
                 "No-Waste Soup or Sauce",
                 "Simmer " + primary + ", " + secondary + ", and " + third + " into a soup, sauce, or freezer base." + preferenceNote,
@@ -287,7 +345,13 @@ public final class AgentRepository {
                 "Save Idea",
                 android.R.drawable.ic_menu_agenda,
                 false,
-                null
+                null,
+                "30 min",
+                "Medium",
+                "280 kcal",
+                "If you have extra vegetables, chop them up and throw them in too. Soup is the ultimate waste-reducer!",
+                ingredients3,
+                steps3
         ));
         return recipes;
     }
@@ -311,6 +375,11 @@ public final class AgentRepository {
         for (int i = 0; i < array.length() && recipes.size() < 3; i++) {
             JSONObject item = array.getJSONObject(i);
             List<String> ingredients = jsonStringList(item.optJSONArray("usedIngredients"));
+            List<String> allIngredients = jsonStringList(item.optJSONArray("allIngredients"));
+            if (allIngredients.isEmpty()) {
+                allIngredients = new ArrayList<>(ingredients);
+            }
+            List<String> instructions = jsonStringList(item.optJSONArray("instructions"));
             recipes.add(new Recipe(
                     item.optString("title", "Smart Inventory Recipe"),
                     item.optString("summary", "A recipe suggestion based on your local inventory."),
@@ -318,7 +387,13 @@ public final class AgentRepository {
                     item.optString("actionText", "View Recipe"),
                     android.R.drawable.ic_menu_gallery,
                     recipes.isEmpty(),
-                    item.optString("imageUrl", null)
+                    item.optString("imageUrl", null),
+                    item.optString("prepTime", "20 min"),
+                    item.optString("difficulty", "Medium"),
+                    item.optString("calories", "400 kcal"),
+                    item.optString("smartTip", null),
+                    allIngredients,
+                    instructions
             ));
         }
         return recipes;
@@ -421,7 +496,12 @@ public final class AgentRepository {
 
     private static String buildRecipePrompt(List<Product> products, String userPrompt, String dietaryPreferences) {
         return "You are SmartExpApp's cooking assistant. Use only this local inventory context. "
-                + "Return strict JSON array of 3 recipe objects with fields title, summary, usedIngredients, actionText, imageUrl. "
+                + "Return strict JSON array of 3 recipe objects with fields: "
+                + "title, summary, usedIngredients (JSON array of strings of expiring ingredients from inventory used), "
+                + "actionText, imageUrl, prepTime (e.g. '25 min'), difficulty (e.g. 'Easy'), calories (e.g. '450 kcal'), "
+                + "smartTip (an AI tip for using expiring ingredients or substitutions, e.g. using yogurt instead of heavy cream), "
+                + "allIngredients (JSON array of strings representing the complete list of ingredients with quantities needed), "
+                + "instructions (JSON array of strings representing the step-by-step cooking steps). "
                 + "Prioritize items expiring soon and respect dietary preferences when possible. No markdown. User request: "
                 + userPrompt + "\nDietary preferences: " + dietaryPreferenceContext(dietaryPreferences)
                 + "\nInventory:\n" + inventoryContext(products);
