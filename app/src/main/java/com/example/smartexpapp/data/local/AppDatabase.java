@@ -18,16 +18,28 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 AgentMessageEntity.class,
                 UserSettingsEntity.class
         },
-        version = 2,
-        exportSchema = false
+        version = 4,
+        exportSchema = true
 )
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "smartexp_local.db";
     private static volatile AppDatabase instance;
-    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+    public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
             // Schema is unchanged; this keeps existing installs on a monotonic Room version.
+        }
+    };
+    public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE user_settings ADD COLUMN display_name TEXT DEFAULT 'Local User'");
+        }
+    };
+    public static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE user_settings ADD COLUMN dark_mode INTEGER NOT NULL DEFAULT 0");
         }
     };
 
@@ -54,8 +66,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     DATABASE_NAME
                             )
-                            .allowMainThreadQueries()
-                            .addMigrations(MIGRATION_1_2)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                             .fallbackToDestructiveMigrationOnDowngrade(true)
                             .build();
                 }

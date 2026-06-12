@@ -92,8 +92,8 @@
                     android:contentDescription="Delete"
                     android:padding="8dp"
                     android:scaleType="center"
-                    android:src="@drawable/ic_notification_bell"
-                    android:tint="@color/smart_error" />
+                    android:src="@drawable/ic_close"
+                    app:tint="@color/smart_error" />
             </LinearLayout>
 
             <LinearLayout

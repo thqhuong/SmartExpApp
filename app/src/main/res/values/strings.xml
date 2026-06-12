@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SmartExpApp</string>
-    <string name="search_hint">Search products…</string>
+    <string name="search_hint">Search products...</string>
     <string name="empty_inventory">No products yet</string>
     <string name="empty_inventory_desc">Add a product to start tracking expiry dates.</string>
     <string name="empty_search">No products found</string>
     <string name="empty_search_desc">Try a different search term or filter.</string>
+    <string name="empty_expiring_soon">No expiring items</string>
+    <string name="empty_expiring_soon_desc">Your current reminder window is clear.</string>
     <string name="delete_title">Delete product?</string>
     <string name="delete_message">Are you sure you want to remove &quot;%s&quot; from your inventory?</string>
     <string name="delete_confirm">Delete</string>
@@ -25,7 +27,7 @@
 
     <string name="status_expired">EXPIRED</string>
     <string name="status_expiring">EXPIRING SOON</string>
-    <string name="product_meta_format">%1$s • %2$s</string>
+    <string name="product_meta_format">%1$s - %2$s</string>
 
     <!-- Inventory Strings -->
     <string name="inventory_title">My Inventory</string>
@@ -40,6 +42,8 @@
     <string name="cat_general">General</string>
     <string name="select_expiry_date">Select expiry date</string>
     <string name="scan_with_camera">Scan with Camera</string>
+    <string name="recipes_loading">Loading local recipe suggestions...</string>
+    <string name="recipes_error">Could not load recipe suggestions. Try again after adding products.</string>
 
     <string name="filter_still_good">Still good</string>
     <string name="storage_type_label">Storage Type</string>
@@ -78,5 +82,4 @@
         <item>tbsp</item>
         <item>tsp</item>
     </string-array>
-
 </resources>

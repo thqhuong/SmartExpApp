@@ -27,6 +27,12 @@ public class UserSettingsEntity {
     @ColumnInfo(name = "dietary_preferences")
     public String dietaryPreferences;
 
+    @ColumnInfo(name = "display_name")
+    public String displayName = "Local User";
+
+    @ColumnInfo(name = "dark_mode", defaultValue = "0")
+    public boolean darkMode = false;
+
     @ColumnInfo(name = "default_storage_location_id")
     @NonNull
     public String defaultStorageLocationId = LocalDataContract.STORAGE_ROOM_TEMP_ID;

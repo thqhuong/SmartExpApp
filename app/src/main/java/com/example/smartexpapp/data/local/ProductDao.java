@@ -49,6 +49,9 @@ public interface ProductDao {
     @Query("DELETE FROM products WHERE id = :id")
     int deleteById(String id);
 
+    @Query("DELETE FROM products")
+    int deleteAll();
+
     @Query("UPDATE products SET status = :status, updated_at = :updatedAt, sync_status = :syncStatus WHERE id = :id")
     int updateStatus(String id, String status, long updatedAt, String syncStatus);
 }

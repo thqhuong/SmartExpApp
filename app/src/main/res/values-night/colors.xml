@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="smart_background">#131316</color>
-    <color name="smart_surface">#131316</color>
+    <color name="smart_background">#0A0A0C</color>
+    <color name="smart_surface">#0A0A0C</color>
     <color name="smart_surface_container">#1B1B1E</color>
     <color name="smart_surface_container_low">#171719</color>
     <color name="smart_surface_variant">#353438</color>
@@ -26,12 +26,12 @@
     <color name="category_general">#95A5A6</color>
 
     <!-- Bottom Nav Add Button Styles -->
-    <color name="bottom_nav_add_border">#131316</color>
-    <color name="bottom_nav_add_icon">#131316</color>
+    <color name="bottom_nav_add_border">#0A0A0C</color>
+    <color name="bottom_nav_add_icon">#0A0A0C</color>
 
     <!-- Glassmorphism and vibrant background colors (Dark Mode) -->
     <color name="smart_glass_surface">#991B1B1E</color>
-    <color name="smart_glass_surface_strong">#CC131316</color>
+    <color name="smart_glass_surface_strong">#CC0A0A0C</color>
     <color name="smart_glass_urgent">#26FF8C00</color>
     <color name="smart_glass_urgent_stroke">#66FF8C00</color>
     <color name="smart_glass_error">#26EF4444</color>
@@ -42,9 +42,9 @@
     <color name="smart_glass_input_stroke">#26FFFFFF</color>
     <color name="smart_gemini_purple">#B6C4FF</color>
     <color name="smart_gemini_pink">#FFB7D5</color>
-    <color name="smart_glass_wash_start">#26FF8C00</color>
-    <color name="smart_glass_wash_mid">#131316</color>
-    <color name="smart_glass_wash_end">#2693000A</color>
-    <color name="smart_glass_glow_mid_left">#2600B5FC</color>
+    <color name="smart_glass_wash_start">#14FF8C00</color>
+    <color name="smart_glass_wash_mid">#0A0A0C</color>
+    <color name="smart_glass_wash_end">#1493000A</color>
+    <color name="smart_glass_glow_mid_left">#1400B5FC</color>
     <color name="edit_profile_avatar_icon">@color/smart_on_primary</color>
 </resources>

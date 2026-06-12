@@ -132,9 +132,10 @@
                         android:textSize="14sp" />
 
                     <TextView
+                        android:id="@+id/wastePrevented"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="3.2 kg"
+                        android:text="0"
                         android:textColor="@color/smart_on_surface"
                         android:textSize="24sp"
                         android:textStyle="bold" />

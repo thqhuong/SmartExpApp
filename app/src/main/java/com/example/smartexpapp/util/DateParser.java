@@ -14,6 +14,35 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DateParser {
+    public static final class DateCandidate {
+        private final long dateMillis;
+        private final String matchedText;
+        private final String snippet;
+        private final float confidence;
+
+        private DateCandidate(long dateMillis, String matchedText, String snippet, float confidence) {
+            this.dateMillis = dateMillis;
+            this.matchedText = matchedText;
+            this.snippet = snippet;
+            this.confidence = confidence;
+        }
+
+        public long getDateMillis() {
+            return dateMillis;
+        }
+
+        public String getMatchedText() {
+            return matchedText;
+        }
+
+        public String getSnippet() {
+            return snippet;
+        }
+
+        public float getConfidence() {
+            return confidence;
+        }
+    }
 
     private static final String[] DATE_FORMATS = {
             "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd",
@@ -34,13 +63,27 @@ public class DateParser {
             Pattern.CASE_INSENSITIVE);
 
     public static List<Long> extractDates(String text) {
+        List<DateCandidate> candidates = extractDateCandidates(text);
+        Set<Long> uniqueDates = new HashSet<>();
+        for (DateCandidate candidate : candidates) {
+            uniqueDates.add(candidate.getDateMillis());
+        }
+
+        List<Long> result = new ArrayList<>(uniqueDates);
+        Collections.sort(result);
+        return result;
+    }
+
+    public static List<DateCandidate> extractDateCandidates(String text) {
+        List<DateCandidate> candidates = new ArrayList<>();
         Set<Long> uniqueDates = new HashSet<>();
         if (text == null || text.isEmpty())
-            return new ArrayList<>();
+            return candidates;
 
         Matcher matcher = DATE_PATTERN.matcher(text);
         while (matcher.find()) {
             String match = matcher.group();
+            String snippet = snippetAround(text, matcher.start(), matcher.end());
             // normalize spaces
             match = match.replaceAll("\\s+", " ").trim();
 
@@ -55,7 +98,10 @@ public class DateParser {
                         int year = cal.get(Calendar.YEAR);
                         // Sanity check for valid expiry years
                         if (year >= 2000 && year < 2100) {
-                            uniqueDates.add(date.getTime());
+                            long dateMillis = date.getTime();
+                            if (uniqueDates.add(dateMillis)) {
+                                candidates.add(new DateCandidate(dateMillis, match, snippet, confidenceFor(match, snippet)));
+                            }
                             break;
                         }
                     }
@@ -64,8 +110,25 @@ public class DateParser {
             }
         }
 
-        List<Long> result = new ArrayList<>(uniqueDates);
-        Collections.sort(result);
-        return result;
+        Collections.sort(candidates, (left, right) -> Long.compare(left.getDateMillis(), right.getDateMillis()));
+        return candidates;
+    }
+
+    private static String snippetAround(String text, int start, int end) {
+        int snippetStart = Math.max(0, start - 24);
+        int snippetEnd = Math.min(text.length(), end + 24);
+        return text.substring(snippetStart, snippetEnd).replaceAll("\\s+", " ").trim();
+    }
+
+    private static float confidenceFor(String match, String snippet) {
+        float confidence = 0.65f;
+        String lower = snippet.toLowerCase(Locale.US);
+        if (lower.contains("exp") || lower.contains("best before") || lower.contains("use by")) {
+            confidence += 0.25f;
+        }
+        if (match.matches(".*\\d{4}.*")) {
+            confidence += 0.1f;
+        }
+        return Math.min(confidence, 1.0f);
     }
 }

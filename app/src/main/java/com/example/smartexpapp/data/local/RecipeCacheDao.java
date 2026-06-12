@@ -15,6 +15,9 @@ public interface RecipeCacheDao {
     @Query("SELECT * FROM recipe_cache WHERE id = :id LIMIT 1")
     RecipeCacheEntity getById(String id);
 
+    @Query("DELETE FROM recipe_cache")
+    int deleteAll();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(RecipeCacheEntity recipeCache);
 }

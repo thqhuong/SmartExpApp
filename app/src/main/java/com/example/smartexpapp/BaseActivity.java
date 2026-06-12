@@ -130,8 +130,13 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void useBackButton() {
         ImageButton menuButton = findViewById(R.id.topActionMenu);
         if (menuButton != null) {
-            menuButton.setImageResource(android.R.drawable.ic_menu_revert);
+            menuButton.setImageResource(R.drawable.ic_arrow_back);
+            menuButton.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.smart_primary)));
             menuButton.setOnClickListener(v -> finish());
+        }
+        TextView topTitle = findViewById(R.id.topTitle);
+        if (topTitle != null) {
+            topTitle.setTextColor(getColor(R.color.smart_primary));
         }
     }
 

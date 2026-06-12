@@ -15,6 +15,12 @@ public interface InventoryActionDao {
     @Query("SELECT * FROM inventory_actions ORDER BY action_at DESC")
     List<InventoryActionEntity> getAll();
 
+    @Query("SELECT COUNT(*) FROM inventory_actions WHERE action_type IN (:actionTypes)")
+    int countByActionTypes(String[] actionTypes);
+
+    @Query("DELETE FROM inventory_actions")
+    int deleteAll();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(InventoryActionEntity action);
 }

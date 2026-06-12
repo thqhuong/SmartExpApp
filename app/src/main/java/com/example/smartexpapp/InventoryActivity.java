@@ -24,6 +24,7 @@ import androidx.appcompat.content.res.AppCompatResources;
 
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.notifications.ReminderScheduler;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
@@ -35,6 +36,8 @@ import java.util.List;
 
 public class InventoryActivity extends BaseActivity {
     private static final String TAG = "InventoryActivity";
+    public static final String EXTRA_FILTER = "com.example.smartexpapp.extra.FILTER";
+    public static final String FILTER_EXPIRING_SOON = "ExpiringSoon";
 
     private LinearLayout productList;
     private LinearLayout emptyState;
@@ -74,8 +77,17 @@ public class InventoryActivity extends BaseActivity {
 
         setupSearch();
         setupSpinners();
+        applyLaunchFilter(getIntent());
 
         showLoading();
+        renderProducts();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyLaunchFilter(intent);
         renderProducts();
     }
 
@@ -175,6 +187,14 @@ public class InventoryActivity extends BaseActivity {
         });
     }
 
+    private void applyLaunchFilter(Intent intent) {
+        if (intent == null || !FILTER_EXPIRING_SOON.equals(intent.getStringExtra(EXTRA_FILTER))) {
+            return;
+        }
+        currentFilter = FILTER_EXPIRING_SOON;
+        Toast.makeText(this, "Showing items from your expiry reminder.", Toast.LENGTH_SHORT).show();
+    }
+
     private void showLoading() {
         loadingIndicator.setVisibility(View.VISIBLE);
         productList.setVisibility(View.GONE);
@@ -188,19 +208,18 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void renderProducts() {
-        try {
-            List<Product> products = ProductRepository.search(this, currentSearch);
-            products = filterProducts(products);
-            products = sortProducts(products);
-            bindProducts(products);
+        ProductRepository.searchAsync(this, currentSearch, products -> {
+            List<Product> filtered = filterProducts(products);
+            List<Product> sorted = sortProducts(filtered);
+            bindProducts(sorted);
             hideLoading();
-        } catch (Exception e) {
+        }, e -> {
             Log.e(TAG, "Failed to render products", e);
             hideLoading();
             productList.setVisibility(View.GONE);
             emptyState.setVisibility(View.GONE);
             errorState.setVisibility(View.VISIBLE);
-        }
+        });
     }
 
     private List<Product> filterProducts(List<Product> products) {
@@ -223,6 +242,9 @@ public class InventoryActivity extends BaseActivity {
         }
         if ("StillGood".equals(currentFilter)) {
             return !product.isExpired();
+        }
+        if (FILTER_EXPIRING_SOON.equals(currentFilter)) {
+            return product.isExpiringSoon();
         }
         return product.isExpired();
     }
@@ -254,6 +276,9 @@ public class InventoryActivity extends BaseActivity {
             if (!currentSearch.isEmpty()) {
                 emptyTitle.setText(R.string.empty_search);
                 emptyDesc.setText(R.string.empty_search_desc);
+            } else if (FILTER_EXPIRING_SOON.equals(currentFilter)) {
+                emptyTitle.setText(R.string.empty_expiring_soon);
+                emptyDesc.setText(R.string.empty_expiring_soon_desc);
             } else {
                 emptyTitle.setText(R.string.empty_inventory);
                 emptyDesc.setText(R.string.empty_inventory_desc);
@@ -331,9 +356,37 @@ public class InventoryActivity extends BaseActivity {
             progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_gray));
         }
 
-        card.setOnClickListener(v -> openEditDialog(product));
+        card.setOnClickListener(v -> showProductActions(product));
 
         deleteBtn.setOnClickListener(v -> confirmDelete(product));
+    }
+
+    private void showProductActions(Product product) {
+        String[] actions = {"Edit", "Mark consumed", "Mark wasted", "Mark donated", "Delete"};
+        new AlertDialog.Builder(this)
+                .setTitle(product.getName())
+                .setItems(actions, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            openEditDialog(product);
+                            break;
+                        case 1:
+                            markConsumed(product);
+                            break;
+                        case 2:
+                            markWasted(product);
+                            break;
+                        case 3:
+                            markDonated(product);
+                            break;
+                        case 4:
+                            confirmDelete(product);
+                            break;
+                        default:
+                            break;
+                    }
+                })
+                .show();
     }
 
     private void openEditDialog(Product product) {
@@ -347,11 +400,49 @@ public class InventoryActivity extends BaseActivity {
                 .setTitle(R.string.delete_title)
                 .setMessage(getString(R.string.delete_message, product.getName()))
                 .setPositiveButton(R.string.delete_confirm, (dialog, which) -> {
-                    ProductRepository.deleteProduct(this, product.getId());
-                    Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
-                    renderProducts();
+                    ProductRepository.deleteProductAsync(this, product.getId(), deleted -> {
+                        if (Boolean.TRUE.equals(deleted)) {
+                            Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
+                            ReminderScheduler.runSoon(this);
+                            renderProducts();
+                        }
+                    }, error -> {
+                        Log.e(TAG, "Failed to delete product", error);
+                        Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+                    });
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private void markConsumed(Product product) {
+        ProductRepository.markConsumedAsync(this, product.getId(), "Marked from inventory",
+                updated -> onStatusUpdated(updated, product.getName() + " marked consumed."),
+                error -> onStatusUpdateFailed(error));
+    }
+
+    private void markWasted(Product product) {
+        ProductRepository.markWastedAsync(this, product.getId(), "Marked from inventory",
+                updated -> onStatusUpdated(updated, product.getName() + " marked wasted."),
+                error -> onStatusUpdateFailed(error));
+    }
+
+    private void markDonated(Product product) {
+        ProductRepository.markDonatedAsync(this, product.getId(), "Marked from inventory",
+                updated -> onStatusUpdated(updated, product.getName() + " marked donated."),
+                error -> onStatusUpdateFailed(error));
+    }
+
+    private void onStatusUpdated(Boolean updated, String message) {
+        if (Boolean.TRUE.equals(updated)) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            ReminderScheduler.runSoon(this);
+            renderProducts();
+        }
+    }
+
+    private void onStatusUpdateFailed(Exception error) {
+        Log.e(TAG, "Failed to update product status", error);
+        Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
     }
 }

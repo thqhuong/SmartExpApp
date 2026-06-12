@@ -26,6 +26,7 @@
             android:paddingBottom="24dp">
 
             <LinearLayout
+                android:id="@+id/notificationDetailsPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_glass_panel"
@@ -75,6 +76,71 @@
                     android:background="@color/smart_surface_variant" />
 
                 <LinearLayout
+                    android:id="@+id/reminderWindowRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="22dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Reminder Window"
+                        android:textColor="@color/smart_on_surface"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Choose how early SmartExp should include items in expiry reminders."
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="14sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/reminder1DayButton"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:text="1 day"
+                            android:textAllCaps="false"
+                            app:cornerRadius="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/reminder3DayButton"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:text="3 days"
+                            android:textAllCaps="false"
+                            app:cornerRadius="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/reminder7DayButton"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:text="7 days"
+                            android:textAllCaps="false"
+                            app:cornerRadius="8dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/smart_surface_variant" />
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -110,11 +176,18 @@
                                 android:textSize="17sp"
                                 android:textStyle="bold" />
 
-                            <com.google.android.material.switchmaterial.SwitchMaterial
-                                android:id="@+id/expiryAlertsSwitch"
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:checked="true" />
+                                android:background="@drawable/bg_primary_soft_badge"
+                                android:paddingStart="10dp"
+                                android:paddingTop="4dp"
+                                android:paddingEnd="10dp"
+                                android:paddingBottom="4dp"
+                                android:text="Active"
+                                android:textColor="@color/smart_primary_container"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <TextView
@@ -163,23 +236,25 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Daily Summaries"
+                                android:text="Local Daily Checks"
                                 android:textColor="@color/smart_on_surface"
                                 android:textSize="17sp"
                                 android:textStyle="bold" />
 
-                            <com.google.android.material.switchmaterial.SwitchMaterial
-                                android:id="@+id/dailySummarySwitch"
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:checked="false" />
+                                android:text="Local"
+                                android:textColor="@color/smart_secondary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="A morning brief of items expiring today and waste statistics."
+                            android:text="Reminder checks run locally once a day when notifications are enabled."
                             android:textColor="@color/smart_secondary"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -226,18 +301,20 @@
                                 android:textSize="17sp"
                                 android:textStyle="bold" />
 
-                            <com.google.android.material.switchmaterial.SwitchMaterial
-                                android:id="@+id/recipeSuggestionSwitch"
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:checked="true" />
+                                android:text="In app"
+                                android:textColor="@color/smart_secondary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Personalized recipes based on ingredients about to expire."
+                            android:text="Recipe ideas are shown inside the assistant and inventory flows, not pushed as separate alerts."
                             android:textColor="@color/smart_secondary"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -279,23 +356,25 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Gemini Quota Alerts"
+                                android:text="AI Fallback"
                                 android:textColor="@color/smart_on_surface"
                                 android:textSize="17sp"
                                 android:textStyle="bold" />
 
-                            <com.google.android.material.switchmaterial.SwitchMaterial
-                                android:id="@+id/aiQuotaSwitch"
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:checked="true" />
+                                android:text="Automatic"
+                                android:textColor="@color/smart_secondary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Alerts when AI analysis quota is near its monthly limit."
+                            android:text="If Gemini is unavailable or not configured, SmartExp keeps using local suggestions."
                             android:textColor="@color/smart_secondary"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -322,7 +401,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
-                    android:text="All alerts are processed locally when possible to protect your data privacy."
+                    android:text="Expiry reminders are processed locally from your Room inventory database."
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />

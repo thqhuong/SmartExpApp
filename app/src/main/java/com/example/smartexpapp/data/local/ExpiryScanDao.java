@@ -15,6 +15,9 @@ public interface ExpiryScanDao {
     @Query("SELECT * FROM expiry_scans ORDER BY scanned_at DESC")
     List<ExpiryScanEntity> getAll();
 
+    @Query("DELETE FROM expiry_scans")
+    int deleteAll();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(ExpiryScanEntity scan);
 }

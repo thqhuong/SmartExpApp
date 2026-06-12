@@ -44,9 +44,9 @@
                         android:layout_height="96dp"
                         android:background="@drawable/bg_avatar"
                         android:clipToOutline="true"
-                        android:contentDescription="Alex Johnson"
+                        android:contentDescription="Local user"
                         android:scaleType="centerCrop"
-                        android:src="@android:drawable/ic_menu_myplaces"
+                        android:src="@drawable/ic_nav_profile"
                         app:tint="@color/smart_primary" />
 
                     <FrameLayout
@@ -66,17 +66,18 @@
                             android:layout_width="16dp"
                             android:layout_height="16dp"
                             android:layout_gravity="center"
-                            android:src="@android:drawable/ic_menu_edit"
+                            android:src="@drawable/ic_edit"
                             app:tint="@color/edit_profile_avatar_icon" />
                     </FrameLayout>
                 </FrameLayout>
 
                 <TextView
+                    android:id="@+id/settingsDisplayNameText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:gravity="center"
-                    android:text="Alex Johnson"
+                    android:text="Local User"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -85,7 +86,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="alex.johnson@smartexp.io"
+                    android:text="Stored on this device"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -119,18 +120,18 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
-            <!-- Sign Out Button -->
+            <!-- Local Mode Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/signOutButton"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:text="Sign Out"
+                android:text="Local-only mode"
                 android:textAllCaps="false"
                 android:textColor="@color/smart_error"
                 android:textStyle="bold"
                 app:backgroundTint="@color/smart_glass_surface"
                 app:cornerRadius="12dp"
-                app:icon="@android:drawable/ic_menu_revert"
+                app:icon="@drawable/ic_info"
                 app:iconGravity="textStart"
                 app:iconTint="@color/smart_error"
                 app:strokeColor="@color/smart_error"

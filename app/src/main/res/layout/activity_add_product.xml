@@ -44,12 +44,12 @@
                 android:textColor="@color/smart_secondary"
                 android:textSize="14sp" />
 
-            <!-- Gemini Live Smart Adder Card -->
+            <!-- AI-assisted Smart Add Card -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:text="GEMINI LIVE SMART ADDER"
+                android:text="SMART ADD"
                 android:textColor="@color/smart_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -92,7 +92,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Smart Add with Gemini"
+                            android:text="AI-assisted Smart Add"
                             android:textColor="@color/smart_on_surface"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -101,7 +101,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Use AI to quickly register multiple items via voice or photo."
+                            android:text="Describe one or more items by voice or text. AI is used when configured; local parsing is always available."
                             android:textColor="@color/smart_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -114,7 +114,7 @@
                     android:layout_marginTop="16dp"
                     android:background="@drawable/bg_gemini_launch_button"
                     app:backgroundTint="@null"
-                    android:text="Launch Gemini Live"
+                    android:text="Start Voice Add"
                     android:textAllCaps="false"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
@@ -122,6 +122,22 @@
                     app:icon="@drawable/ic_mic"
                     app:iconGravity="textStart"
                     app:iconTint="#FFFFFF" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTypeSmartAdd"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:backgroundTint="@color/smart_surface_container"
+                    android:text="Type Smart Add"
+                    android:textAllCaps="false"
+                    android:textColor="@color/smart_on_surface"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="24dp"
+                    app:icon="@android:drawable/ic_menu_edit"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/smart_on_surface" />
             </LinearLayout>
 
             <!-- Glass Panel Form Container -->
@@ -229,30 +245,13 @@
                         android:layout_height="48dp"
                         android:layout_marginStart="8dp"
                         android:text="Manage"
-                        android:textColor="@color/smart_error"
+                        android:textColor="@color/smart_primary"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
-                        android:backgroundTint="@color/smart_error_container"
+                        android:backgroundTint="@color/smart_primary_soft"
                         app:cornerRadius="24dp" />
                 </LinearLayout>
-
-                <EditText
-                    android:id="@+id/customCategoryInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="-8dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/bg_glass_input"
-                    android:hint="Enter custom category"
-                    android:inputType="textCapWords"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:singleLine="true"
-                    android:textColor="@color/smart_on_surface"
-                    android:textColorHint="@color/smart_secondary"
-                    android:textSize="16sp"
-                    android:visibility="gone" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -408,7 +407,7 @@
                                 android:layout_width="28dp"
                                 android:layout_height="28dp"
                                 android:src="@android:drawable/ic_menu_gallery"
-                                android:tint="@color/smart_muted" />
+                                app:tint="@color/smart_muted" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -429,7 +428,7 @@
                             android:background="@drawable/bg_glass_shadow"
                             android:padding="5dp"
                             android:src="@android:drawable/ic_menu_edit"
-                            android:tint="@color/smart_primary_container"
+                            app:tint="@color/smart_primary_container"
                             android:visibility="gone" />
                     </FrameLayout>
 

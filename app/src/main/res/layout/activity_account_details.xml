@@ -38,16 +38,17 @@
                     android:layout_height="118dp"
                     android:background="@drawable/bg_avatar"
                     android:clipToOutline="true"
-                    android:contentDescription="Alex Johnson"
+                    android:contentDescription="Local user"
                     android:scaleType="centerCrop"
                     android:src="@drawable/account_avatar" />
 
                 <TextView
+                    android:id="@+id/accountDisplayNameText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:gravity="center"
-                    android:text="Alex Johnson"
+                    android:text="Local User"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="30sp"
                     android:textStyle="bold" />
@@ -56,7 +57,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Member since October 2023"
+                    android:text="Stored only on this device"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -81,12 +82,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Full Name"
+                    android:text="Display Name"
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
                 <EditText
+                    android:id="@+id/displayNameInput"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="6dp"
@@ -95,7 +97,7 @@
                     android:inputType="textPersonName"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Alex Johnson"
+                    android:text="Local User"
                     android:textColor="@color/smart_on_surface"
                     android:textColorHint="@color/smart_muted" />
 
@@ -103,7 +105,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Email Address"
+                    android:text="Local Mode"
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -113,11 +115,12 @@
                     android:layout_height="56dp"
                     android:layout_marginTop="6dp"
                     android:background="@drawable/bg_glass_input"
-                    android:hint="your@email.com"
-                    android:inputType="textEmailAddress"
+                    android:enabled="false"
+                    android:hint="Device only"
+                    android:inputType="none"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="alex.j@example.com"
+                    android:text="No sign-in required"
                     android:textColor="@color/smart_on_surface"
                     android:textColorHint="@color/smart_muted" />
 
@@ -125,7 +128,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Phone Number"
+                    android:text="AI Access"
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -135,11 +138,12 @@
                     android:layout_height="56dp"
                     android:layout_marginTop="6dp"
                     android:background="@drawable/bg_glass_input"
-                    android:hint="+1 000 000 000"
-                    android:inputType="phone"
+                    android:enabled="false"
+                    android:hint="Optional API key"
+                    android:inputType="none"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="+1 234 567 890"
+                    android:text="Optional local API key"
                     android:textColor="@color/smart_on_surface"
                     android:textColorHint="@color/smart_muted" />
             </LinearLayout>
@@ -155,20 +159,21 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Security"
+                    android:text="Local Data"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:background="@drawable/bg_glass_input"
                     android:gravity="center_vertical"
+                    android:minHeight="56dp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Change Password"
+                    android:text="Inventory, scans, recipes, and reminders are stored in the app database."
                     android:textColor="@color/smart_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -191,7 +196,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Two-Factor Authentication"
+                            android:text="Authentication"
                             android:textColor="@color/smart_on_surface"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -200,8 +205,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="ENABLED"
-                            android:textColor="@color/smart_primary_container"
+                            android:text="Not used in local-only mode"
+                            android:textColor="@color/smart_secondary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -233,10 +238,14 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/exportDataButton"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="14dp"
                     android:background="@drawable/bg_glass_input"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
@@ -246,14 +255,18 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/deleteLocalDataButton"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="12dp"
                     android:background="@drawable/bg_glass_input"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Delete Account"
+                    android:text="Delete Local Data"
                     android:textColor="@color/smart_error"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -264,7 +277,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="22dp"
-                android:text="Save Changes"
+                android:text="Save Local Profile"
                 android:textAllCaps="false"
                 android:textColor="@color/smart_on_primary"
                 android:textStyle="bold"

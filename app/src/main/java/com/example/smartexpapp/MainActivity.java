@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map;
 
 public class MainActivity extends BaseActivity {
     @Override
@@ -30,30 +29,55 @@ public class MainActivity extends BaseActivity {
         bindDashboard();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bindDashboard();
+    }
+
     private void bindDashboard() {
-        List<Product> products = ProductRepository.getProducts(this);
-        int urgentCount = 0;
-        for (Product product : products) {
-            if (product.isExpiringSoon()) {
-                urgentCount++;
-            }
+        ProductRepository.getDashboardSnapshotAsync(this, snapshot -> {
+            ((TextView) findViewById(R.id.urgentCount)).setText(String.valueOf(snapshot.getUrgentCount()));
+            ((TextView) findViewById(R.id.totalTracked)).setText(String.valueOf(snapshot.getTotalTracked()));
+            ((TextView) findViewById(R.id.wastePrevented)).setText(String.valueOf(snapshot.getWastePreventedCount()));
+            findViewById(R.id.viewAllInventory).setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
+
+            resetGroup(R.id.expiredList, R.id.sectionExpiredTitle, R.id.sectionExpiredCard);
+            resetGroup(R.id.urgentList, R.id.sectionUrgentTitle, R.id.sectionUrgentCard);
+            resetGroup(R.id.soonList, R.id.sectionSoonTitle, R.id.sectionSoonCard);
+            resetGroup(R.id.safeList, R.id.sectionSafeTitle, R.id.sectionSafeCard);
+            bindStorageSummaries(snapshot.getActiveProducts());
+            bindGroupedProducts(snapshot.getActiveProducts());
+        }, error -> {
+            ((TextView) findViewById(R.id.urgentCount)).setText("0");
+            ((TextView) findViewById(R.id.totalTracked)).setText("0");
+            ((TextView) findViewById(R.id.wastePrevented)).setText("0");
+        });
+    }
+
+    private void resetGroup(int listId, int titleId, int cardId) {
+        View title = findViewById(titleId);
+        View card = findViewById(cardId);
+        LinearLayout list = findViewById(listId);
+        if (title != null) {
+            title.setVisibility(View.GONE);
         }
-
-        ((TextView) findViewById(R.id.urgentCount)).setText(String.valueOf(urgentCount));
-        ((TextView) findViewById(R.id.totalTracked)).setText(String.valueOf(products.size()));
-        findViewById(R.id.viewAllInventory).setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
-
-        bindStorageSummaries(products);
-        bindGroupedProducts(products);
+        if (card != null) {
+            card.setVisibility(View.GONE);
+            card.setBackgroundResource(R.drawable.bg_glass_card);
+        }
+        if (list != null) {
+            list.removeAllViews();
+        }
     }
 
     private void bindStorageSummaries(List<Product> products) {
         LinearLayout list = findViewById(R.id.storageSummaryList);
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-        addStorageSummary(inflater, list, products, "Refrigerator", "Refrigerator", android.R.drawable.ic_menu_upload, true);
-        addStorageSummary(inflater, list, products, "Room Temp", "Room Temp", android.R.drawable.ic_menu_agenda, false);
-        addStorageSummary(inflater, list, products, "Freezer", "Freeze", android.R.drawable.ic_menu_compass, false);
+        addStorageSummary(inflater, list, products, "Refrigerator", "Refrigerator", R.drawable.ic_storage_fridge, true);
+        addStorageSummary(inflater, list, products, "Room Temp", "Room Temp", R.drawable.ic_storage_room, false);
+        addStorageSummary(inflater, list, products, "Freezer", "Freeze", R.drawable.ic_storage_freeze, false);
     }
 
     private void addStorageSummary(LayoutInflater inflater, LinearLayout list, List<Product> products, String label, String storageValue, int iconRes, boolean primaryProgress) {

@@ -1,6 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use(::load)
+    }
+}
+val geminiApiKey = providers.environmentVariable("GEMINI_API_KEY")
+    .orElse(localProperties.getProperty("GEMINI_API_KEY", ""))
+    .get()
 
 android {
     namespace = "com.example.smartexpapp"
@@ -16,8 +28,22 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "GEMINI_API_KEY", "\"${geminiApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField("String", "GEMINI_MODEL", "\"gemini-3.1-flash-lite\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += mapOf(
+                    "room.schemaLocation" to "$projectDir/schemas",
+                    "room.incremental" to "true"
+                )
+            }
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -46,7 +72,8 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.room.runtime)
-    implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation(libs.work.runtime)
+    implementation(libs.mlkit.text.recognition)
     annotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.test.core)

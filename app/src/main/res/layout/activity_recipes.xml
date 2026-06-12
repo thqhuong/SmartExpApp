@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -28,7 +29,7 @@
             android:clipChildren="false"
             android:clipToPadding="false">
 
-            <!-- Gemini Live Section -->
+            <!-- Voice assistant section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -75,12 +76,12 @@
                     </FrameLayout>
                 </FrameLayout>
 
-                <!-- Gradient Gemini Live Title -->
+                <!-- Gradient assistant title -->
                 <TextView
                     android:id="@+id/geminiLiveTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Gemini Live"
+                    android:text="Smart Recipe Assistant"
                     android:textSize="28sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="6dp" />
@@ -89,9 +90,25 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Your AI culinary assistant. Tap the microphone to start talking about what to cook."
+                    android:text="Ask by voice or text. Gemini is used when configured; local recipe suggestions stay available offline."
                     android:textColor="@color/smart_secondary"
                     android:textSize="15sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/askByTextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/smart_surface_container"
+                    android:text="Ask by Text"
+                    android:textAllCaps="false"
+                    android:textColor="@color/smart_on_surface"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="24dp"
+                    app:icon="@android:drawable/ic_menu_edit"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/smart_on_surface" />
             </LinearLayout>
 
             <View
@@ -129,11 +146,35 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="12dp"
                 android:gravity="center"
-                android:text="We've generated these recipes based on items in your inventory that are approaching expiration."
+                android:text="Recipes are based on local inventory items approaching expiration."
                 android:textColor="@color/smart_secondary"
                 android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/recipeStateText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/bg_glass_input"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="10dp"
+                android:text="@string/recipes_loading"
+                android:textColor="@color/smart_secondary"
+                android:textSize="13sp" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/recipePromptChipGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
+                app:singleLine="false" />
 
             <LinearLayout
                 android:id="@+id/recipeList"

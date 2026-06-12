@@ -1,9 +1,17 @@
 package com.example.smartexpapp;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Shader;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -11,32 +19,95 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.ScaleAnimation;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.smartexpapp.data.SampleData;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
+import com.example.smartexpapp.data.AgentRepository;
+import com.example.smartexpapp.data.AgentRepository.RecipeSuggestionResult;
+import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Recipe;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class RecipesActivity extends BaseActivity {
+    private static RecipeSuggestionResult defaultSessionRecipeResult;
+    private static boolean defaultSessionRecipeLoadAttempted;
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private TextToSpeech textToSpeech;
+    private boolean ttsReady;
+    private TextView recipeStateText;
+    private ChipGroup recipePromptChipGroup;
+
+    private final ActivityResultLauncher<Intent> agentSpeechLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
+                    showTypedPromptDialog();
+                    return;
+                }
+                ArrayList<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (matches == null || matches.isEmpty()) {
+                    showTypedPromptDialog();
+                    return;
+                }
+                askAgent(matches.get(0));
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipes);
         setupChrome(R.id.nav_recipes);
+        recipeStateText = findViewById(R.id.recipeStateText);
+        recipePromptChipGroup = findViewById(R.id.recipePromptChipGroup);
+        setupTextToSpeech();
         setupGeminiLive();
-        bindRecipes();
+        loadDefaultRecipesOncePerSession();
 
         if (getIntent().getBooleanExtra("start_gemini_live", false)) {
-            View geminiLiveButton = findViewById(R.id.geminiLiveButton);
-            if (geminiLiveButton != null) {
-                geminiLiveButton.performClick();
-            }
+            startAgentVoice();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadRecipePromptChips();
+    }
+
+    @Override
+    protected void onDestroy() {
+        executor.shutdownNow();
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+        super.onDestroy();
+    }
+
+    private void setupTextToSpeech() {
+        textToSpeech = new TextToSpeech(this, status -> {
+            ttsReady = status == TextToSpeech.SUCCESS;
+            if (ttsReady) {
+                textToSpeech.setLanguage(Locale.US);
+            }
+        });
     }
 
     private void setupGeminiLive() {
@@ -66,12 +137,96 @@ public class RecipesActivity extends BaseActivity {
 
         View geminiLiveButton = findViewById(R.id.geminiLiveButton);
         if (geminiLiveButton != null) {
-            geminiLiveButton.setOnClickListener(v -> {
-                Toast.makeText(this, "Gemini Live starting...", Toast.LENGTH_SHORT).show();
-            });
+            geminiLiveButton.setOnClickListener(v -> startAgentVoice());
+        }
+        View askByTextButton = findViewById(R.id.askByTextButton);
+        if (askByTextButton != null) {
+            askByTextButton.setOnClickListener(v -> showTypedPromptDialog());
         }
 
         startPulseAnimation();
+    }
+
+    private void loadRecipePromptChips() {
+        ProductRepository.getProductsAsync(this,
+                products -> renderPromptChips(AgentRepository.recipePromptSuggestions(products)),
+                error -> renderPromptChips(new ArrayList<>()));
+    }
+
+    private void renderPromptChips(List<String> prompts) {
+        if (recipePromptChipGroup == null) {
+            return;
+        }
+        recipePromptChipGroup.removeAllViews();
+        recipePromptChipGroup.setVisibility(prompts.isEmpty() ? View.GONE : View.VISIBLE);
+        for (String prompt : prompts) {
+            Chip chip = new Chip(this);
+            chip.setText(prompt);
+            chip.setCheckable(false);
+            chip.setClickable(true);
+            chip.setTextColor(getColor(R.color.smart_on_surface));
+            chip.setChipBackgroundColor(ColorStateList.valueOf(getColor(R.color.smart_surface_container)));
+            chip.setChipStrokeColor(ColorStateList.valueOf(getColor(R.color.smart_glass_input_stroke)));
+            chip.setChipStrokeWidth(ViewUtils.dp(this, 1));
+            chip.setContentDescription("Ask: " + prompt);
+            chip.setOnClickListener(v -> askAgent(prompt));
+            recipePromptChipGroup.addView(chip);
+        }
+    }
+
+    private void startAgentVoice() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Ask about recipes or expiring items");
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            showTypedPromptDialog();
+            return;
+        }
+        agentSpeechLauncher.launch(intent);
+    }
+
+    private void showTypedPromptDialog() {
+        EditText input = new EditText(this);
+        input.setHint("Ask about recipes or expiring items");
+        input.setSingleLine(false);
+        int padding = Math.round(16 * getResources().getDisplayMetrics().density);
+        input.setPadding(padding, padding / 2, padding, padding / 2);
+        new AlertDialog.Builder(this)
+                .setTitle("Ask SmartExp Agent")
+                .setView(input)
+                .setPositiveButton("Ask", (dialog, which) -> askAgent(input.getText().toString()))
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void askAgent(String prompt) {
+        String safePrompt = prompt == null ? "" : prompt.trim();
+        if (safePrompt.isEmpty()) {
+            safePrompt = "Suggest recipes from my expiring items";
+        }
+        Toast.makeText(this, "Checking local inventory...", Toast.LENGTH_SHORT).show();
+        setRecipeState(getString(R.string.recipes_loading), false);
+        String finalPrompt = safePrompt;
+        executor.execute(() -> {
+            try {
+                String answer = AgentRepository.answerInventoryQuestion(this, finalPrompt);
+                RecipeSuggestionResult result = AgentRepository.getRecipeSuggestionResult(this, finalPrompt);
+                mainHandler.post(() -> {
+                    Toast.makeText(this, answer, Toast.LENGTH_LONG).show();
+                    speak(answer);
+                    renderRecipeResult(result);
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> showRecipeLoadError());
+            }
+        });
+    }
+
+    private void speak(String answer) {
+        if (ttsReady && answer != null && !answer.trim().isEmpty()) {
+            textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, "smartexp-agent");
+        }
     }
 
     private void startPulseAnimation() {
@@ -101,17 +256,60 @@ public class RecipesActivity extends BaseActivity {
         pulseView.startAnimation(animSet);
     }
 
-    private void bindRecipes() {
+    private void loadDefaultRecipesOncePerSession() {
+        if (defaultSessionRecipeResult != null) {
+            renderRecipeResult(defaultSessionRecipeResult);
+            return;
+        }
+        if (defaultSessionRecipeLoadAttempted) {
+            showRecipeLoadError();
+            return;
+        }
+
+        defaultSessionRecipeLoadAttempted = true;
+        setRecipeState(getString(R.string.recipes_loading), false);
+        executor.execute(() -> {
+            try {
+                RecipeSuggestionResult result = AgentRepository.getRecipeSuggestionResult(this, "");
+                mainHandler.post(() -> {
+                    defaultSessionRecipeResult = result;
+                    renderRecipeResult(result);
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> showRecipeLoadError());
+            }
+        });
+    }
+
+    private void renderRecipeResult(RecipeSuggestionResult result) {
+        setRecipeState(result.getStatusMessage(), result.isInventoryEmpty() || result.isLocalFallback());
+        renderRecipes(result.getRecipes());
+    }
+
+    private void renderRecipes(List<Recipe> recipes) {
         LinearLayout recipeList = findViewById(R.id.recipeList);
         recipeList.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
 
-        for (Recipe recipe : SampleData.recipes()) {
+        for (Recipe recipe : recipes) {
             View item = inflater.inflate(R.layout.item_recipe_card, recipeList, false);
             bindRecipeCard(inflater, item, recipe);
             ViewUtils.setBottomMargin(item, 16);
             recipeList.addView(item);
         }
+    }
+
+    private void showRecipeLoadError() {
+        setRecipeState(getString(R.string.recipes_error), true);
+        renderRecipes(new ArrayList<>());
+    }
+
+    private void setRecipeState(String message, boolean emphasized) {
+        if (recipeStateText == null) {
+            return;
+        }
+        recipeStateText.setText(message);
+        recipeStateText.setTextColor(getColor(emphasized ? R.color.smart_primary : R.color.smart_secondary));
     }
 
     private void bindRecipeCard(LayoutInflater inflater, View item, Recipe recipe) {
@@ -127,6 +325,11 @@ public class RecipesActivity extends BaseActivity {
         action.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(recipe.isFeatured() ? R.color.smart_primary : R.color.smart_surface_container)));
         action.setTextColor(getColor(recipe.isFeatured() ? R.color.smart_on_primary : R.color.smart_on_surface));
         action.setIconTint(android.content.res.ColorStateList.valueOf(getColor(recipe.isFeatured() ? R.color.smart_on_primary : R.color.smart_on_surface)));
+        action.setOnClickListener(v -> {
+            String message = recipe.getSummary();
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            speak(message);
+        });
 
         LinearLayout ingredients = item.findViewById(R.id.ingredientList);
         ingredients.removeAllViews();

@@ -99,6 +99,22 @@ public class ProductRepositoryTest {
     }
 
     @Test
+    public void reminderExpiryQueryReturnsOnlyActiveProductsInsideWindow() {
+        Product activeSoon = product("active-soon-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 1);
+        Product activeLate = product("active-late-id", "Pasta", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 9);
+        Product consumedSoon = product("consumed-soon-id", "Spinach", "Vegetables", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 1);
+        ProductRepository.addProduct(database, activeSoon);
+        ProductRepository.addProduct(database, activeLate);
+        ProductRepository.addProduct(database, consumedSoon);
+        ProductRepository.markConsumed(database, consumedSoon.getId(), "Used");
+
+        List<Product> expiring = ProductRepository.getExpiringBetween(database, startOfToday(), expiryMillisForOffset(3));
+
+        assertEquals(1, expiring.size());
+        assertEquals("Milk", expiring.get(0).getName());
+    }
+
+    @Test
     public void markConsumedUpdatesStatusAndWritesInventoryAction() {
         Product yogurt = product("yogurt-id", "Greek Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
         ProductRepository.addProduct(database, yogurt);
@@ -114,26 +130,59 @@ public class ProductRepositoryTest {
     }
 
     @Test
-    public void seedDemoProductsOnlyWhenDatabaseIsEmpty() {
-        assertEquals(0, database.productDao().count());
+    public void wastePreventedCountIncludesConsumedAndDonatedOnly() {
+        Product consumed = product("consumed-id", "Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
+        Product donated = product("donated-id", "Beans", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 10);
+        Product wasted = product("wasted-id", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 1);
+        ProductRepository.addProduct(database, consumed);
+        ProductRepository.addProduct(database, donated);
+        ProductRepository.addProduct(database, wasted);
 
-        ProductRepository.seedDemoProductsIfEmpty(database);
-        int seededCount = database.productDao().count();
+        ProductRepository.markConsumed(database, consumed.getId(), "Used");
+        ProductRepository.markDonated(database, donated.getId(), "Shared");
+        ProductRepository.markWasted(database, wasted.getId(), "Spoiled");
 
-        assertEquals(SampleData.products().size(), seededCount);
-        assertEquals(3, database.storageLocationDao().count());
-        assertNotNull(database.userSettingsDao().getById("default"));
-
-        ProductRepository.seedDemoProductsIfEmpty(database);
-        assertEquals(seededCount, database.productDao().count());
+        assertEquals(2, ProductRepository.getWastePreventedCount(database));
     }
 
     @Test
-    public void seedDemoProductsDoesNotRunWhenProductTableHasData() {
+    public void dashboardSnapshotDerivesMetricsFromRoomData() {
+        Product urgent = product("urgent-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 1);
+        Product expired = product("expired-id", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, -1);
+        Product safe = product("safe-id", "Pasta", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 20);
+        Product consumed = product("consumed-id", "Spinach", "Vegetables", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
+        ProductRepository.addProduct(database, urgent);
+        ProductRepository.addProduct(database, expired);
+        ProductRepository.addProduct(database, safe);
+        ProductRepository.addProduct(database, consumed);
+        ProductRepository.markConsumed(database, consumed.getId(), "Used before expiry");
+
+        ProductRepository.DashboardSnapshot snapshot = ProductRepository.getDashboardSnapshot(database);
+
+        assertEquals(3, snapshot.getTotalTracked());
+        assertEquals(1, snapshot.getUrgentCount());
+        assertEquals(1, snapshot.getExpiredCount());
+        assertEquals(1, snapshot.getWastePreventedCount());
+        assertEquals(3, snapshot.getActiveProducts().size());
+    }
+
+    @Test
+    public void ensureLocalDefaultsDoesNotSeedProducts() {
+        assertEquals(0, database.productDao().count());
+
+        ProductRepository.ensureLocalDefaults(database);
+
+        assertEquals(0, database.productDao().count());
+        assertEquals(3, database.storageLocationDao().count());
+        assertNotNull(database.userSettingsDao().getById("default"));
+    }
+
+    @Test
+    public void ensureLocalDefaultsPreservesExistingProducts() {
         Product custom = product("custom-id", "Custom Item", "General", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 7);
         ProductRepository.addProduct(database, custom);
 
-        ProductRepository.seedDemoProductsIfEmpty(database);
+        ProductRepository.ensureLocalDefaults(database);
 
         List<Product> products = ProductRepository.getProducts(database);
         assertEquals(1, products.size());
