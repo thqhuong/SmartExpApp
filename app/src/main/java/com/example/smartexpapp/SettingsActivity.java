@@ -37,9 +37,7 @@ public class SettingsActivity extends BaseActivity {
             overridePendingTransition(0, 0);
         });
 
-        findViewById(R.id.signOutButton).setOnClickListener(v ->
-                Toast.makeText(this, R.string.local_only_mode_toast, Toast.LENGTH_SHORT).show()
-        );
+        // signOutButton is dynamically bound in onResume
     }
 
     @Override
@@ -47,6 +45,62 @@ public class SettingsActivity extends BaseActivity {
         super.onResume();
         bindLocalProfile();
         bindSettings();
+        bindSignOutButton();
+    }
+
+    private void bindSignOutButton() {
+        com.google.android.material.button.MaterialButton signOutBtn = findViewById(R.id.signOutButton);
+        if (signOutBtn == null) return;
+
+        com.google.firebase.auth.FirebaseUser user = null;
+        try {
+            if (!com.google.firebase.FirebaseApp.getApps(this).isEmpty()) {
+                user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            }
+        } catch (Exception e) {
+            // Firebase not configured
+        }
+
+        if (user != null && !user.isAnonymous()) {
+            signOutBtn.setText(R.string.sign_out_label);
+            signOutBtn.setIconResource(R.drawable.ic_close);
+            signOutBtn.setOnClickListener(v -> {
+                try {
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
+                } catch (Exception e) {
+                    // Ignore
+                }
+                try {
+                    androidx.credentials.CredentialManager.create(this).clearCredentialStateAsync(
+                        new androidx.credentials.ClearCredentialStateRequest(),
+                        new android.os.CancellationSignal(),
+                        java.util.concurrent.Executors.newSingleThreadExecutor(),
+                        new androidx.credentials.CredentialManagerCallback<Void, androidx.credentials.exceptions.ClearCredentialException>() {
+                            @Override
+                            public void onResult(Void result) {}
+                            @Override
+                            public void onError(androidx.credentials.exceptions.ClearCredentialException e) {}
+                        }
+                    );
+                } catch (Exception e) {
+                    // Ignore
+                }
+                getSharedPreferences("auth_prefs", MODE_PRIVATE).edit().putBoolean("guest_mode_enabled", false).apply();
+                Intent intent = new Intent(this, SignInActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        } else {
+            signOutBtn.setText(R.string.settings_local_mode);
+            signOutBtn.setIconResource(R.drawable.ic_info);
+            signOutBtn.setOnClickListener(v -> {
+                Intent intent = new Intent(this, SignInActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
     }
 
     private void bindLocalProfile() {
