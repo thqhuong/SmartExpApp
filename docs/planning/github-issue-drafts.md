@@ -68,15 +68,7 @@ Acceptance criteria:
 
 ## Issue 6: Barcode: lookup products and auto-fill metadata
 
-Goal:
-Speed up product entry by scanning barcodes and filling product details from an external provider.
-
-Acceptance criteria:
-1. User can scan a barcode from Add Product.
-2. App calls a product lookup provider such as Open Food Facts.
-3. Product name, brand/category, and image are auto-filled when available.
-4. User can edit all auto-filled fields before saving.
-5. Missing product and network-error fallbacks are handled.
+(Cancelled: Barcode scanning is out of scope for the final product.)
 
 ## Issue 7: Agent: voice/chat assistant with recipe help
 
