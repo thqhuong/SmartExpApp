@@ -36,7 +36,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class InventoryActivity extends BaseActivity {
-    private static final String[] STORAGE_KEYS = {"All", "Room Temp", "Refrigerator", "Freeze"};
+    private static final String[] STORAGE_KEYS = { "All", "Room Temp", "Refrigerator", "Freeze" };
     private static final String TAG = "InventoryActivity";
     public static final String EXTRA_FILTER = "com.example.smartexpapp.extra.FILTER";
     public static final String EXTRA_RESET_FILTERS = "com.example.smartexpapp.extra.RESET_FILTERS";
@@ -355,12 +355,13 @@ public class InventoryActivity extends BaseActivity {
             icon.setImageTintList(null);
             ImageLoader.load(icon, imgUrl);
         } else {
-            int tintColor = CategoryColorHelper.getColor(product.getCategory());
+            int tintColor = CategoryColorHelper.getColor(this, product.getCategory());
             icon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(tintColor)));
             ViewUtils.setIcon(icon, product.getIconRes(), tintColor);
         }
         ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
-        ((TextView) item.findViewById(R.id.productMeta)).setText(getString(R.string.product_meta_format, product.getCategory(), product.getAmount()));
+        ((TextView) item.findViewById(R.id.productMeta))
+                .setText(getString(R.string.product_meta_format, product.getCategory(), product.getAmount()));
         expiryStatus.setText(product.getExpiryStatus());
         progress.setProgress(product.getExpiryProgress());
 
@@ -434,25 +435,24 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void openEditDialog(Product product) {
-        Intent intent = new Intent(this, AddProductActivity.class);
-        intent.putExtra(AddProductActivity.EXTRA_PRODUCT_ID, product.getId());
-        startActivity(intent);
+        new EditProductDialog(product, this::renderProducts).show(this);
     }
 
     private void confirmDelete(Product product) {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.delete_title)
                 .setMessage(getString(R.string.delete_message, product.getName()))
-                .setPositiveButton(R.string.delete_confirm, (dialog, which) -> ProductRepository.deleteProductAsync(this, product.getId(), deleted -> {
-                    if (Boolean.TRUE.equals(deleted)) {
-                        Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
-                        ReminderScheduler.runSoon(this);
-                        renderProducts();
-                    }
-                }, error -> {
-                    Log.e(TAG, "Failed to delete product", error);
-                    Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
-                }))
+                .setPositiveButton(R.string.delete_confirm,
+                        (dialog, which) -> ProductRepository.deleteProductAsync(this, product.getId(), deleted -> {
+                            if (Boolean.TRUE.equals(deleted)) {
+                                Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
+                                ReminderScheduler.runSoon(this);
+                                renderProducts();
+                            }
+                        }, error -> {
+                            Log.e(TAG, "Failed to delete product", error);
+                            Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+                        }))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
