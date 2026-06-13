@@ -64,7 +64,7 @@
                     <TextView
                         android:layout_width="80dp"
                         android:layout_height="wrap_content"
-                        android:text="Expiry"
+                        android:text="@string/expiry_label"
                         android:textColor="@color/smart_secondary"
                         android:textSize="14sp"
                         android:textStyle="bold" />

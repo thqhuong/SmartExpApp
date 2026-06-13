@@ -1,5 +1,7 @@
 package com.example.smartexpapp.data;
 
+import android.content.Context;
+
 import com.example.smartexpapp.R;
 import com.example.smartexpapp.model.SettingItem;
 
@@ -10,14 +12,14 @@ public final class SampleData {
     private SampleData() {
     }
 
-    public static List<SettingItem> settings() {
+    public static List<SettingItem> settings(Context context) {
         return Arrays.asList(
-                new SettingItem("Notification Settings", "Manage local expiry alerts", R.drawable.ic_notification_bell, false),
-                new SettingItem("Storage Preferences", "Default locations and categories", R.drawable.ic_nav_inventory, false),
-                new SettingItem("Dietary Preferences", "Guide local and Gemini recipes", R.drawable.ic_nav_meals, false),
-                new SettingItem("Local Profile", "Device-only profile and local data", R.drawable.ic_nav_profile, false),
-                new SettingItem("Help & Support", "FAQs and contact information", R.drawable.ic_help, false),
-                new SettingItem("Dark Mode", "Toggle dark theme across the application", R.drawable.ic_theme_moon, true)
+                new SettingItem(context.getString(R.string.settings_notification_title), context.getString(R.string.settings_notification_desc), R.drawable.ic_notification_bell, false),
+                new SettingItem(context.getString(R.string.settings_storage_title), context.getString(R.string.settings_storage_desc), R.drawable.ic_nav_inventory, false),
+                new SettingItem(context.getString(R.string.settings_dietary_title), context.getString(R.string.settings_dietary_desc), R.drawable.ic_nav_meals, false),
+                new SettingItem(context.getString(R.string.settings_profile_title), context.getString(R.string.settings_profile_desc), R.drawable.ic_nav_profile, false),
+                new SettingItem(context.getString(R.string.settings_help_title), context.getString(R.string.settings_help_desc), R.drawable.ic_help, false),
+                new SettingItem(context.getString(R.string.settings_dark_mode_title), context.getString(R.string.settings_dark_mode_desc), R.drawable.ic_theme_moon, true)
         );
     }
 }

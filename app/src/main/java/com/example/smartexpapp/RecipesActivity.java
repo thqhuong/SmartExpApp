@@ -189,14 +189,14 @@ public class RecipesActivity extends BaseActivity {
 
     private void showTypedPromptDialog() {
         EditText input = new EditText(this);
-        input.setHint("Ask about recipes or expiring items");
+        input.setHint(R.string.ask_agent_hint);
         input.setSingleLine(false);
         int padding = Math.round(16 * getResources().getDisplayMetrics().density);
         input.setPadding(padding, padding / 2, padding, padding / 2);
         new AlertDialog.Builder(this)
-                .setTitle("Ask SmartExp Agent")
+                .setTitle(R.string.ask_agent_title)
                 .setView(input)
-                .setPositiveButton("Ask", (dialog, which) -> askAgent(input.getText().toString()))
+                .setPositiveButton(R.string.ask_label, (dialog, which) -> askAgent(input.getText().toString()))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
@@ -206,7 +206,7 @@ public class RecipesActivity extends BaseActivity {
         if (safePrompt.isEmpty()) {
             safePrompt = "Suggest recipes from my expiring items";
         }
-        Toast.makeText(this, "Checking local inventory...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.recipes_checking_inventory, Toast.LENGTH_SHORT).show();
         setRecipeState(getString(R.string.recipes_loading), false);
         String finalPrompt = safePrompt;
         executor.execute(() -> {

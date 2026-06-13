@@ -59,7 +59,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         View bottomNavigation = findViewById(R.id.bottomNavigation);
 
         if (menuButton != null) {
-            menuButton.setOnClickListener(v -> Toast.makeText(this, "Menu placeholder", Toast.LENGTH_SHORT).show());
+            menuButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            });
         }
 
         View themeTogglePill = findViewById(R.id.themeTogglePill);
@@ -88,7 +92,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                         sunIcon,
                         moonIcon
                 );
-                Toast.makeText(this, "Could not save theme setting.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show();
             });
         };
 
@@ -105,7 +109,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
 
         if (searchButton != null) {
-            searchButton.setOnClickListener(v -> Toast.makeText(this, "Search placeholder", Toast.LENGTH_SHORT).show());
+            searchButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, InventoryActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            });
         }
 
         if (bottomNavigation == null) {

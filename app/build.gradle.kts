@@ -13,6 +13,9 @@ val localProperties = Properties().apply {
 val geminiApiKey = providers.environmentVariable("GEMINI_API_KEY")
     .orElse(localProperties.getProperty("GEMINI_API_KEY", ""))
     .get()
+val openRouterApiKey = providers.environmentVariable("OPENROUTER_API_KEY")
+    .orElse(localProperties.getProperty("OPENROUTER_API_KEY", ""))
+    .get()
 
 android {
     namespace = "com.example.smartexpapp"
@@ -30,6 +33,8 @@ android {
         versionName = "1.0"
         buildConfigField("String", "GEMINI_API_KEY", "\"${geminiApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
         buildConfigField("String", "GEMINI_MODEL", "\"gemini-3.1-flash-lite\"")
+        buildConfigField("String", "OPENROUTER_API_KEY", "\"${openRouterApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField("String", "OPENROUTER_IMAGE_MODEL", "\"black-forest-labs/flux.2-klein-4b\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {

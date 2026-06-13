@@ -91,7 +91,7 @@ public class RecipeDetailsActivity extends BaseActivity {
             }
         } else {
             TextView emptyText = new TextView(this);
-            emptyText.setText("No ingredients listed.");
+            emptyText.setText(R.string.ingredients_empty);
             emptyText.setTextColor(getColor(R.color.smart_secondary));
             emptyText.setTextSize(14);
             ingredientsContainer.addView(emptyText);
@@ -132,11 +132,11 @@ public class RecipeDetailsActivity extends BaseActivity {
             if (isFavorited[0]) {
                 favoriteBtn.setImageResource(R.drawable.ic_favorite_filled);
                 favoriteBtn.setImageTintList(null);
-                Toast.makeText(this, "Recipe saved to favorites!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.favorite_saved, Toast.LENGTH_SHORT).show();
             } else {
                 favoriteBtn.setImageResource(R.drawable.ic_favorite_border);
                 favoriteBtn.setImageTintList(ColorStateList.valueOf(getColor(R.color.smart_primary)));
-                Toast.makeText(this, "Recipe removed from favorites.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.favorite_removed, Toast.LENGTH_SHORT).show();
             }
         });
     }

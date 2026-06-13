@@ -35,7 +35,7 @@ public class SettingsActivity extends BaseActivity {
         });
 
         findViewById(R.id.signOutButton).setOnClickListener(v ->
-                Toast.makeText(this, "SmartExpApp is running in local-only mode.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.local_only_mode_toast, Toast.LENGTH_SHORT).show()
         );
     }
 
@@ -54,7 +54,7 @@ public class SettingsActivity extends BaseActivity {
             }
         }, error -> {
             if (displayName != null) {
-                displayName.setText("Local User");
+                displayName.setText(R.string.profile_local_user);
             }
         });
     }
@@ -65,7 +65,7 @@ public class SettingsActivity extends BaseActivity {
             list.removeAllViews();
         }
         LayoutInflater inflater = LayoutInflater.from(this);
-        List<SettingItem> settings = SampleData.settings();
+        List<SettingItem> settings = SampleData.settings(this);
 
         for (int i = 0; i < settings.size(); i++) {
             SettingItem item = settings.get(i);
@@ -77,7 +77,7 @@ public class SettingsActivity extends BaseActivity {
             com.google.android.material.switchmaterial.SwitchMaterial switchBtn = row.findViewById(R.id.settingSwitch);
             if (item.isSwitchRow()) {
                 switchBtn.setVisibility(View.VISIBLE);
-                if ("Dark Mode".equals(item.getTitle())) {
+                if (getString(R.string.settings_dark_mode_title).equals(item.getTitle())) {
                     switchBtn.setSaveEnabled(false);
                     switchBtn.setOnCheckedChangeListener(null);
                     switchBtn.setChecked(SettingsRepository.getCachedDarkMode(this));
@@ -91,11 +91,11 @@ public class SettingsActivity extends BaseActivity {
                                 switchBtn.setOnCheckedChangeListener((retryButton, checked) -> {
                                     if (checked != SettingsRepository.getCachedDarkMode(this)) {
                                         applyDarkMode(checked, retryError ->
-                                                Toast.makeText(this, "Could not save theme setting.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show()
                                         );
                                     }
                                 });
-                                Toast.makeText(this, "Could not save theme setting.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show();
                             });
                         }
                     });
@@ -113,15 +113,15 @@ public class SettingsActivity extends BaseActivity {
 
     private void openSetting(String title) {
         Intent intent = null;
-        if ("Notification Settings".equals(title)) {
+        if (getString(R.string.settings_notification_title).equals(title)) {
             intent = new Intent(this, NotificationSettingsActivity.class);
-        } else if ("Local Profile".equals(title)) {
+        } else if (getString(R.string.settings_profile_title).equals(title)) {
             intent = new Intent(this, AccountDetailsActivity.class);
-        } else if ("Help & Support".equals(title)) {
+        } else if (getString(R.string.settings_help_title).equals(title)) {
             intent = new Intent(this, HelpSupportActivity.class);
-        } else if ("Storage Preferences".equals(title)) {
+        } else if (getString(R.string.settings_storage_title).equals(title)) {
             showStoragePreferencesDialog();
-        } else if ("Dietary Preferences".equals(title)) {
+        } else if (getString(R.string.settings_dietary_title).equals(title)) {
             showDietaryPreferencesDialog();
         }
 
@@ -154,18 +154,18 @@ public class SettingsActivity extends BaseActivity {
 
             final int[] selected = {checked};
             new AlertDialog.Builder(this)
-                    .setTitle("Default Storage")
+                    .setTitle(R.string.default_storage_title)
                     .setSingleChoiceItems(labels, checked, (dialog, which) -> selected[0] = which)
-                    .setPositiveButton("Save", (dialog, which) ->
+                    .setPositiveButton(R.string.save_label, (dialog, which) ->
                             SettingsRepository.setDefaultStorageLocationAsync(
                                     this,
                                     ids[selected[0]],
-                                    updated -> Toast.makeText(this, "Default storage set to " + updated.getDefaultStorageName() + ".", Toast.LENGTH_SHORT).show(),
-                                    error -> Toast.makeText(this, "Could not save storage preference.", Toast.LENGTH_SHORT).show()
+                                    updated -> Toast.makeText(this, getString(R.string.default_storage_saved_format, updated.getDefaultStorageName()), Toast.LENGTH_SHORT).show(),
+                                    error -> Toast.makeText(this, R.string.default_storage_save_error, Toast.LENGTH_SHORT).show()
                             ))
                     .setNegativeButton(R.string.cancel, null)
                     .show();
-        }, error -> Toast.makeText(this, "Could not load storage preference.", Toast.LENGTH_SHORT).show());
+        }, error -> Toast.makeText(this, R.string.default_storage_load_error, Toast.LENGTH_SHORT).show());
     }
 
     private void showDietaryPreferencesDialog() {
@@ -174,32 +174,32 @@ public class SettingsActivity extends BaseActivity {
             input.setSingleLine(false);
             input.setMinLines(2);
             input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-            input.setHint("Vegetarian, dairy-free, low sodium");
+            input.setHint(R.string.dietary_preferences_hint);
             input.setText(settings.getDietaryPreferences());
             input.setSelectAllOnFocus(false);
             int padding = (int) (16 * getResources().getDisplayMetrics().density);
             input.setPadding(padding, padding / 2, padding, padding / 2);
 
             new AlertDialog.Builder(this)
-                    .setTitle("Dietary Preferences")
-                    .setMessage("Used only on this device to guide recipe suggestions.")
+                    .setTitle(R.string.settings_dietary_title)
+                    .setMessage(R.string.dietary_preferences_message)
                     .setView(input)
-                    .setPositiveButton("Save", (dialog, which) ->
+                    .setPositiveButton(R.string.save_label, (dialog, which) ->
                             SettingsRepository.setDietaryPreferencesAsync(
                                     this,
                                     input.getText().toString(),
-                                    updated -> Toast.makeText(this, "Dietary preferences saved.", Toast.LENGTH_SHORT).show(),
-                                    error -> Toast.makeText(this, "Could not save dietary preferences.", Toast.LENGTH_SHORT).show()
+                                    updated -> Toast.makeText(this, R.string.dietary_preferences_saved, Toast.LENGTH_SHORT).show(),
+                                    error -> Toast.makeText(this, R.string.dietary_preferences_save_error, Toast.LENGTH_SHORT).show()
                             ))
-                    .setNeutralButton("Clear", (dialog, which) ->
+                    .setNeutralButton(R.string.clear_label, (dialog, which) ->
                             SettingsRepository.setDietaryPreferencesAsync(
                                     this,
                                     "",
-                                    updated -> Toast.makeText(this, "Dietary preferences cleared.", Toast.LENGTH_SHORT).show(),
-                                    error -> Toast.makeText(this, "Could not clear dietary preferences.", Toast.LENGTH_SHORT).show()
+                                    updated -> Toast.makeText(this, R.string.dietary_preferences_cleared, Toast.LENGTH_SHORT).show(),
+                                    error -> Toast.makeText(this, R.string.dietary_preferences_clear_error, Toast.LENGTH_SHORT).show()
                             ))
                     .setNegativeButton(R.string.cancel, null)
                     .show();
-        }, error -> Toast.makeText(this, "Could not load dietary preferences.", Toast.LENGTH_SHORT).show());
+        }, error -> Toast.makeText(this, R.string.dietary_preferences_load_error, Toast.LENGTH_SHORT).show());
     }
 }

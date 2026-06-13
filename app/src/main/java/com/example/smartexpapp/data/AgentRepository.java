@@ -3,6 +3,7 @@ package com.example.smartexpapp.data;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 
 import com.example.smartexpapp.BuildConfig;
 import com.example.smartexpapp.R;
@@ -18,6 +19,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -159,6 +162,7 @@ public final class AgentRepository {
             try {
                 List<Recipe> remote = generateGeminiRecipes(products, prompt, dietaryPreferences);
                 if (!remote.isEmpty()) {
+                    remote = enrichRecipeImages(context, database, remote, products, dietaryPreferences);
                     cacheRecipes(database, remote, "gemini");
                     saveAgentMessage(database, "user", prompt.isEmpty() ? "Suggest recipes" : prompt, relatedProductIds(products), prompt);
                     saveAgentMessage(database, "agent", "Generated recipe suggestions from local inventory.", relatedProductIds(products), prompt);
@@ -166,7 +170,7 @@ public final class AgentRepository {
                             remote,
                             inventoryEmpty
                                     ? "Gemini is configured, but your local inventory is empty. Add products for tailored suggestions."
-                                    : recipeStatus("Generated with Gemini using your local inventory.", dietaryPreferences),
+                                    : recipeStatus(recipeGenerationStatus("Generated with Gemini using your local inventory.", remote), dietaryPreferences),
                             false,
                             inventoryEmpty
                     );
@@ -176,12 +180,21 @@ public final class AgentRepository {
             }
         }
 
+        local = enrichRecipeImages(context, database, local, products, dietaryPreferences);
         cacheRecipes(database, local, "local");
         if (!prompt.isEmpty()) {
             saveAgentMessage(database, "user", prompt, relatedProductIds(products), prompt);
             saveAgentMessage(database, "agent", localFallbackAnswer(products, prompt), relatedProductIds(products), prompt);
         }
-        return localRecipeSuggestionResult(products, dietaryPreferences);
+        String status = inventoryEmpty
+                ? "Your local inventory is empty. These are generic fallback ideas until you add products."
+                : "Using local fallback suggestions from your saved inventory.";
+        return new RecipeSuggestionResult(
+                local,
+                recipeStatus(recipeGenerationStatus(status, local), dietaryPreferences),
+                true,
+                inventoryEmpty
+        );
     }
 
     public static String answerInventoryQuestion(Context context, String prompt) {
@@ -399,6 +412,205 @@ public final class AgentRepository {
         return recipes;
     }
 
+    private static List<Recipe> enrichRecipeImages(Context context, AppDatabase database, List<Recipe> recipes,
+                                                   List<Product> products, String dietaryPreferences) {
+        if (BuildConfig.OPENROUTER_API_KEY.trim().isEmpty() || recipes.isEmpty()) {
+            return recipes;
+        }
+
+        List<Recipe> enriched = new ArrayList<>();
+        for (Recipe recipe : recipes) {
+            if (isExistingLocalImage(recipe.getImageUrl())) {
+                enriched.add(recipe);
+                continue;
+            }
+
+            String cachedPath = cachedOpenRouterImagePath(database, recipe);
+            if (cachedPath != null && new File(cachedPath).exists()) {
+                enriched.add(copyRecipeWithImageUrl(recipe, cachedPath));
+                continue;
+            }
+
+            try {
+                String dataOrUrl = callOpenRouterImage(buildOpenRouterRecipeImagePrompt(recipe, products, dietaryPreferences), true);
+                String imagePath = persistOpenRouterImage(context, recipe, dataOrUrl);
+                cacheRecipeImage(database, recipe, imagePath);
+                enriched.add(copyRecipeWithImageUrl(recipe, imagePath));
+            } catch (Exception firstError) {
+                try {
+                    String dataOrUrl = callOpenRouterImage(buildOpenRouterRecipeImagePrompt(recipe, products, dietaryPreferences), false);
+                    String imagePath = persistOpenRouterImage(context, recipe, dataOrUrl);
+                    cacheRecipeImage(database, recipe, imagePath);
+                    enriched.add(copyRecipeWithImageUrl(recipe, imagePath));
+                } catch (Exception ignored) {
+                    enriched.add(recipe);
+                }
+            }
+        }
+        return enriched;
+    }
+
+    private static String callOpenRouterImage(String prompt, boolean includeImageConfig) throws Exception {
+        URL url = new URL("https://openrouter.ai/api/v1/chat/completions");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(12000);
+        connection.setReadTimeout(45000);
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Authorization", "Bearer " + BuildConfig.OPENROUTER_API_KEY);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("HTTP-Referer", "https://smartexpapp.local");
+        connection.setRequestProperty("X-Title", "SmartExpApp");
+        connection.setDoOutput(true);
+
+        JSONObject message = new JSONObject()
+                .put("role", "user")
+                .put("content", prompt);
+        JSONObject payload = new JSONObject()
+                .put("model", BuildConfig.OPENROUTER_IMAGE_MODEL)
+                .put("messages", new JSONArray().put(message))
+                .put("modalities", new JSONArray().put("image"))
+                .put("stream", false);
+        if (includeImageConfig) {
+            payload.put("image_config", new JSONObject()
+                    .put("aspect_ratio", "4:3")
+                    .put("image_size", "1K"));
+        }
+
+        try (OutputStream output = connection.getOutputStream()) {
+            output.write(payload.toString().getBytes(StandardCharsets.UTF_8));
+        }
+
+        int code = connection.getResponseCode();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream(),
+                StandardCharsets.UTF_8));
+        StringBuilder builder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
+        }
+        connection.disconnect();
+        if (code < 200 || code >= 300) {
+            throw new IllegalStateException("OpenRouter image request failed with HTTP " + code);
+        }
+
+        JSONObject json = new JSONObject(builder.toString());
+        JSONArray choices = json.optJSONArray("choices");
+        if (choices == null || choices.length() == 0) {
+            throw new IllegalStateException("OpenRouter image response had no choices");
+        }
+        JSONObject messageJson = choices.getJSONObject(0).optJSONObject("message");
+        if (messageJson == null) {
+            throw new IllegalStateException("OpenRouter image response had no message");
+        }
+        JSONArray images = messageJson.optJSONArray("images");
+        if (images == null || images.length() == 0) {
+            throw new IllegalStateException("OpenRouter image response had no images");
+        }
+        JSONObject image = images.getJSONObject(0);
+        JSONObject imageUrl = image.optJSONObject("image_url");
+        if (imageUrl == null) {
+            imageUrl = image.optJSONObject("imageUrl");
+        }
+        String value = imageUrl == null ? "" : imageUrl.optString("url", "").trim();
+        if (value.isEmpty()) {
+            throw new IllegalStateException("OpenRouter image response had no image URL");
+        }
+        return value;
+    }
+
+    private static String persistOpenRouterImage(Context context, Recipe recipe, String dataOrUrl) throws Exception {
+        if (dataOrUrl == null || dataOrUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("OpenRouter image response was empty");
+        }
+        String value = dataOrUrl.trim();
+        if (!value.startsWith("data:image/")) {
+            return value;
+        }
+
+        int commaIndex = value.indexOf(',');
+        if (commaIndex < 0) {
+            throw new IllegalArgumentException("OpenRouter image data URL was malformed");
+        }
+        String metadata = value.substring(0, commaIndex);
+        String extension = metadata.contains("jpeg") || metadata.contains("jpg") ? ".jpg" : ".png";
+        byte[] bytes = Base64.decode(value.substring(commaIndex + 1), Base64.DEFAULT);
+        File directory = new File(context.getFilesDir(), "openrouter_recipe_images");
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new IllegalStateException("Could not create recipe image directory");
+        }
+        File imageFile = new File(directory, UUID.nameUUIDFromBytes(recipe.getTitle().getBytes(StandardCharsets.UTF_8)).toString() + extension);
+        try (FileOutputStream output = new FileOutputStream(imageFile)) {
+            output.write(bytes);
+        }
+        return imageFile.getAbsolutePath();
+    }
+
+    private static String buildOpenRouterRecipeImagePrompt(Recipe recipe, List<Product> products, String dietaryPreferences) {
+        return "Create a realistic plated food photo for this recipe. "
+                + "No text, no labels, no watermark, no hands, no packaging. "
+                + "Use appetizing natural light, a clean kitchen table, and make the main ingredients visually clear. "
+                + "Recipe title: " + recipe.getTitle() + ". "
+                + "Summary: " + recipe.getSummary() + ". "
+                + "Ingredients: " + String.join(", ", recipe.getAllIngredients()) + ". "
+                + "Dietary preferences: " + dietaryPreferenceContext(dietaryPreferences) + ". "
+                + "Inventory context: " + inventoryContext(products);
+    }
+
+    private static String cachedOpenRouterImagePath(AppDatabase database, Recipe recipe) {
+        RecipeCacheEntity cached = database.recipeCacheDao().getById(openRouterImageCacheId(recipe));
+        return cached == null ? null : cached.imageUrl;
+    }
+
+    private static boolean isExistingLocalImage(String imageUrl) {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            return false;
+        }
+        String path = imageUrl.trim();
+        if (path.startsWith("file://")) {
+            path = path.substring(7);
+        }
+        return path.startsWith("/") && new File(path).exists();
+    }
+
+    private static void cacheRecipeImage(AppDatabase database, Recipe recipe, String imagePath) {
+        long now = System.currentTimeMillis();
+        RecipeCacheEntity entity = new RecipeCacheEntity();
+        entity.id = openRouterImageCacheId(recipe);
+        entity.provider = "openrouter-image";
+        entity.title = recipe.getTitle();
+        entity.imageUrl = imagePath;
+        entity.sourceUrl = BuildConfig.OPENROUTER_IMAGE_MODEL;
+        entity.usedIngredients = String.join(",", recipe.getExpiringIngredients());
+        entity.missingIngredients = "";
+        entity.cachedAt = now;
+        entity.createdAt = now;
+        entity.updatedAt = now;
+        database.recipeCacheDao().insert(entity);
+    }
+
+    private static String openRouterImageCacheId(Recipe recipe) {
+        return UUID.nameUUIDFromBytes(("openrouter-image:" + recipe.getTitle()).getBytes(StandardCharsets.UTF_8)).toString();
+    }
+
+    private static Recipe copyRecipeWithImageUrl(Recipe recipe, String imageUrl) {
+        return new Recipe(
+                recipe.getTitle(),
+                recipe.getSummary(),
+                recipe.getExpiringIngredients(),
+                recipe.getActionText(),
+                recipe.getIconRes(),
+                recipe.isFeatured(),
+                imageUrl,
+                recipe.getPrepTime(),
+                recipe.getDifficulty(),
+                recipe.getCalories(),
+                recipe.getSmartTip(),
+                recipe.getAllIngredients(),
+                recipe.getInstructions()
+        );
+    }
+
     private static ProductDraft generateGeminiProductDraft(String input, ProductDraft fallback) throws Exception {
         String response = callGemini(buildProductDraftPrompt(input));
         JSONObject json = extractJsonObject(response);
@@ -498,10 +710,11 @@ public final class AgentRepository {
         return "You are SmartExpApp's cooking assistant. Use only this local inventory context. "
                 + "Return strict JSON array of 3 recipe objects with fields: "
                 + "title, summary, usedIngredients (JSON array of strings of expiring ingredients from inventory used), "
-                + "actionText, imageUrl, prepTime (e.g. '25 min'), difficulty (e.g. 'Easy'), calories (e.g. '450 kcal'), "
+                + "actionText, prepTime (e.g. '25 min'), difficulty (e.g. 'Easy'), calories (e.g. '450 kcal'), "
                 + "smartTip (an AI tip for using expiring ingredients or substitutions, e.g. using yogurt instead of heavy cream), "
                 + "allIngredients (JSON array of strings representing the complete list of ingredients with quantities needed), "
                 + "instructions (JSON array of strings representing the step-by-step cooking steps). "
+                + "Do not include image URLs; recipe images are generated separately. "
                 + "Prioritize items expiring soon and respect dietary preferences when possible. No markdown. User request: "
                 + userPrompt + "\nDietary preferences: " + dietaryPreferenceContext(dietaryPreferences)
                 + "\nInventory:\n" + inventoryContext(products);
@@ -577,6 +790,19 @@ public final class AgentRepository {
             return baseStatus;
         }
         return baseStatus + " Dietary preferences: " + preferences + ".";
+    }
+
+    private static String recipeGenerationStatus(String baseStatus, List<Recipe> recipes) {
+        if (BuildConfig.OPENROUTER_API_KEY.trim().isEmpty()) {
+            return baseStatus;
+        }
+        for (Recipe recipe : recipes) {
+            String imageUrl = recipe.getImageUrl();
+            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                return baseStatus + " Recipe images generated with OpenRouter FLUX.2 Klein 4B.";
+            }
+        }
+        return baseStatus + " OpenRouter image generation is configured, but no recipe image was returned.";
     }
 
     private static String dietaryPreferenceContext(String dietaryPreferences) {

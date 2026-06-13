@@ -66,13 +66,15 @@
                         android:background="@drawable/bg_gemini_button"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackgroundBorderless">
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/smart_recipe_assistant">
 
                         <ImageView
                             android:layout_width="56dp"
                             android:layout_height="56dp"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_gemini_sparkles" />
+                            android:src="@drawable/ic_gemini_sparkles"
+                            android:importantForAccessibility="no" />
                     </FrameLayout>
                 </FrameLayout>
 
@@ -81,7 +83,7 @@
                     android:id="@+id/geminiLiveTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Smart Recipe Assistant"
+                    android:text="@string/smart_recipe_assistant"
                     android:textSize="28sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="6dp" />
@@ -90,7 +92,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Ask by voice or text. Gemini is used when configured; local recipe suggestions stay available offline."
+                    android:text="@string/recipes_intro_desc"
                     android:textColor="@color/smart_secondary"
                     android:textSize="15sp" />
 
@@ -100,7 +102,7 @@
                     android:layout_height="48dp"
                     android:layout_marginTop="16dp"
                     android:backgroundTint="@color/smart_surface_container"
-                    android:text="Ask by Text"
+                    android:text="@string/ask_by_text"
                     android:textAllCaps="false"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="14sp"
@@ -121,7 +123,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Smart Recipes"
+                android:text="@string/smart_recipes_title"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="32sp"
                 android:textStyle="bold" />
@@ -136,7 +138,7 @@
                 android:paddingTop="8dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
-                android:text="Use these soon!"
+                android:text="@string/badge_use_soon"
                 android:textColor="@color/smart_primary_container"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -148,7 +150,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="12dp"
                 android:gravity="center"
-                android:text="Recipes are based on local inventory items approaching expiration."
+                android:text="@string/recipes_source_desc"
                 android:textColor="@color/smart_secondary"
                 android:textSize="15sp" />
 

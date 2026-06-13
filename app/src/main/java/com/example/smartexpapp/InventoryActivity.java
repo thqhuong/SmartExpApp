@@ -192,7 +192,7 @@ public class InventoryActivity extends BaseActivity {
             return;
         }
         currentFilter = FILTER_EXPIRING_SOON;
-        Toast.makeText(this, "Showing items from your expiry reminder.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.reminder_filter_toast, Toast.LENGTH_SHORT).show();
     }
 
     private void showLoading() {

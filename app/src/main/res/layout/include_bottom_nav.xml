@@ -31,11 +31,12 @@
             <ImageView
                 style="@style/SmartExpBottomNavIcon"
                 android:src="@drawable/ic_nav_inventory"
+                android:contentDescription="@string/nav_inventory_label"
                 app:tint="@color/bottom_nav_item" />
 
             <TextView
                 style="@style/SmartExpBottomNavLabel"
-                android:text="Inventory" />
+                android:text="@string/nav_inventory_label" />
         </LinearLayout>
 
         <LinearLayout
@@ -45,11 +46,12 @@
             <ImageView
                 style="@style/SmartExpBottomNavIcon"
                 android:src="@drawable/ic_nav_stats"
+                android:contentDescription="@string/nav_stats_label"
                 app:tint="@color/bottom_nav_item" />
 
             <TextView
                 style="@style/SmartExpBottomNavLabel"
-                android:text="Stats" />
+                android:text="@string/nav_stats_label" />
         </LinearLayout>
 
         <!-- Placeholder Spacer for Center FAB -->
@@ -66,11 +68,12 @@
             <ImageView
                 style="@style/SmartExpBottomNavIcon"
                 android:src="@drawable/ic_nav_agent"
+                android:contentDescription="@string/nav_agent_label"
                 app:tint="@color/bottom_nav_item" />
 
             <TextView
                 style="@style/SmartExpBottomNavLabel"
-                android:text="Agent" />
+                android:text="@string/nav_agent_label" />
         </LinearLayout>
 
         <LinearLayout
@@ -80,11 +83,12 @@
             <ImageView
                 style="@style/SmartExpBottomNavIcon"
                 android:src="@drawable/ic_nav_settings_gear"
+                android:contentDescription="@string/nav_settings_label"
                 app:tint="@color/bottom_nav_item" />
 
             <TextView
                 style="@style/SmartExpBottomNavLabel"
-                android:text="Settings" />
+                android:text="@string/nav_settings_label" />
         </LinearLayout>
     </LinearLayout>
 
@@ -115,6 +119,7 @@
             android:layout_height="26dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_plus"
+            android:contentDescription="@string/add_product"
             app:tint="@color/bottom_nav_add_icon" />
     </FrameLayout>
 </FrameLayout>
