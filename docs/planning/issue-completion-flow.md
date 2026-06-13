@@ -43,7 +43,7 @@ These issues can begin at the same time from current `dev`.
 | #51 Move remaining hardcoded UI text into string resources | `QusyPlus` | None | Work screen-by-screen; avoid touching files under active refactors if possible. |
 | #52 Replace top bar placeholder actions with real navigation | `QusyPlus` | None | Small, high-value UI cleanup. |
 | #59 Create release checklist and setup documentation | `QusyPlus` | None | Can start as docs-only and update as auth/proxy decisions land. |
-| #61 Remove barcode from final-product scope while preserving harmless schema fields | `QusyPlus` | None | Docs/UI cleanup only; do not remove DB fields unless separately approved. |
+| #61 Remove barcode from final-product scope while preserving harmless schema fields | `QusyPlus` | Completed | Docs/UI cleanup completed; DB fields preserved. |
 
 ### Wave 1: Architecture Foundation
 
