@@ -24,9 +24,9 @@ public class ProductTest {
         assertEquals("TODAY", today.getDashboardBadge());
         assertEquals(100, today.getExpiryProgress());
 
-        Product soon = productExpiringIn(3);
-        assertEquals(3, soon.getDaysUntilExpiry());
-        assertEquals("3 Days", soon.getExpiryStatus());
+        Product soon = productExpiringIn(1);
+        assertEquals(1, soon.getDaysUntilExpiry());
+        assertEquals("1 Day", soon.getExpiryStatus());
         assertTrue(soon.isExpiringSoon());
         assertTrue(soon.getExpiryProgress() > 0);
 

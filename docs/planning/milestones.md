@@ -24,11 +24,10 @@ Issues:
 
 ## M4: Smart Input and Recipe Features
 
-Description: Add high-impact OCR, barcode lookup, and Agent features that reduce manual work for users.
+Description: Add high-impact OCR and Agent features that reduce manual work for users.
 
 Issues:
 - #11 OCR: scan and confirm expiry dates from product labels
-- #12 Barcode: lookup products and auto-fill metadata
 - #13 Agent: voice/chat assistant with recipe help
 
 ## M5: Insights, Polish, and Submission
