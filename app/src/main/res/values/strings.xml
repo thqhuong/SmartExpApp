@@ -307,4 +307,13 @@
     <string name="reminder_filter_toast">Showing items from your expiry reminder.</string>
     <string name="btn_generate_recipes">Generate recipes</string>
     <string name="recipe_expiring_ingredients_used">EXPIRING INGREDIENTS USED:</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_mark_consumed">Mark consumed</string>
+    <string name="action_mark_wasted">Mark wasted</string>
+    <string name="action_mark_donated">Mark donated</string>
+    <string name="action_delete">Delete</string>
+    <string name="toast_mark_consumed_format">%1$s marked consumed.</string>
+    <string name="toast_mark_wasted_format">%1$s marked wasted.</string>
+    <string name="toast_mark_donated_format">%1$s marked donated.</string>
+    <string name="note_marked_from_inventory">Marked from inventory</string>
 </resources>
