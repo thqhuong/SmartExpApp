@@ -15,6 +15,8 @@
     <string name="cancel">Cancel</string>
     <string name="edit_product">Edit Product</string>
     <string name="add_product">Add Product</string>
+    <string name="add_product_progress_format">Add Product (%1$d of %2$d)</string>
+    <string name="skip_label">Skip</string>
     <string name="filter_expiring">Expiring Soon</string>
     <string name="filter_expired">Expired</string>
     <string name="sort_date">Date</string>
@@ -101,12 +103,12 @@
     <string name="settings_local_mode">Local-only mode</string>
     <string name="recipe_details_title">Recipe Details</string>
     <string name="difficulty_easy_uppercase">EASY</string>
-    <string name="gemini_smart_tip">Gemini Smart Tip</string>
+    <string name="gemini_smart_tip">Smart AI Tip</string>
     <string name="no_recommendations">No waste recommendations available.</string>
     <string name="label_ingredients">Ingredients</string>
     <string name="label_instructions">Instructions</string>
     <string name="smart_recipe_assistant">Smart Recipe Assistant</string>
-    <string name="recipes_intro_desc">Ask by voice or text. Gemini is used when configured; local recipe suggestions stay available offline.</string>
+    <string name="recipes_intro_desc">Ask by voice or text. Cloudflare AI is used when configured; local recipe suggestions stay available offline.</string>
     <string name="ask_by_text">Ask by Text</string>
     <string name="smart_recipes_title">Smart Recipes</string>
     <string name="badge_use_soon">Use these soon!</string>
@@ -126,7 +128,7 @@
     <string name="recipe_suggestions_desc">Recipe ideas are shown inside the assistant and inventory flows, not pushed as separate alerts.</string>
     <string name="ai_fallback">AI Fallback</string>
     <string name="automatic_label">Automatic</string>
-    <string name="ai_fallback_desc">If Gemini is unavailable or not configured, SmartExp keeps using local suggestions.</string>
+    <string name="ai_fallback_desc">If Cloudflare AI is unavailable or not configured, SmartExp keeps using local suggestions.</string>
     <string name="reminder_source_desc">Expiry reminders are processed locally from your Room inventory database.</string>
     <string name="urgent_attention">URGENT ATTENTION</string>
     <string name="items_expiring_soon_label">Items Expiring Soon</string>
@@ -185,6 +187,7 @@
     <string name="fill_details">Fill Details</string>
     <string name="smart_add_review_first_format">Review item 1 of %1$d.</string>
     <string name="smart_add_next_ready">Next Smart Add item ready. Review and save it.</string>
+    <string name="smart_add_item_skipped">Smart Add item skipped.</string>
     <string name="expiry_not_detected">Expiry date was not detected. Please select one before saving.</string>
     <string name="select_expiry_before_saving">Select an expiry date before saving.</string>
     <string name="enter_product_name">Enter a product name.</string>
@@ -238,7 +241,7 @@
     <string name="settings_storage_title">Storage Preferences</string>
     <string name="settings_storage_desc">Default locations and categories</string>
     <string name="settings_dietary_title">Dietary Preferences</string>
-    <string name="settings_dietary_desc">Guide local and Gemini recipes</string>
+    <string name="settings_dietary_desc">Guide local and AI recipes</string>
     <string name="settings_profile_title">Local Profile</string>
     <string name="settings_profile_desc">Device-only profile and local data</string>
     <string name="settings_help_title">Help &amp; Support</string>

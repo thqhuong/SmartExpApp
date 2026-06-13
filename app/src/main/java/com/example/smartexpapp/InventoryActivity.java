@@ -56,6 +56,7 @@ public class InventoryActivity extends BaseActivity {
     private String currentFilter = "All";
     private String currentStorage = "All";
     private String currentSort = "oldest";
+    private List<Product> latestProducts = new ArrayList<>();
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
@@ -245,6 +246,7 @@ public class InventoryActivity extends BaseActivity {
 
     private void renderProducts() {
         ProductRepository.searchAsync(this, currentSearch, products -> {
+            latestProducts = new ArrayList<>(products);
             List<Product> filtered = filterProducts(products);
             List<Product> sorted = sortProducts(filtered);
             bindProducts(sorted);
@@ -425,7 +427,7 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void openEditDialog(Product product) {
-        new EditProductDialog(product, this::renderProducts).show(this);
+        new EditProductDialog(product, this::renderProducts, latestProducts).show(this);
     }
 
     private void confirmDelete(Product product) {

@@ -53,6 +53,7 @@ pnpm-debug.log*
 .cache/
 .parcel-cache/
 .vite/
+.wrangler/
 
 # Editor and IDE
 .vscode/*

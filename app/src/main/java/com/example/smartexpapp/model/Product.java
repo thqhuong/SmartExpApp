@@ -231,7 +231,7 @@ public class Product {
 
     public boolean isExpiringSoon() {
         int days = getDaysUntilExpiry();
-        return days >= 0 && days <= 1 && !isExpired();
+        return days >= 0 && days <= 7 && !isExpired();
     }
 
     public boolean isExpired() {
