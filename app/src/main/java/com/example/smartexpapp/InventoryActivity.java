@@ -425,9 +425,7 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void openEditDialog(Product product) {
-        Intent intent = new Intent(this, AddProductActivity.class);
-        intent.putExtra(AddProductActivity.EXTRA_PRODUCT_ID, product.getId());
-        startActivity(intent);
+        new EditProductDialog(product, this::renderProducts).show(this);
     }
 
     private void confirmDelete(Product product) {
