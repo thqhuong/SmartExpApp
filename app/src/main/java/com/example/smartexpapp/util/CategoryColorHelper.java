@@ -1,5 +1,7 @@
 package com.example.smartexpapp.util;
 
+import android.content.Context;
+
 import androidx.annotation.ColorRes;
 
 import com.example.smartexpapp.R;
@@ -42,5 +44,23 @@ public class CategoryColorHelper {
         nextColorIndex++;
         customColors.put(category, customPalette[idx]);
         return customPalette[idx];
+    }
+
+    @ColorRes
+    public static int getColor(Context context, String category) {
+        return getColor(toCanonical(context, category));
+    }
+
+    private static String toCanonical(Context context, String category) {
+        if (category == null) return null;
+        String[] canonicals = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
+        int[] resIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
+                R.string.cat_pantry, R.string.cat_produce, R.string.cat_vegetables};
+        for (int i = 0; i < canonicals.length; i++) {
+            if (canonicals[i].equals(category) || context.getString(resIds[i]).equals(category)) {
+                return canonicals[i];
+            }
+        }
+        return category;
     }
 }

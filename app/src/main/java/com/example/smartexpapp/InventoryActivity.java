@@ -343,7 +343,7 @@ public class InventoryActivity extends BaseActivity {
         View deleteBtn = item.findViewById(R.id.btnDelete);
 
         View categoryDot = item.findViewById(R.id.categoryDot);
-        categoryDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(product.getCategory())));
+        categoryDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, product.getCategory())));
         categoryDot.setVisibility(View.VISIBLE);
 
         ImageView icon = item.findViewById(R.id.productIcon);
@@ -352,7 +352,7 @@ public class InventoryActivity extends BaseActivity {
             icon.setImageTintList(null);
             ImageLoader.load(icon, imgUrl);
         } else {
-            int tintColor = CategoryColorHelper.getColor(product.getCategory());
+            int tintColor = CategoryColorHelper.getColor(this, product.getCategory());
             icon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(tintColor)));
             ViewUtils.setIcon(icon, product.getIconRes(), tintColor);
         }
