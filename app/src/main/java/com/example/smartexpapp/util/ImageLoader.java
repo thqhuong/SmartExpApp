@@ -112,8 +112,8 @@ public final class ImageLoader {
         try {
             URL url = new URL(path);
             connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(30000);
             connection.setInstanceFollowRedirects(true);
             int code = connection.getResponseCode();
             if (code < 200 || code >= 300) {
