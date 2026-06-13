@@ -58,6 +58,9 @@ public class RecipeDetailsActivity extends BaseActivity {
 
         TextView prepTimeText = findViewById(R.id.recipePrepTime);
         if (prepTime != null && !prepTime.trim().isEmpty()) {
+            if (prepTime.length() > 12) {
+                prepTime = "20 min";
+            }
             prepTimeText.setText(prepTime.toUpperCase());
         }
 
@@ -68,6 +71,9 @@ public class RecipeDetailsActivity extends BaseActivity {
 
         TextView caloriesText = findViewById(R.id.recipeCalories);
         if (calories != null && !calories.trim().isEmpty()) {
+            if (calories.length() > 12) {
+                calories = "400 kcal";
+            }
             caloriesText.setText(calories.toUpperCase());
         }
 

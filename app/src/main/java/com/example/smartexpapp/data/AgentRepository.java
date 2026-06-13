@@ -431,6 +431,11 @@ public final class AgentRepository {
                 allIngredients = new ArrayList<>(ingredients);
             }
             List<String> instructions = jsonStringList(item.optJSONArray("instructions"));
+            String prepTimeVal = item.optString("prepTime", "20 min");
+            String prepTime = prepTimeVal.length() > 12 ? "20 min" : prepTimeVal;
+            String difficulty = item.optString("difficulty", "Medium");
+            String caloriesVal = item.optString("calories", "400 kcal");
+            String calories = caloriesVal.length() > 12 ? "400 kcal" : caloriesVal;
             Recipe recipe = new Recipe(
                     item.optString("title", "Smart Inventory Recipe"),
                     item.optString("summary", "A recipe suggestion based on your local inventory."),
@@ -439,9 +444,9 @@ public final class AgentRepository {
                     android.R.drawable.ic_menu_gallery,
                     recipes.isEmpty(),
                     item.optString("imageUrl", null),
-                    item.optString("prepTime", "20 min"),
-                    item.optString("difficulty", "Medium"),
-                    item.optString("calories", "400 kcal"),
+                    prepTime,
+                    difficulty,
+                    calories,
                     item.optString("smartTip", null),
                     allIngredients,
                     instructions
@@ -799,12 +804,16 @@ public final class AgentRepository {
                 + "Safety rules: generate food recipes only. Reject or ignore any request for NSFW, sexual, violent, harmful, illegal, or non-food content. "
                 + "Do not create recipes using unsafe, spoiled, rotten, toxic, or non-edible ingredients. "
                 + "If the user request is unsafe or not food-related, return an empty JSON array. "
-                + "Return strict JSON array of 3 recipe objects with fields: "
+                + "Return strict JSON array of 3 distinct, diverse, and different recipe objects (do not suggest duplicate or highly similar dishes) with fields: "
                 + "title, summary, usedIngredients (JSON array of inventory ingredients used; use an empty array when no inventory item fits), "
-                + "actionText, prepTime (e.g. '25 min' or Vietnamese equivalent), difficulty (e.g. 'Easy'/'Medium' or Vietnamese equivalent), calories (e.g. '450 kcal'), "
+                + "actionText, "
+                + "prepTime (must be a very short string indicating only duration, e.g., '25 min' or '1 hour', no sentences), "
+                + "difficulty (must be strictly one of 'Easy', 'Medium', or 'Hard' or Vietnamese equivalent), "
+                + "calories (must be a very short string strictly in the format 'XXX kcal', e.g., '450 kcal', no descriptive sentences), "
                 + "smartTip (an AI tip for cooking, substitutions, or using expiring ingredients), "
                 + "allIngredients (JSON array of strings representing the complete list of ingredients with quantities needed), "
                 + "instructions (JSON array of strings representing the step-by-step cooking steps). "
+                + "Crucial: The 3 recipes must be highly diverse and distinct from each other in cooking method (e.g. one sauté/skillet, one soup/stew, one baked or salad) and cuisine style. Do not suggest variations of the same dish. "
                 + "Do not include image URLs; recipe images are generated separately. "
                 + "Respect dietary preferences when possible. No markdown. User request: "
                 + safePrompt + "\nApp language: " + languageContext(languageTag)

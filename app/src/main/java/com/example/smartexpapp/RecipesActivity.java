@@ -226,6 +226,8 @@ public class RecipesActivity extends BaseActivity {
                 mainHandler.post(() -> {
                     Toast.makeText(this, answer, Toast.LENGTH_LONG).show();
                     speak(answer);
+                    defaultSessionRecipeResult = result;
+                    saveRecipeResultToPrefs(result);
                     renderRecipeResult(result);
                 });
             } catch (Exception error) {
@@ -512,7 +514,11 @@ public class RecipesActivity extends BaseActivity {
 
         TextView caloriesView = item.findViewById(R.id.recipeCardCalories);
         if (caloriesView != null) {
-            caloriesView.setText(recipe.getCalories().toUpperCase());
+            String cal = recipe.getCalories();
+            if (cal != null && cal.length() > 12) {
+                cal = "400 kcal";
+            }
+            caloriesView.setText(cal != null ? cal.toUpperCase() : "");
         }
 
         TextView difficultyView = item.findViewById(R.id.recipeCardDifficulty);
@@ -522,7 +528,11 @@ public class RecipesActivity extends BaseActivity {
 
         TextView prepTimeView = item.findViewById(R.id.recipeCardPrepTime);
         if (prepTimeView != null) {
-            prepTimeView.setText(recipe.getPrepTime());
+            String prep = recipe.getPrepTime();
+            if (prep != null && prep.length() > 12) {
+                prep = "20 min";
+            }
+            prepTimeView.setText(prep);
         }
 
         View ingredientsContainer = item.findViewById(R.id.recipeIngredientsContainer);
