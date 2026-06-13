@@ -14,7 +14,7 @@ Current native app state:
 - Dashboard, inventory, add/edit product, settings, notification settings, account details, help, and recipe/agent screens exist.
 - OCR product entry is implemented with ML Kit text recognition: scanned text can fill a reviewable local product draft and expiry-date candidates remain confirm-before-save.
 - Room schema already includes future concepts: storage locations, inventory actions, expiry scans, recipe cache, agent messages, and user settings.
-- Support, barcode lookup, advanced stats, and some release-readiness tasks are still incomplete or placeholder behavior.
+- Support, advanced stats, and some release-readiness tasks are still incomplete or placeholder behavior.
 - There is no production backend service in this branch. The native app is local-first Room data plus optional direct Gemini calls when configured. The React prototype calls `/api/generate-recipes`, but no matching checked-in Express/API route exists.
 
 Verification performed:
@@ -59,7 +59,7 @@ Recommended direction:
 - Remove main-thread database queries.
 - Add dependency injection. Manual DI is acceptable for a small app; Hilt becomes appropriate once ViewModels, WorkManager, and API services are added.
 - Keep XML Views for the immediate release, or migrate to Jetpack Compose gradually only after the app is stable.
-- Treat AI, barcode lookup, and future cloud sync as optional data sources behind repositories, not direct Activity dependencies.
+- Treat AI, and future cloud sync as optional data sources behind repositories, not direct Activity dependencies.
 
 References used:
 
@@ -104,7 +104,7 @@ References used:
 - Inventory action APIs exist for consumed/wasted/donated/expired, and the inventory UI can now trigger consumed/wasted/donated actions.
 - Recipe cache and agent message tables are now written by the native recipe/agent flow.
 - Product sync fields exist (`cloudId`, `ownerUserId`, `syncStatus`, `lastSyncedAt`) but no sync engine exists.
-- Barcode fields exist but scanning and lookup are not implemented.
+- Barcode fields exist but scanning and lookup are out of scope.
 - OCR scan history is stored after product save with raw OCR text, selected date when detected or edited, candidate confidence, and no-date fallback metadata.
 - Product category management still lives in Activity code, though database reads/writes now run through async repository calls.
 - Business rules such as expiry grouping, progress, category defaults, and storage mapping still need a cleaner domain layer, but dashboard metric counts now have repository-level test coverage.
@@ -159,12 +159,12 @@ Goal: prevent the app from feeling like separate prototypes stitched together.
 
 Steps:
 
-1. Confirm first release scope: local-first inventory, expiry dashboard, reminders, OCR, optional barcode lookup, basic agent/recipe help, settings, and stats.
+1. Confirm first release scope: local-first inventory, expiry dashboard, reminders, OCR, basic agent/recipe help, settings, and stats.
 2. Rename "Stats" destination to either "Dashboard" or make it a real stats screen. Avoid using `MainActivity` as an ambiguous name.
 3. Decide whether bottom nav destination 4 is "Agent", "Recipes", or "Assistant". Use one name consistently in code, strings, docs, and icons.
 4. Define the user journey:
    - Sign in or continue as guest.
-   - Add product manually, by OCR, or by barcode.
+   - Add product manually, or by OCR.
    - See expiring/expired items.
    - Act on items: consume, waste, donate, delete, edit.
    - Get reminders.
@@ -214,7 +214,7 @@ Steps:
 2. Completed for current Activity flows: run product database work on repository executors.
 3. Completed: enable Room schema export and commit schema JSON files.
 4. Completed for the current schema: add real migration history through version 4 and cover it with a Room migration test; keep schema history going for future changes.
-5. Add indexes for frequent queries if needed: status plus expiry date, category, storage location, barcode.
+5. Add indexes for frequent queries if needed: status plus expiry date, category, storage location.
 6. Completed for local MVP: remove automatic demo seeding from production repository reads.
 7. Completed for current MVP settings: notification settings, reminder lead time, local display name, theme state, default storage, and dietary preferences now use `UserSettingsEntity`; keep only boot-critical cache outside Room.
 8. Add backup/data extraction rules that deliberately include or exclude local inventory, settings, images, and scan history.
@@ -283,17 +283,12 @@ Steps:
    - Completed: show date candidates with raw OCR snippets.
    - Completed: let users correct the date before saving.
    - Completed: store scan metadata with candidate confidence or manual-edit fallback confidence.
-2. Add barcode scanning:
-   - Add CameraX and ML Kit barcode scanning, or another proven scanner.
-   - Store barcode on product records.
-   - Query a product data source such as Open Food Facts through a repository.
-   - Cache lookup responses and allow user correction.
-3. Add manual fallback for every smart-input flow.
-4. Add privacy copy for image/OCR/barcode handling.
+2. Add manual fallback for every smart-input flow.
+3. Add privacy copy for image/OCR handling.
 
 Acceptance criteria:
 
-- OCR and barcode flows never save unconfirmed product data.
+- OCR flows never save unconfirmed product data.
 - Manual add remains reliable when scanning fails.
 - Scan history is persisted and visible/debuggable.
 
@@ -435,7 +430,7 @@ Acceptance criteria:
 4. Remove main-thread Room queries and stabilize migrations.
 5. Finish inventory lifecycle actions and settings persistence.
 6. Add reminders.
-7. Finish OCR, then barcode.
+7. Finish OCR.
 8. Build agent/recipe behavior through a proper repository and optional backend proxy.
 9. Replace hardcoded stats with computed insights.
 10. Finish accessibility, localization, tests, CI, and release docs.
@@ -448,7 +443,7 @@ Use existing planned work areas from `docs/planning/general-route.md`, but keep 
 2. `03-inventory-crud`: RecyclerView, status actions, category/storage cleanup, validation.
 3. `04-expiry-reminders`: notifications, settings persistence, scheduling.
 4. `05-ocr-expiry-scan`: OCR UX, scan metadata, image handling.
-5. `06-barcode-product-lookup`: barcode scanner and product lookup repository.
+5. `06-barcode-product-lookup`: [CANCELLED]
 6. `07-agent-assistant`: typed agent, recipe cache, optional backend proxy.
 7. `08-stats-settings`: computed stats, account/settings honesty, export/delete local data.
 8. `09-testing-docs-submission`: UI tests, CI, screenshots, README, release checklist.
@@ -459,7 +454,7 @@ The project should be considered complete when:
 
 - A user can manage inventory without sample data reappearing unexpectedly.
 - Expiry reminders work from persisted settings.
-- OCR and barcode flows are confirm-before-save.
+- OCR flows are confirm-before-save.
 - Agent/recipe behavior is either genuinely implemented or clearly labeled as local suggestions.
 - All visible account/auth behavior is real or honestly presented as local-only.
 - Dashboard and stats are derived from stored data.
