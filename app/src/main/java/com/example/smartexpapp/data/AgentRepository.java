@@ -91,15 +91,32 @@ public final class AgentRepository {
         }
 
         String storage = "Room Temp";
-        if (lower.contains("fridge") || lower.contains("refrigerator") || lower.contains("refrigerated") || lower.contains("cool")) {
+        if (lower.contains("fridge")
+                || lower.contains("refrigerator")
+                || lower.contains("refrigerated")
+                || lower.contains("cool")
+                || lower.contains("tu lanh")
+                || lower.contains("tủ lạnh")
+                || lower.contains("ngan mat")
+                || lower.contains("ngăn mát")
+                || lower.contains("cat lanh")
+                || lower.contains("cất lạnh")
+                || lower.contains("bao quan lanh")
+                || lower.contains("bảo quản lạnh")) {
             storage = "Refrigerator";
-        } else if (lower.contains("freezer") || lower.contains("frozen") || lower.contains("freeze")) {
+        } else if (lower.contains("freezer")
+                || lower.contains("frozen")
+                || lower.contains("freeze")
+                || lower.contains("ngan dong")
+                || lower.contains("ngăn đông")
+                || lower.contains("dong lanh")
+                || lower.contains("đông lạnh")) {
             storage = "Freeze";
         }
 
         String category = inferCategory(lower);
         Long expiry = inferExpiryMillis(source);
-        String name = inferProductName(source, quantityMatcher);
+        String name = normalizeProductName(inferProductName(source, quantityMatcher));
 
         return new ProductDraft(
                 name.isEmpty() ? "New Product" : name,
@@ -393,7 +410,7 @@ public final class AgentRepository {
                 allIngredients = new ArrayList<>(ingredients);
             }
             List<String> instructions = jsonStringList(item.optJSONArray("instructions"));
-            recipes.add(new Recipe(
+            Recipe recipe = new Recipe(
                     item.optString("title", "Smart Inventory Recipe"),
                     item.optString("summary", "A recipe suggestion based on your local inventory."),
                     ingredients.isEmpty() ? ingredientLabels(products) : ingredients,
@@ -407,7 +424,10 @@ public final class AgentRepository {
                     item.optString("smartTip", null),
                     allIngredients,
                     instructions
-            ));
+            );
+            if (isSafeFoodRecipe(recipe)) {
+                recipes.add(recipe);
+            }
         }
         return recipes;
     }
@@ -548,6 +568,8 @@ public final class AgentRepository {
 
     private static String buildOpenRouterRecipeImagePrompt(Recipe recipe, List<Product> products, String dietaryPreferences) {
         return "Create a realistic plated food photo for this recipe. "
+                + "Food only. No people, no NSFW content, no gore, no violence, no unsafe or non-edible items. "
+                + "Show a realistic plated edible dish only. "
                 + "No text, no labels, no watermark, no hands, no packaging. "
                 + "Use appetizing natural light, a clean kitchen table, and make the main ingredients visually clear. "
                 + "Recipe title: " + recipe.getTitle() + ". "
@@ -630,7 +652,7 @@ public final class AgentRepository {
     }
 
     private static ProductDraft productDraftFromJson(JSONObject json, ProductDraft fallback, String sourceInput) {
-        String name = json.optString("name", fallback.getName()).trim();
+        String name = normalizeProductName(json.optString("name", fallback.getName()).trim());
         String category = normalizeCategory(json.optString("category", fallback.getCategory()));
         String quantity = json.optString("quantity", fallback.getQuantity()).trim();
         String unit = normalizeUnit(json.optString("unit", fallback.getUnit()).trim());
@@ -708,6 +730,9 @@ public final class AgentRepository {
 
     private static String buildRecipePrompt(List<Product> products, String userPrompt, String dietaryPreferences) {
         return "You are SmartExpApp's cooking assistant. Use only this local inventory context. "
+                + "Safety rules: generate food recipes only. Reject or ignore any request for NSFW, sexual, violent, harmful, illegal, or non-food content. "
+                + "Do not create recipes using unsafe, spoiled, rotten, toxic, or non-edible ingredients. "
+                + "If the user request is unsafe or not food-related, return an empty JSON array. "
                 + "Return strict JSON array of 3 recipe objects with fields: "
                 + "title, summary, usedIngredients (JSON array of strings of expiring ingredients from inventory used), "
                 + "actionText, prepTime (e.g. '25 min'), difficulty (e.g. 'Easy'), calories (e.g. '450 kcal'), "
@@ -725,6 +750,10 @@ public final class AgentRepository {
         return "You are SmartExpApp's product intake parser. Today is " + today + ". "
                 + "Convert the user's add-product request into one strict JSON object only. "
                 + "Fields: name, category, quantity, unit, storage, expiryText, expiryDaysFromNow. "
+                + "Normalize Vietnamese food names with proper diacritics and capitalization. "
+                + "For example: 'thit bo' must become 'Thịt bò', 'ca chua' must become 'Cà chua', 'rau muong' must become 'Rau muống'. "
+                + "'tu lanh' means Refrigerator, 'ngan dong' means Freeze, and 'het han ngay mai' means expiryDaysFromNow = 1. "
+                + "The name field must contain only the product name, not storage or expiry words. "
                 + "category must be one of Dairy, General, Meat, Pantry, Produce, Vegetables. "
                 + "storage must be one of Room Temp, Refrigerator, Freeze. "
                 + "expiryDaysFromNow must be a non-negative integer when a relative expiry is clear, otherwise -1. "
@@ -737,6 +766,10 @@ public final class AgentRepository {
                 + "Convert the user's add-product request into a strict JSON array. "
                 + "Create one object per distinct inventory item. If the user mentioned one item, return one object. "
                 + "Each object must use fields: name, category, quantity, unit, storage, expiryText, expiryDaysFromNow. "
+                + "Normalize Vietnamese food names with proper diacritics and capitalization. "
+                + "For example: 'thit bo' must become 'Thịt bò', 'ca chua' must become 'Cà chua', 'rau muong' must become 'Rau muống'. "
+                + "'tu lanh' means Refrigerator, 'ngan dong' means Freeze, and 'het han ngay mai' means expiryDaysFromNow = 1. "
+                + "The name field must contain only the product name, not storage or expiry words. "
                 + "category must be one of Dairy, General, Meat, Pantry, Produce, Vegetables. "
                 + "storage must be one of Room Temp, Refrigerator, Freeze. "
                 + "expiryDaysFromNow must be a non-negative integer when a relative expiry is clear, otherwise -1. "
@@ -825,6 +858,70 @@ public final class AgentRepository {
         return dietaryPreferences.trim().replaceAll("\\s+", " ");
     }
 
+    public static boolean isSafeFoodRecipe(Recipe recipe) {
+        if (recipe == null) {
+            return false;
+        }
+        StringBuilder text = new StringBuilder();
+        appendSafetyText(text, recipe.getTitle());
+        appendSafetyText(text, recipe.getSummary());
+        appendSafetyText(text, recipe.getSmartTip());
+        for (String ingredient : recipe.getAllIngredients()) {
+            appendSafetyText(text, ingredient);
+        }
+        for (String ingredient : recipe.getExpiringIngredients()) {
+            appendSafetyText(text, ingredient);
+        }
+        for (String instruction : recipe.getInstructions()) {
+            appendSafetyText(text, instruction);
+        }
+        String lower = text.toString().toLowerCase(Locale.US);
+        if (lower.trim().isEmpty()) {
+            return false;
+        }
+        if (containsAny(lower,
+                "nsfw", "sexual", "sex", "nude", "naked", "porn", "erotic",
+                "gore", "blood", "violent", "violence", "weapon", "kill",
+                "poison", "toxic", "inedible", "non-edible", "non edible",
+                "rotten", "spoiled", "moldy", "illegal drug", "drug recipe")) {
+            return false;
+        }
+        return containsAny(lower,
+                "recipe", "cook", "cooking", "bake", "boil", "simmer", "saute", "sauté",
+                "grill", "stir", "serve", "dish", "meal", "soup", "salad", "sauce",
+                "ingredient", "ingredients", "rice", "noodle", "beef", "chicken",
+                "pork", "fish", "tofu", "vegetable", "vegetables", "milk", "egg",
+                "eggs", "tomato", "bread", "pantry");
+    }
+
+    private static void appendSafetyText(StringBuilder builder, String value) {
+        if (value != null && !value.trim().isEmpty()) {
+            builder.append(value).append(' ');
+        }
+    }
+
+    private static String normalizeProductName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "";
+        }
+        String compact = name.trim().replaceAll("\\s+", " ");
+        String lower = compact.toLowerCase(Locale.US);
+        if (lower.equals("thit bo") || lower.equals("thịt bò")) return "Thịt bò";
+        if (lower.equals("thit ga") || lower.equals("thịt gà")) return "Thịt gà";
+        if (lower.equals("thit heo") || lower.equals("thịt heo") || lower.equals("thit lon") || lower.equals("thịt lợn")) return "Thịt heo";
+        if (lower.equals("ca") || lower.equals("cá")) return "Cá";
+        if (lower.equals("ca chua") || lower.equals("cà chua")) return "Cà chua";
+        if (lower.equals("ca rot") || lower.equals("cà rốt")) return "Cà rốt";
+        if (lower.equals("rau muong") || lower.equals("rau muống")) return "Rau muống";
+        if (lower.equals("rau cai") || lower.equals("rau cải")) return "Rau cải";
+        if (lower.equals("sua") || lower.equals("sữa")) return "Sữa";
+        if (lower.equals("trung") || lower.equals("trứng")) return "Trứng";
+        if (lower.equals("banh mi") || lower.equals("bánh mì")) return "Bánh mì";
+        if (lower.equals("gao") || lower.equals("gạo")) return "Gạo";
+        if (lower.equals("mi") || lower.equals("mì")) return "Mì";
+        return compact;
+    }
+
     private static JSONArray extractJsonArray(String text) throws Exception {
         String trimmed = text.trim();
         int start = trimmed.indexOf('[');
@@ -907,11 +1004,11 @@ public final class AgentRepository {
     }
 
     private static String inferCategory(String lower) {
-        if (containsAny(lower, "milk", "yogurt", "cheese", "cream", "butter")) return "Dairy";
-        if (containsAny(lower, "chicken", "beef", "pork", "fish", "meat")) return "Meat";
-        if (containsAny(lower, "spinach", "lettuce", "tomato", "pepper", "carrot", "broccoli", "vegetable")) return "Vegetables";
-        if (containsAny(lower, "apple", "banana", "orange", "berry", "fruit")) return "Produce";
-        if (containsAny(lower, "bread", "rice", "pasta", "flour", "cereal")) return "Pantry";
+        if (containsAny(lower, "milk", "yogurt", "cheese", "cream", "butter", "sua", "sữa")) return "Dairy";
+        if (containsAny(lower, "chicken", "beef", "pork", "fish", "meat", "thit", "thịt", "bo", "bò", "ga", "gà", "heo", "lon", "lợn", "ca ", "cá ")) return "Meat";
+        if (containsAny(lower, "spinach", "lettuce", "tomato", "pepper", "carrot", "broccoli", "vegetable", "rau", "ca chua", "cà chua", "ca rot", "cà rốt")) return "Vegetables";
+        if (containsAny(lower, "apple", "banana", "orange", "berry", "fruit", "tao", "táo", "chuoi", "chuối", "cam", "trai cay", "trái cây")) return "Produce";
+        if (containsAny(lower, "bread", "rice", "pasta", "flour", "cereal", "banh mi", "bánh mì", "gao", "gạo", "mi ", "mì ", "bot", "bột")) return "Pantry";
         return "General";
     }
 
@@ -925,11 +1022,11 @@ public final class AgentRepository {
     private static Long inferExpiryMillis(String source) {
         String lower = source.toLowerCase(Locale.US);
         Calendar calendar = Calendar.getInstance(Locale.US);
-        if (lower.contains("tomorrow")) {
+        if (lower.contains("tomorrow") || lower.contains("ngay mai") || lower.contains("ngày mai")) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
             return endOfDay(calendar);
         }
-        if (lower.contains("today")) {
+        if (lower.contains("today") || lower.contains("hom nay") || lower.contains("hôm nay")) {
             return endOfDay(calendar);
         }
         Matcher matcher = Pattern.compile("\\b(?:in|after)\\s+(\\d+)\\s+days?\\b", Pattern.CASE_INSENSITIVE).matcher(source);
@@ -955,6 +1052,7 @@ public final class AgentRepository {
 
     private static String inferProductName(String source, Matcher quantityMatcher) {
         String cleaned = source.replaceAll("(?i)\\b(add|track|new product|expires?|expiry|expiration|use by|best before|best|before|sell by|keep|refrigerated|nutrition|ingredients|net|weight|in|after|the|a|an|today|tomorrow|fridge|refrigerator|freezer|frozen|freeze|room temp|pantry)\\b", " ");
+        cleaned = cleaned.replaceAll("(?i)\\b(het han|hết hạn|han dung|hạn dùng|ngay mai|ngày mai|hom nay|hôm nay|cat|cất|trong|vao|vào|o|ở|tu lanh|tủ lạnh|ngan mat|ngăn mát|cat lanh|cất lạnh|ngan dong|ngăn đông|dong lanh|đông lạnh|bao quan|bảo quản)\\b", " ");
         cleaned = cleaned.replaceAll("\\b\\d{1,4}[/\\-.\\s]+\\d{1,2}[/\\-.\\s]+\\d{1,4}\\b", " ");
         cleaned = cleaned.replaceAll("\\b\\d+\\s+days?\\b", " ");
         if (quantityMatcher != null) {
@@ -968,7 +1066,7 @@ public final class AgentRepository {
         }
         StringBuilder title = new StringBuilder();
         for (String word : words) {
-            word = word.replaceAll("^[^A-Za-z0-9]+|[^A-Za-z0-9]+$", "");
+            word = word.replaceAll("^[^\\p{L}\\p{N}]+|[^\\p{L}\\p{N}]+$", "");
             if (word.isEmpty()) continue;
             title.append(Character.toUpperCase(word.charAt(0)));
             if (word.length() > 1) title.append(word.substring(1).toLowerCase(Locale.US));

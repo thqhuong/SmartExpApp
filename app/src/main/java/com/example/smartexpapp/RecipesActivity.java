@@ -3,6 +3,7 @@ package com.example.smartexpapp;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -32,6 +33,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import com.example.smartexpapp.data.AgentRepository;
 import com.example.smartexpapp.data.AgentRepository.RecipeSuggestionResult;
 import com.example.smartexpapp.data.ProductRepository;
+import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.model.Recipe;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
@@ -44,6 +46,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class RecipesActivity extends BaseActivity {
     private static RecipeSuggestionResult defaultSessionRecipeResult;
@@ -143,6 +148,10 @@ public class RecipesActivity extends BaseActivity {
         View askByTextButton = findViewById(R.id.askByTextButton);
         if (askByTextButton != null) {
             askByTextButton.setOnClickListener(v -> showTypedPromptDialog());
+        }
+        View generateRecipesButton = findViewById(R.id.btnGenerateRecipes);
+        if (generateRecipesButton != null) {
+            generateRecipesButton.setOnClickListener(v -> triggerRecipeGeneration());
         }
 
         startPulseAnimation();
@@ -257,23 +266,15 @@ public class RecipesActivity extends BaseActivity {
         pulseView.startAnimation(animSet);
     }
 
-    private void loadDefaultRecipesOncePerSession() {
-        if (defaultSessionRecipeResult != null) {
-            renderRecipeResult(defaultSessionRecipeResult);
-            return;
-        }
-        if (defaultSessionRecipeLoadAttempted) {
-            showRecipeLoadError();
-            return;
-        }
-
-        defaultSessionRecipeLoadAttempted = true;
+    private void triggerRecipeGeneration() {
+        Toast.makeText(this, R.string.recipes_checking_inventory, Toast.LENGTH_SHORT).show();
         setRecipeState(getString(R.string.recipes_loading), false);
         executor.execute(() -> {
             try {
                 RecipeSuggestionResult result = AgentRepository.getRecipeSuggestionResult(this, "");
                 mainHandler.post(() -> {
                     defaultSessionRecipeResult = result;
+                    saveRecipeResultToPrefs(result);
                     renderRecipeResult(result);
                 });
             } catch (Exception error) {
@@ -282,19 +283,161 @@ public class RecipesActivity extends BaseActivity {
         });
     }
 
-    private void renderRecipeResult(RecipeSuggestionResult result) {
-        setRecipeState(result.getStatusMessage(), result.isInventoryEmpty() || result.isLocalFallback());
-        renderRecipes(result.getRecipes());
+    private void loadDefaultRecipesOncePerSession() {
+        if (defaultSessionRecipeResult != null) {
+            renderRecipeResult(defaultSessionRecipeResult);
+            return;
+        }
+
+        RecipeSuggestionResult cached = loadRecipeResultFromPrefs();
+        if (cached != null) {
+            defaultSessionRecipeResult = cached;
+            renderRecipeResult(cached);
+            return;
+        }
+
+        if (defaultSessionRecipeLoadAttempted) {
+            showRecipeLoadError();
+            return;
+        }
+
+        defaultSessionRecipeLoadAttempted = true;
+        triggerRecipeGeneration();
     }
 
-    private void renderRecipes(List<Recipe> recipes) {
+    private void saveRecipeResultToPrefs(RecipeSuggestionResult result) {
+        if (result == null) return;
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("statusMessage", result.getStatusMessage());
+            obj.put("localFallback", result.isLocalFallback());
+            obj.put("inventoryEmpty", result.isInventoryEmpty());
+
+            JSONArray recipesArray = new JSONArray();
+            for (Recipe recipe : result.getRecipes()) {
+                JSONObject rObj = new JSONObject();
+                rObj.put("title", recipe.getTitle());
+                rObj.put("summary", recipe.getSummary());
+
+                JSONArray expIng = new JSONArray();
+                for (String ing : recipe.getExpiringIngredients()) {
+                    expIng.put(ing);
+                }
+                rObj.put("expiringIngredients", expIng);
+
+                rObj.put("actionText", recipe.getActionText());
+                rObj.put("iconRes", recipe.getIconRes());
+                rObj.put("featured", recipe.isFeatured());
+                rObj.put("imageUrl", recipe.getImageUrl() != null ? recipe.getImageUrl() : "");
+                rObj.put("prepTime", recipe.getPrepTime());
+                rObj.put("difficulty", recipe.getDifficulty());
+                rObj.put("calories", recipe.getCalories());
+                rObj.put("smartTip", recipe.getSmartTip() != null ? recipe.getSmartTip() : "");
+
+                JSONArray allIng = new JSONArray();
+                for (String ing : recipe.getAllIngredients()) {
+                    allIng.put(ing);
+                }
+                rObj.put("allIngredients", allIng);
+
+                JSONArray inst = new JSONArray();
+                for (String step : recipe.getInstructions()) {
+                    inst.put(step);
+                }
+                rObj.put("instructions", inst);
+
+                recipesArray.put(rObj);
+            }
+            obj.put("recipes", recipesArray);
+
+            getSharedPreferences("recipes_prefs", MODE_PRIVATE)
+                    .edit()
+                    .putString("saved_recipes", obj.toString())
+                    .apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private RecipeSuggestionResult loadRecipeResultFromPrefs() {
+        try {
+            String json = getSharedPreferences("recipes_prefs", MODE_PRIVATE).getString("saved_recipes", null);
+            if (json == null) return null;
+
+            JSONObject obj = new JSONObject(json);
+            String statusMessage = obj.optString("statusMessage", "");
+            boolean localFallback = obj.optBoolean("localFallback", false);
+            boolean inventoryEmpty = obj.optBoolean("inventoryEmpty", false);
+
+            JSONArray recipesArray = obj.getJSONArray("recipes");
+            List<Recipe> recipes = new ArrayList<>();
+            for (int i = 0; i < recipesArray.length(); i++) {
+                JSONObject rObj = recipesArray.getJSONObject(i);
+                String title = rObj.getString("title");
+                String summary = rObj.getString("summary");
+
+                JSONArray expIngArr = rObj.getJSONArray("expiringIngredients");
+                List<String> expiringIngredients = new ArrayList<>();
+                for (int j = 0; j < expIngArr.length(); j++) {
+                    expiringIngredients.add(expIngArr.getString(j));
+                }
+
+                String actionText = rObj.getString("actionText");
+                int iconRes = rObj.getInt("iconRes");
+                boolean featured = rObj.getBoolean("featured");
+                String imageUrl = rObj.optString("imageUrl", "");
+                if (imageUrl.isEmpty()) imageUrl = null;
+
+                String prepTime = rObj.optString("prepTime", "20 min");
+                String difficulty = rObj.optString("difficulty", "Medium");
+                String calories = rObj.optString("calories", "400 kcal");
+
+                String smartTip = rObj.optString("smartTip", "");
+                if (smartTip.isEmpty()) smartTip = null;
+
+                JSONArray allIngArr = rObj.optJSONArray("allIngredients");
+                List<String> allIngredients = new ArrayList<>();
+                if (allIngArr != null) {
+                    for (int j = 0; j < allIngArr.length(); j++) {
+                        allIngredients.add(allIngArr.getString(j));
+                    }
+                } else {
+                    allIngredients = expiringIngredients;
+                }
+
+                JSONArray instArr = rObj.optJSONArray("instructions");
+                List<String> instructions = new ArrayList<>();
+                if (instArr != null) {
+                    for (int j = 0; j < instArr.length(); j++) {
+                        instructions.add(instArr.getString(j));
+                    }
+                }
+
+                recipes.add(new Recipe(title, summary, expiringIngredients, actionText, iconRes, featured,
+                        imageUrl, prepTime, difficulty, calories, smartTip, allIngredients, instructions));
+            }
+            return new RecipeSuggestionResult(recipes, statusMessage, localFallback, inventoryEmpty);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void renderRecipeResult(RecipeSuggestionResult result) {
+        setRecipeState(result.getStatusMessage(), result.isInventoryEmpty() || result.isLocalFallback());
+        ProductRepository.getProductsAsync(this,
+                products -> renderRecipes(result.getRecipes(), products),
+                error -> renderRecipes(result.getRecipes(), new ArrayList<>()));
+    }
+
+    private void renderRecipes(List<Recipe> recipes, List<Product> products) {
         LinearLayout recipeList = findViewById(R.id.recipeList);
         recipeList.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
 
         for (Recipe recipe : recipes) {
             View item = inflater.inflate(R.layout.item_recipe_card, recipeList, false);
-            bindRecipeCard(inflater, item, recipe);
+            bindRecipeCard(inflater, item, recipe, products);
             ViewUtils.setBottomMargin(item, 16);
             recipeList.addView(item);
         }
@@ -302,7 +445,7 @@ public class RecipesActivity extends BaseActivity {
 
     private void showRecipeLoadError() {
         setRecipeState(getString(R.string.recipes_error), true);
-        renderRecipes(new ArrayList<>());
+        renderRecipes(new ArrayList<>(), new ArrayList<>());
     }
 
     private void setRecipeState(String message, boolean emphasized) {
@@ -313,7 +456,7 @@ public class RecipesActivity extends BaseActivity {
         recipeStateText.setTextColor(getColor(emphasized ? R.color.smart_primary : R.color.smart_secondary));
     }
 
-    private void bindRecipeCard(LayoutInflater inflater, View item, Recipe recipe) {
+    private void bindRecipeCard(LayoutInflater inflater, View item, Recipe recipe, List<Product> products) {
         FrameLayout hero = item.findViewById(R.id.recipeHero);
         if (hero != null) {
             hero.setBackgroundResource(recipe.isFeatured() ? R.drawable.bg_hero_primary : R.drawable.bg_hero_neutral);
@@ -340,6 +483,67 @@ public class RecipesActivity extends BaseActivity {
         TextView prepTimeView = item.findViewById(R.id.recipeCardPrepTime);
         if (prepTimeView != null) {
             prepTimeView.setText(recipe.getPrepTime());
+        }
+
+        View ingredientsContainer = item.findViewById(R.id.recipeIngredientsContainer);
+        ChipGroup ingredientsChipGroup = item.findViewById(R.id.recipeIngredientsChipGroup);
+        if (ingredientsContainer != null && ingredientsChipGroup != null) {
+            ingredientsChipGroup.removeAllViews();
+            List<Product> matchedProducts = new ArrayList<>();
+            for (Product product : products) {
+                if (product.isExpired()) {
+                    continue;
+                }
+                boolean matches = false;
+                for (String ingredient : recipe.getAllIngredients()) {
+                    String ingredientLower = ingredient.toLowerCase(Locale.US).trim();
+                    String productLower = product.getName().toLowerCase(Locale.US).trim();
+                    if (productLower.length() >= 3 && (ingredientLower.contains(productLower) || productLower.contains(ingredientLower))) {
+                        matches = true;
+                        break;
+                    } else if (productLower.equalsIgnoreCase(ingredientLower)) {
+                        matches = true;
+                        break;
+                    }
+                }
+                if (matches) {
+                    boolean duplicate = false;
+                    for (Product p : matchedProducts) {
+                        if (p.getName().equalsIgnoreCase(product.getName())) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) {
+                        matchedProducts.add(product);
+                    }
+                }
+            }
+
+            if (!matchedProducts.isEmpty()) {
+                ingredientsContainer.setVisibility(View.VISIBLE);
+                for (Product product : matchedProducts) {
+                    View badge = inflater.inflate(R.layout.item_recipe_ingredient_badge, ingredientsChipGroup, false);
+                    ImageView badgeIcon = badge.findViewById(R.id.ingredientBadgeIcon);
+                    TextView badgeText = badge.findViewById(R.id.ingredientBadgeText);
+
+                    int daysLeft = product.getDaysUntilExpiry();
+                    if (daysLeft <= 7) {
+                        badge.setBackgroundResource(R.drawable.bg_recipe_ingredient_expiring);
+                        badgeText.setText(product.getName() + " (" + daysLeft + "d left)");
+                        badgeText.setTextColor(getColor(R.color.smart_error));
+                        ViewUtils.setIcon(badgeIcon, R.drawable.ic_clock, R.color.smart_error);
+                    } else {
+                        badge.setBackgroundResource(R.drawable.bg_recipe_ingredient_normal);
+                        badgeText.setText(product.getName());
+                        badgeText.setTextColor(getColor(R.color.smart_on_surface));
+                        ViewUtils.setIcon(badgeIcon, R.drawable.ic_check_circle, R.color.smart_on_surface);
+                    }
+                    ingredientsChipGroup.addView(badge);
+                }
+            } else {
+                ingredientsContainer.setVisibility(View.GONE);
+            }
         }
 
         // Entire card is clickable to open RecipeDetailsActivity

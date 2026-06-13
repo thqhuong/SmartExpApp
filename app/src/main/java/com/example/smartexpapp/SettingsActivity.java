@@ -12,6 +12,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
+
 import com.example.smartexpapp.data.SampleData;
 import com.example.smartexpapp.data.SettingsRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
@@ -77,7 +80,7 @@ public class SettingsActivity extends BaseActivity {
             com.google.android.material.switchmaterial.SwitchMaterial switchBtn = row.findViewById(R.id.settingSwitch);
             if (item.isSwitchRow()) {
                 switchBtn.setVisibility(View.VISIBLE);
-                if (getString(R.string.settings_dark_mode_title).equals(item.getTitle())) {
+                if (SettingItem.KEY_DARK_MODE.equals(item.getKey())) {
                     switchBtn.setSaveEnabled(false);
                     switchBtn.setOnCheckedChangeListener(null);
                     switchBtn.setChecked(SettingsRepository.getCachedDarkMode(this));
@@ -102,7 +105,7 @@ public class SettingsActivity extends BaseActivity {
                 }
             } else {
                 switchBtn.setVisibility(View.GONE);
-                row.setOnClickListener(v -> openSetting(item.getTitle()));
+                row.setOnClickListener(v -> openSetting(item.getKey()));
             }
 
             ((ImageView) row.findViewById(R.id.settingChevron)).setVisibility(item.isSwitchRow() ? View.GONE : View.VISIBLE);
@@ -111,18 +114,20 @@ public class SettingsActivity extends BaseActivity {
         }
     }
 
-    private void openSetting(String title) {
+    private void openSetting(String key) {
         Intent intent = null;
-        if (getString(R.string.settings_notification_title).equals(title)) {
+        if (SettingItem.KEY_NOTIFICATIONS.equals(key)) {
             intent = new Intent(this, NotificationSettingsActivity.class);
-        } else if (getString(R.string.settings_profile_title).equals(title)) {
+        } else if (SettingItem.KEY_PROFILE.equals(key)) {
             intent = new Intent(this, AccountDetailsActivity.class);
-        } else if (getString(R.string.settings_help_title).equals(title)) {
+        } else if (SettingItem.KEY_HELP.equals(key)) {
             intent = new Intent(this, HelpSupportActivity.class);
-        } else if (getString(R.string.settings_storage_title).equals(title)) {
+        } else if (SettingItem.KEY_STORAGE.equals(key)) {
             showStoragePreferencesDialog();
-        } else if (getString(R.string.settings_dietary_title).equals(title)) {
+        } else if (SettingItem.KEY_DIETARY.equals(key)) {
             showDietaryPreferencesDialog();
+        } else if (SettingItem.KEY_LANGUAGE.equals(key)) {
+            showLanguageDialog();
         }
 
         if (intent != null) {
@@ -201,5 +206,36 @@ public class SettingsActivity extends BaseActivity {
                     .setNegativeButton(R.string.cancel, null)
                     .show();
         }, error -> Toast.makeText(this, R.string.dietary_preferences_load_error, Toast.LENGTH_SHORT).show());
+    }
+
+    private void showLanguageDialog() {
+        String[] labels = {
+                getString(R.string.language_english),
+                getString(R.string.language_vietnamese)
+        };
+        String[] tags = {"en", "vi"};
+
+        SettingsRepository.getSettingsAsync(this, settings -> {
+            int checked = "vi".equals(settings.getLanguageTag()) ? 1 : 0;
+            final int[] selected = {checked};
+
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.settings_language_title)
+                    .setSingleChoiceItems(labels, checked, (dialog, which) -> selected[0] = which)
+                    .setPositiveButton(R.string.save_label, (dialog, which) -> {
+                        String languageTag = tags[selected[0]];
+                        SettingsRepository.setLanguageTagAsync(
+                                this,
+                                languageTag,
+                                updated -> {
+                                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(updated.getLanguageTag()));
+                                    Toast.makeText(this, R.string.language_saved, Toast.LENGTH_SHORT).show();
+                                },
+                                error -> Toast.makeText(this, R.string.language_save_error, Toast.LENGTH_SHORT).show()
+                        );
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .show();
+        }, error -> Toast.makeText(this, R.string.language_load_error, Toast.LENGTH_SHORT).show());
     }
 }

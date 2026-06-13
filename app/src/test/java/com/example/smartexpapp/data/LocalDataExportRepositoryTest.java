@@ -47,6 +47,7 @@ public class LocalDataExportRepositoryTest {
         ProductRepository.markConsumed(database, "milk-id", "Used before expiry");
         SettingsRepository.setDisplayName(database, "Kitchen Team");
         SettingsRepository.setDietaryPreferences(database, "vegetarian");
+        SettingsRepository.setLanguageTag(database, "vi");
 
         JSONObject export = LocalDataExportRepository.buildExportJson(database);
 
@@ -55,6 +56,7 @@ public class LocalDataExportRepositoryTest {
         assertEquals("CONSUMED", export.getJSONArray("products").getJSONObject(0).getString("status"));
         assertEquals("Kitchen Team", export.getJSONObject("settings").getString("displayName"));
         assertEquals("vegetarian", export.getJSONObject("settings").getString("dietaryPreferences"));
+        assertEquals("vi", export.getJSONObject("settings").getString("languageTag"));
         assertEquals(1, export.getJSONArray("inventoryActions").length());
         assertTrue(export.has("expiryScans"));
         assertTrue(export.has("recipeCache"));

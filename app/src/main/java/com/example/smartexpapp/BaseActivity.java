@@ -16,6 +16,7 @@ import androidx.annotation.IdRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
+import androidx.core.os.LocaleListCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
@@ -34,6 +35,12 @@ public abstract class BaseActivity extends AppCompatActivity {
         // when the current mode doesn't match the preference (e.g. cold start
         // or after a process death). This avoids triggering redundant activity
         // recreations.
+        String languageTag = SettingsRepository.getCachedLanguageTag(this);
+        String currentLanguageTag = AppCompatDelegate.getApplicationLocales().toLanguageTags();
+        if (!languageTag.equals(currentLanguageTag)) {
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag));
+        }
+
         boolean isNightMode = SettingsRepository.getCachedDarkMode(this);
         int targetMode = isNightMode
                 ? AppCompatDelegate.MODE_NIGHT_YES

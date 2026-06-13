@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="top|start"
             android:layout_margin="12dp"
-            android:background="@drawable/bg_recipe_card_badge"
+            android:background="@drawable/bg_neutral_badge"
             android:paddingStart="8dp"
             android:paddingTop="4dp"
             android:paddingEnd="8dp"
@@ -64,6 +64,33 @@
         android:layout_marginTop="4dp"
         android:textColor="@color/smart_secondary"
         android:textSize="14sp" />
+
+    <!-- Expiring/Used Ingredients Box -->
+    <LinearLayout
+        android:id="@+id/recipeIngredientsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="12dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/recipe_expiring_ingredients_used"
+            android:textColor="@color/smart_primary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/recipeIngredientsChipGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:chipSpacingHorizontal="8dp"
+            app:chipSpacingVertical="8dp"
+            app:singleLine="false" />
+    </LinearLayout>
 
     <!-- Divider Line -->
     <View

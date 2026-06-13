@@ -237,6 +237,13 @@
     <string name="settings_profile_desc">Device-only profile and local data</string>
     <string name="settings_help_title">Help &amp; Support</string>
     <string name="settings_help_desc">FAQs and contact information</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_desc">English or Vietnamese</string>
+    <string name="language_english">English</string>
+    <string name="language_vietnamese">Vietnamese</string>
+    <string name="language_saved">Language updated.</string>
+    <string name="language_save_error">Could not save language setting.</string>
+    <string name="language_load_error">Could not load language setting.</string>
     <string name="settings_dark_mode_title">Dark Mode</string>
     <string name="settings_dark_mode_desc">Toggle dark theme across the application</string>
     <string name="local_only_mode_toast">SmartExpApp is running in local-only mode.</string>
@@ -298,4 +305,6 @@
     <string name="favorite_saved">Recipe saved to favorites!</string>
     <string name="favorite_removed">Recipe removed from favorites.</string>
     <string name="reminder_filter_toast">Showing items from your expiry reminder.</string>
+    <string name="btn_generate_recipes">Generate recipes</string>
+    <string name="recipe_expiring_ingredients_used">EXPIRING INGREDIENTS USED:</string>
 </resources>

@@ -999,8 +999,12 @@ public class AddProductActivity extends BaseActivity {
         }
 
         saveCompleted = true;
-        startActivity(new Intent(this, InventoryActivity.class));
+        Intent inventoryIntent = new Intent(this, InventoryActivity.class);
+        inventoryIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        inventoryIntent.putExtra(InventoryActivity.EXTRA_RESET_FILTERS, true);
+        startActivity(inventoryIntent);
         overridePendingTransition(0, 0);
+        finish();
     }
 
     private void resetFormForSmartDraft() {

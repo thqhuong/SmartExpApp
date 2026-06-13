@@ -128,20 +128,25 @@
                 android:textSize="32sp"
                 android:textStyle="bold" />
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGenerateRecipes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_primary_soft_badge"
-                android:paddingStart="16dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="8dp"
-                android:text="@string/badge_use_soon"
+                android:text="@string/btn_generate_recipes"
+                android:textAllCaps="false"
                 android:textColor="@color/smart_primary_container"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:backgroundTint="@color/smart_primary_soft"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/smart_primary_soft_border"
+                app:strokeWidth="1dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
 
             <TextView
                 android:id="@+id/recipesDescription"
