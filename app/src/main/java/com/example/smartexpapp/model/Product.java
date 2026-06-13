@@ -241,32 +241,32 @@ public class Product {
     public String getExpiryStatus() {
         int daysUntilExpiry = getDaysUntilExpiry();
         if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
-            return "Expired";
+            return "Đã hết hạn";
         }
         if (daysUntilExpiry == 0) {
-            return "Today";
+            return "Hôm nay";
         }
         if (daysUntilExpiry == 1) {
-            return "1 Day";
+            return "1 Ngày";
         }
         if (daysUntilExpiry >= 60) {
-            return Math.max(1, daysUntilExpiry / 30) + " Months";
+            return Math.max(1, daysUntilExpiry / 30) + " Tháng";
         }
-        return daysUntilExpiry + " Days";
+        return daysUntilExpiry + " Ngày";
     }
 
     public String getDashboardBadge() {
         int daysUntilExpiry = getDaysUntilExpiry();
         if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
-            return "EXPIRED";
+            return "HẾT HẠN";
         }
         if (daysUntilExpiry == 0) {
-            return "TODAY";
+            return "HÔM NAY";
         }
         if (daysUntilExpiry == 1) {
-            return "TOMORROW";
+            return "NGÀY MAI";
         }
-        return "IN " + daysUntilExpiry + " DAYS";
+        return "CÒN " + daysUntilExpiry + " NGÀY";
     }
 
     public String getGroup() {
