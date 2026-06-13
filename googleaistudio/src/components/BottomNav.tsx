@@ -10,11 +10,18 @@ interface BottomNavProps {
   onViewChange: (view: AppView) => void;
 }
 
+type NavItem = {
+  id: AppView;
+  label: string;
+  icon: string;
+  isFab?: true;
+};
+
 export default function BottomNav({ activeView, onViewChange }: BottomNavProps) {
   // Hide bottom nav if we are in SignIn Screen
   if (activeView === 'signin') return null;
 
-  const items = [
+  const items: NavItem[] = [
     { id: 'inventory', label: 'Inventory', icon: 'inventory_2' },
     { id: 'stats', label: 'Stats', icon: 'leaderboard' },
     { id: 'add', label: 'Add', icon: 'add', isFab: true },

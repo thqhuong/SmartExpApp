@@ -20,6 +20,7 @@ public final class SettingsRepository {
     private static final String KEY_NOTIFICATIONS_ENABLED = "notifications_enabled";
     private static final String KEY_REMINDER_DAYS = "reminder_days_before";
     private static final String KEY_DARK_MODE = "dark_mode";
+    private static final String KEY_LANGUAGE_TAG = "language_tag";
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
     public interface Callback<T> {
@@ -35,32 +36,38 @@ public final class SettingsRepository {
         private final int reminderDaysBefore;
         private final String displayName;
         private final boolean darkMode;
+        private final String languageTag;
         private final String defaultStorageLocationId;
         private final String dietaryPreferences;
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore) {
-            this(notificationsEnabled, reminderDaysBefore, "Local User", false, LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
+            this(notificationsEnabled, reminderDaysBefore, "Local User", false, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName) {
-            this(notificationsEnabled, reminderDaysBefore, displayName, false, LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
+            this(notificationsEnabled, reminderDaysBefore, displayName, false, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode) {
-            this(notificationsEnabled, reminderDaysBefore, displayName, darkMode, LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
+            this(notificationsEnabled, reminderDaysBefore, displayName, darkMode, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode, String defaultStorageLocationId) {
-            this(notificationsEnabled, reminderDaysBefore, displayName, darkMode, defaultStorageLocationId, null);
+            this(notificationsEnabled, reminderDaysBefore, displayName, darkMode, "en", defaultStorageLocationId, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode, String defaultStorageLocationId, String dietaryPreferences) {
+            this(notificationsEnabled, reminderDaysBefore, displayName, darkMode, "en", defaultStorageLocationId, dietaryPreferences);
+        }
+
+        public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode, String languageTag, String defaultStorageLocationId, String dietaryPreferences) {
             this.notificationsEnabled = notificationsEnabled;
             this.reminderDaysBefore = reminderDaysBefore;
             this.displayName = displayName == null || displayName.trim().isEmpty()
                     ? "Local User"
                     : displayName.trim();
             this.darkMode = darkMode;
+            this.languageTag = normalizeLanguageTag(languageTag);
             this.defaultStorageLocationId = normalizeStorageLocationId(defaultStorageLocationId);
             this.dietaryPreferences = normalizeOptionalText(dietaryPreferences);
         }
@@ -79,6 +86,10 @@ public final class SettingsRepository {
 
         public boolean isDarkMode() {
             return darkMode;
+        }
+
+        public String getLanguageTag() {
+            return languageTag;
         }
 
         public String getDefaultStorageLocationId() {
@@ -104,6 +115,7 @@ public final class SettingsRepository {
     public static SettingsSnapshot getSettings(Context context) {
         SettingsSnapshot settings = toSnapshot(getOrCreateSettings(context, AppDatabase.getInstance(context)));
         cacheDarkMode(context, settings.isDarkMode());
+        cacheLanguageTag(context, settings.getLanguageTag());
         return settings;
     }
 
@@ -119,6 +131,12 @@ public final class SettingsRepository {
         return context.getApplicationContext()
                 .getSharedPreferences(LEGACY_PREFS, Context.MODE_PRIVATE)
                 .getBoolean(KEY_DARK_MODE, false);
+    }
+
+    public static String getCachedLanguageTag(Context context) {
+        return normalizeLanguageTag(context.getApplicationContext()
+                .getSharedPreferences(LEGACY_PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_LANGUAGE_TAG, "en"));
     }
 
     public static boolean areNotificationsEnabled(Context context) {
@@ -218,6 +236,30 @@ public final class SettingsRepository {
         database.userSettingsDao().insert(settings);
     }
 
+    public static void setLanguageTag(Context context, String languageTag) {
+        AppDatabase database = AppDatabase.getInstance(context);
+        String normalizedLanguageTag = normalizeLanguageTag(languageTag);
+        UserSettingsEntity settings = getOrCreateSettings(context, database);
+        settings.languageTag = normalizedLanguageTag;
+        settings.updatedAt = System.currentTimeMillis();
+        database.userSettingsDao().insert(settings);
+        cacheLanguageTag(context, normalizedLanguageTag);
+    }
+
+    public static void setLanguageTagAsync(Context context, String languageTag, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
+        execute(() -> {
+            setLanguageTag(context, languageTag);
+            return getSettings(context);
+        }, callback, errorCallback);
+    }
+
+    public static void setLanguageTag(AppDatabase database, String languageTag) {
+        UserSettingsEntity settings = getOrCreateSettings(database);
+        settings.languageTag = normalizeLanguageTag(languageTag);
+        settings.updatedAt = System.currentTimeMillis();
+        database.userSettingsDao().insert(settings);
+    }
+
     public static void setDefaultStorageLocation(Context context, String storageLocationId) {
         AppDatabase database = AppDatabase.getInstance(context);
         UserSettingsEntity settings = getOrCreateSettings(context, database);
@@ -273,7 +315,8 @@ public final class SettingsRepository {
                 database,
                 legacy.getBoolean(KEY_NOTIFICATIONS_ENABLED, true),
                 legacy.getInt(KEY_REMINDER_DAYS, 3),
-                legacy.getBoolean(KEY_DARK_MODE, false)
+                legacy.getBoolean(KEY_DARK_MODE, false),
+                legacy.getString(KEY_LANGUAGE_TAG, "en")
         );
     }
 
@@ -282,10 +325,10 @@ public final class SettingsRepository {
         if (existing != null) {
             return existing;
         }
-        return createDefaultSettings(database, true, 3, false);
+        return createDefaultSettings(database, true, 3, false, "en");
     }
 
-    private static UserSettingsEntity createDefaultSettings(AppDatabase database, boolean notificationsEnabled, int reminderDaysBefore, boolean darkMode) {
+    private static UserSettingsEntity createDefaultSettings(AppDatabase database, boolean notificationsEnabled, int reminderDaysBefore, boolean darkMode, String languageTag) {
         ensureStorageLocations(database);
         long now = System.currentTimeMillis();
         UserSettingsEntity settings = new UserSettingsEntity();
@@ -295,6 +338,7 @@ public final class SettingsRepository {
         settings.notificationEnabled = notificationsEnabled;
         settings.displayName = "Local User";
         settings.darkMode = darkMode;
+        settings.languageTag = normalizeLanguageTag(languageTag);
         settings.createdAt = now;
         settings.updatedAt = now;
         database.userSettingsDao().insert(settings);
@@ -319,6 +363,7 @@ public final class SettingsRepository {
                 settings.reminderDaysBefore,
                 settings.displayName,
                 settings.darkMode,
+                settings.languageTag,
                 settings.defaultStorageLocationId,
                 settings.dietaryPreferences
         );
@@ -341,6 +386,13 @@ public final class SettingsRepository {
         return LocalDataContract.STORAGE_ROOM_TEMP_ID;
     }
 
+    private static String normalizeLanguageTag(String languageTag) {
+        if (languageTag != null && languageTag.trim().toLowerCase().startsWith("vi")) {
+            return "vi";
+        }
+        return "en";
+    }
+
     private static String normalizeOptionalText(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
@@ -353,6 +405,14 @@ public final class SettingsRepository {
                 .getSharedPreferences(LEGACY_PREFS, Context.MODE_PRIVATE)
                 .edit()
                 .putBoolean(KEY_DARK_MODE, darkMode)
+                .apply();
+    }
+
+    private static void cacheLanguageTag(Context context, String languageTag) {
+        context.getApplicationContext()
+                .getSharedPreferences(LEGACY_PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_LANGUAGE_TAG, normalizeLanguageTag(languageTag))
                 .apply();
     }
 

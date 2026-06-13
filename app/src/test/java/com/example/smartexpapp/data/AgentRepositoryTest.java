@@ -31,6 +31,17 @@ public class AgentRepositoryTest {
     }
 
     @Test
+    public void parseProductDraftNormalizesVietnameseSmartAddText() {
+        ProductDraft draft = AgentRepository.parseProductDraft(
+                "thit bo het han ngay mai cat trong tu lanh");
+
+        assertEquals("Thịt bò", draft.getName());
+        assertEquals("Meat", draft.getCategory());
+        assertEquals("Refrigerator", draft.getStorage());
+        assertTrue(draft.hasExpiryDate());
+    }
+
+    @Test
     public void parseProductDraftHandlesOcrLikePackageText() {
         ProductDraft draft = AgentRepository.parseProductDraft(
                 "Organic Milk\n1 gallon\nBest Before 12/31/2026\nKeep Refrigerated");
@@ -133,6 +144,48 @@ public class AgentRepositoryTest {
         );
 
         assertTrue(recipes.get(0).getSummary().contains("Adapt for: low sodium"));
+    }
+
+    @Test
+    public void recipeSafetyRejectsNsfwOrNonFoodContent() {
+        Recipe unsafe = new Recipe(
+                "NSFW non-food idea",
+                "This is not a food recipe.",
+                Collections.singletonList("unsafe ingredient"),
+                "View",
+                android.R.drawable.ic_menu_gallery,
+                false,
+                null,
+                "10 min",
+                "Easy",
+                "0 kcal",
+                "NSFW content",
+                Collections.singletonList("non-edible item"),
+                Collections.singletonList("Do not cook this.")
+        );
+
+        assertFalse(AgentRepository.isSafeFoodRecipe(unsafe));
+    }
+
+    @Test
+    public void recipeSafetyAllowsNormalFoodRecipe() {
+        Recipe safe = new Recipe(
+                "Beef and Tomato Soup",
+                "A simple cooked meal using expiring ingredients.",
+                Arrays.asList("Beef", "Tomato"),
+                "View Recipe",
+                android.R.drawable.ic_menu_gallery,
+                true,
+                null,
+                "25 min",
+                "Easy",
+                "350 kcal",
+                "Cook the beef first, then simmer with tomato.",
+                Arrays.asList("Beef", "Tomato", "Salt"),
+                Arrays.asList("Cook beef.", "Simmer with tomato.", "Serve hot.")
+        );
+
+        assertTrue(AgentRepository.isSafeFoodRecipe(safe));
     }
 
     @Test

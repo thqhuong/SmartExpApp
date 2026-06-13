@@ -48,10 +48,12 @@ public class SettingsRepositoryTest {
         assertEquals(3, settings.getReminderDaysBefore());
         assertEquals("Local User", settings.getDisplayName());
         assertFalse(settings.isDarkMode());
+        assertEquals("en", settings.getLanguageTag());
         assertEquals(LocalDataContract.STORAGE_ROOM_TEMP_ID, settings.getDefaultStorageLocationId());
         UserSettingsEntity entity = database.userSettingsDao().getById("default");
         assertNotNull(entity);
         assertEquals(LocalDataContract.STORAGE_ROOM_TEMP_ID, entity.defaultStorageLocationId);
+        assertEquals("en", entity.languageTag);
         assertEquals(3, database.storageLocationDao().count());
     }
 
@@ -61,6 +63,7 @@ public class SettingsRepositoryTest {
         SettingsRepository.setReminderDaysBefore(database, 5);
         SettingsRepository.setDisplayName(database, "Kitchen Team");
         SettingsRepository.setDarkMode(database, true);
+        SettingsRepository.setLanguageTag(database, "vi-VN");
         SettingsRepository.setDefaultStorageLocation(database, LocalDataContract.STORAGE_REFRIGERATOR_ID);
         SettingsRepository.setDietaryPreferences(database, " vegetarian, dairy-free ");
 
@@ -70,6 +73,7 @@ public class SettingsRepositoryTest {
         assertEquals(5, settings.getReminderDaysBefore());
         assertEquals("Kitchen Team", settings.getDisplayName());
         assertTrue(settings.isDarkMode());
+        assertEquals("vi", settings.getLanguageTag());
         assertEquals(LocalDataContract.STORAGE_REFRIGERATOR_ID, settings.getDefaultStorageLocationId());
         assertEquals(LocalDataContract.STORAGE_REFRIGERATOR_NAME, settings.getDefaultStorageName());
         assertEquals("vegetarian, dairy-free", settings.getDietaryPreferences());
@@ -80,6 +84,7 @@ public class SettingsRepositoryTest {
         assertEquals(5, entity.reminderDaysBefore);
         assertEquals("Kitchen Team", entity.displayName);
         assertTrue(entity.darkMode);
+        assertEquals("vi", entity.languageTag);
         assertEquals(LocalDataContract.STORAGE_REFRIGERATOR_ID, entity.defaultStorageLocationId);
         assertEquals("vegetarian, dairy-free", entity.dietaryPreferences);
     }
@@ -113,5 +118,14 @@ public class SettingsRepositoryTest {
         assertEquals("No dietary preferences", settings.getDietaryPreferencesLabel());
         assertNotNull(entity);
         assertNull(entity.dietaryPreferences);
+    }
+
+    @Test
+    public void unsupportedLanguageFallsBackToEnglish() {
+        SettingsRepository.setLanguageTag(database, "fr");
+
+        SettingsRepository.SettingsSnapshot settings = SettingsRepository.getSettings(database);
+
+        assertEquals("en", settings.getLanguageTag());
     }
 }

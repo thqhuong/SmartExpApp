@@ -25,7 +25,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop"
+            android:importantForAccessibility="no" />
 
         <!-- Calories Badge top-left -->
         <TextView
@@ -34,12 +35,12 @@
             android:layout_height="wrap_content"
             android:layout_gravity="top|start"
             android:layout_margin="12dp"
-            android:background="@drawable/bg_recipe_card_badge"
+            android:background="@drawable/bg_neutral_badge"
             android:paddingStart="8dp"
             android:paddingTop="4dp"
             android:paddingEnd="8dp"
             android:paddingBottom="4dp"
-            android:text="450 KCAL"
+            android:text="@string/placeholder_recipe_calories"
             android:textColor="@color/smart_primary"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -64,6 +65,33 @@
         android:textColor="@color/smart_secondary"
         android:textSize="14sp" />
 
+    <!-- Expiring/Used Ingredients Box -->
+    <LinearLayout
+        android:id="@+id/recipeIngredientsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="12dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/recipe_expiring_ingredients_used"
+            android:textColor="@color/smart_primary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/recipeIngredientsChipGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:chipSpacingHorizontal="8dp"
+            app:chipSpacingVertical="8dp"
+            app:singleLine="false" />
+    </LinearLayout>
+
     <!-- Divider Line -->
     <View
         android:layout_width="match_parent"
@@ -83,6 +111,7 @@
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:src="@drawable/ic_fork_knife"
+            android:importantForAccessibility="no"
             app:tint="@color/smart_secondary" />
 
         <TextView
@@ -91,7 +120,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="6dp"
-            android:text="Easy"
+            android:text="@string/placeholder_difficulty"
             android:textColor="@color/smart_secondary"
             android:textSize="14sp" />
 
@@ -99,7 +128,7 @@
             android:id="@+id/recipeCardPrepTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="15 Mins"
+            android:text="@string/placeholder_recipe_prep_time"
             android:textColor="@color/smart_primary"
             android:textSize="14sp"
             android:textStyle="bold" />

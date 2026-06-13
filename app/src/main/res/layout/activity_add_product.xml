@@ -29,7 +29,7 @@
                 android:id="@+id/addProductTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Add Product"
+                android:text="@string/add_product"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="32sp"
                 android:textStyle="bold" />
@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:layout_marginBottom="16dp"
-                android:text="Enter details to track expiration."
+                android:text="@string/add_product_subtitle"
                 android:textColor="@color/smart_secondary"
                 android:textSize="14sp" />
 
@@ -49,7 +49,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:text="SMART ADD"
+                android:text="@string/smart_add_section"
                 android:textColor="@color/smart_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -78,6 +78,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_gravity="center"
+                            android:importantForAccessibility="no"
                             android:src="@drawable/ic_gemini_sparkles"
                             app:tint="#FFFFFF" />
                     </FrameLayout>
@@ -92,7 +93,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="AI-assisted Smart Add"
+                            android:text="@string/smart_add_title"
                             android:textColor="@color/smart_on_surface"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -101,7 +102,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Describe one or more items by voice or text. AI is used when configured; local parsing is always available."
+                            android:text="@string/smart_add_desc"
                             android:textColor="@color/smart_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -114,7 +115,7 @@
                     android:layout_marginTop="16dp"
                     android:background="@drawable/bg_gemini_launch_button"
                     app:backgroundTint="@null"
-                    android:text="Start Voice Add"
+                    android:text="@string/start_voice_add"
                     android:textAllCaps="false"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
@@ -129,7 +130,7 @@
                     android:layout_height="48dp"
                     android:layout_marginTop="10dp"
                     android:backgroundTint="@color/smart_surface_container"
-                    android:text="Type Smart Add"
+                    android:text="@string/type_smart_add"
                     android:textAllCaps="false"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="14sp"
@@ -151,7 +152,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="PRODUCT NAME"
+                    android:text="@string/product_name_label"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -163,7 +164,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="20dp"
                     android:background="@drawable/bg_glass_input"
-                    android:hint="e.g., Organic Milk"
+                    android:hint="@string/product_name_hint"
                     android:inputType="textCapWords"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
@@ -175,7 +176,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="QUANTITY"
+                    android:text="@string/quantity_label"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -196,7 +197,7 @@
                         android:layout_marginEnd="12dp"
                         android:background="@drawable/bg_glass_input"
                         android:inputType="numberDecimal"
-                        android:hint="1"
+                        android:hint="@string/quantity_default"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
                         android:singleLine="true"
@@ -217,7 +218,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="CATEGORY"
+                        android:text="@string/category_label"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -244,7 +245,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="48dp"
                         android:layout_marginStart="8dp"
-                        android:text="Manage"
+                        android:text="@string/manage_label"
                         android:textColor="@color/smart_primary"
                         android:textSize="12sp"
                         android:textStyle="bold"
@@ -256,7 +257,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="STORAGE METHOD"
+                    android:text="@string/storage_method_label"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -280,13 +281,14 @@
 
                         <ImageView
                             style="@style/SmartExpStorageIcon"
+                            android:importantForAccessibility="no"
                             android:src="@drawable/ic_storage_room"
                             app:tint="@color/color_storage_room_tint" />
 
                         <TextView
                             style="@style/SmartExpStorageLabel"
                             android:textColor="@color/color_storage_room_tint"
-                            android:text="ROOM\nTEMP" />
+                            android:text="@string/storage_room_temp_upper" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -296,13 +298,14 @@
 
                         <ImageView
                             style="@style/SmartExpStorageIcon"
+                            android:importantForAccessibility="no"
                             android:src="@drawable/ic_storage_fridge"
                             app:tint="@color/color_storage_fridge_tint" />
 
                         <TextView
                             style="@style/SmartExpStorageLabel"
                             android:textColor="@color/color_storage_fridge_tint"
-                            android:text="REFRIGERATOR" />
+                            android:text="@string/storage_refrigerator_upper" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -312,20 +315,21 @@
 
                         <ImageView
                             style="@style/SmartExpStorageIcon"
+                            android:importantForAccessibility="no"
                             android:src="@drawable/ic_storage_freeze"
                             app:tint="@color/color_storage_freezer_tint" />
 
                         <TextView
                             style="@style/SmartExpStorageLabel"
                             android:textColor="@color/color_storage_freezer_tint"
-                            android:text="FREEZE" />
+                            android:text="@string/storage_freeze_upper" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="EXPIRY DATE"
+                    android:text="@string/expiry_date_label"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -344,6 +348,7 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:clickable="true"
+                        android:contentDescription="@string/select_expiry_date"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:paddingStart="16dp"
@@ -374,7 +379,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="PHOTO (optional)"
+                    android:text="@string/photo_optional_label"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -392,6 +397,7 @@
                         android:layout_height="100dp"
                         android:background="@drawable/bg_glass_input"
                         android:clickable="true"
+                        android:contentDescription="@string/add_product_photo_desc"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless">
 
@@ -411,15 +417,16 @@
 
                             <ImageView
                                 android:layout_width="28dp"
-                                android:layout_height="28dp"
-                                android:src="@android:drawable/ic_menu_gallery"
+                            android:layout_height="28dp"
+                            android:importantForAccessibility="no"
+                            android:src="@android:drawable/ic_menu_gallery"
                                 app:tint="@color/smart_muted" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="Tap to add photo"
+                                android:text="@string/tap_add_photo"
                                 android:textColor="@color/smart_muted"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -433,6 +440,7 @@
                             android:layout_marginEnd="4dp"
                             android:background="@drawable/bg_glass_shadow"
                             android:padding="5dp"
+                            android:importantForAccessibility="no"
                             android:src="@android:drawable/ic_menu_edit"
                             app:tint="@color/smart_primary_container"
                             android:visibility="gone" />
@@ -444,7 +452,7 @@
                         android:layout_height="44dp"
                         android:layout_marginStart="16dp"
                         android:layout_weight="1"
-                        android:text="Remove Photo"
+                        android:text="@string/remove_photo"
                         android:textAllCaps="false"
                         android:textColor="@color/smart_error"
                         android:textSize="14sp"
@@ -463,7 +471,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="24dp"
-                android:text="Add Product"
+                android:text="@string/add_product"
                 android:textAllCaps="false"
                 android:textColor="@color/smart_on_primary"
                 android:textSize="16sp"

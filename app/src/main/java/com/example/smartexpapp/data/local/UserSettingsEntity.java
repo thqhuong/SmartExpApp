@@ -33,6 +33,10 @@ public class UserSettingsEntity {
     @ColumnInfo(name = "dark_mode", defaultValue = "0")
     public boolean darkMode = false;
 
+    @ColumnInfo(name = "language_tag", defaultValue = "'en'")
+    @NonNull
+    public String languageTag = "en";
+
     @ColumnInfo(name = "default_storage_location_id")
     @NonNull
     public String defaultStorageLocationId = LocalDataContract.STORAGE_ROOM_TEMP_ID;

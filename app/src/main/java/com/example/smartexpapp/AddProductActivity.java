@@ -164,7 +164,7 @@ public class AddProductActivity extends BaseActivity {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something like: add milk, 1 gallon, expires tomorrow, fridge");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.smart_add_voice_prompt));
         if (intent.resolveActivity(getPackageManager()) == null) {
             showSmartAddTextDialog();
             return;
@@ -174,28 +174,28 @@ public class AddProductActivity extends BaseActivity {
 
     private void showSmartAddTextDialog() {
         EditText input = new EditText(this);
-        input.setHint("Add milk, 1 gallon, expires tomorrow, fridge");
+        input.setHint(R.string.smart_add_hint);
         input.setSingleLine(false);
         int padding = Math.round(16 * getResources().getDisplayMetrics().density);
         input.setPadding(padding, padding / 2, padding, padding / 2);
         new AlertDialog.Builder(this)
-                .setTitle("Smart Add")
-                .setMessage("Describe the item. SmartExp will fill the form, then you confirm before saving.")
+                .setTitle(R.string.smart_add_dialog_title)
+                .setMessage(R.string.smart_add_dialog_message)
                 .setView(input)
-                .setPositiveButton("Parse", (dialog, which) ->
+                .setPositiveButton(R.string.parse_label, (dialog, which) ->
                         parseSmartAddDraft(input.getText().toString()))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
     private void parseSmartAddDraft(String input) {
-        Toast.makeText(this, "Preparing Smart Add drafts...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.smart_add_preparing, Toast.LENGTH_SHORT).show();
         AgentRepository.parseProductDraftsAsync(input, this::showSmartDraftConfirmation);
     }
 
     private void showSmartDraftConfirmation(List<ProductDraft> drafts) {
         if (drafts == null || drafts.isEmpty()) {
-            Toast.makeText(this, "No product details were detected.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.smart_add_no_details, Toast.LENGTH_SHORT).show();
             return;
         }
         if (drafts.size() == 1) {
@@ -203,9 +203,7 @@ public class AddProductActivity extends BaseActivity {
             return;
         }
 
-        StringBuilder message = new StringBuilder("Detected ")
-                .append(drafts.size())
-                .append(" items. You will review and save each one before it is added.\n");
+        StringBuilder message = new StringBuilder(getString(R.string.smart_add_batch_intro_format, drafts.size()));
         for (int i = 0; i < drafts.size(); i++) {
             ProductDraft draft = drafts.get(i);
             message.append("\n")
@@ -219,9 +217,9 @@ public class AddProductActivity extends BaseActivity {
         }
 
         new AlertDialog.Builder(this)
-                .setTitle("Review Smart Add Batch")
+                .setTitle(R.string.smart_add_batch_title)
                 .setMessage(message.toString())
-                .setPositiveButton("Start Review", (dialog, which) -> applySmartDraftBatch(drafts))
+                .setPositiveButton(R.string.start_review, (dialog, which) -> applySmartDraftBatch(drafts))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
@@ -229,17 +227,21 @@ public class AddProductActivity extends BaseActivity {
     private void showSingleSmartDraftConfirmation(ProductDraft draft) {
         String expiry = draft.hasExpiryDate()
                 ? new SimpleDateFormat("MMM d, yyyy", Locale.US).format(new java.util.Date(draft.getExpiryDateMillis()))
-                : "Not detected";
-        String message = "Name: " + draft.getName()
-                + "\nQuantity: " + draft.getQuantity() + " " + draft.getUnit()
-                + "\nCategory: " + draft.getCategory()
-                + "\nStorage: " + draft.getStorage()
-                + "\nExpiry: " + expiry
-                + "\n\nSource: " + draft.getSourceText();
+                : getString(R.string.not_detected);
+        String message = getString(
+                R.string.smart_add_draft_summary_format,
+                draft.getName(),
+                draft.getQuantity(),
+                draft.getUnit(),
+                draft.getCategory(),
+                draft.getStorage(),
+                expiry,
+                draft.getSourceText()
+        );
         new AlertDialog.Builder(this)
-                .setTitle("Review Smart Add Draft")
+                .setTitle(R.string.smart_add_draft_title)
                 .setMessage(message)
-                .setPositiveButton("Fill Form", (dialog, which) -> applySmartDraft(draft))
+                .setPositiveButton(R.string.fill_form, (dialog, which) -> applySmartDraft(draft))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
@@ -257,7 +259,7 @@ public class AddProductActivity extends BaseActivity {
         }
         resetFormForSmartDraft();
         applyDraftFields(drafts.get(0), true);
-        Toast.makeText(this, "Review item 1 of " + drafts.size() + ".", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.smart_add_review_first_format, drafts.size()), Toast.LENGTH_LONG).show();
     }
 
     private void applyDraftFields(ProductDraft draft, boolean includeExpiry) {
@@ -285,7 +287,7 @@ public class AddProductActivity extends BaseActivity {
             expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
             expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
         } else if (includeExpiry) {
-            Toast.makeText(this, "Expiry date was not detected. Please select one before saving.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.expiry_not_detected, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -300,9 +302,9 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void showOcrSourceDialog() {
-        String[] sources = {"Camera", "Gallery"};
+        String[] sources = {getString(R.string.ocr_source_camera), getString(R.string.ocr_source_gallery)};
         new AlertDialog.Builder(this)
-                .setTitle("Scan Expiry Text")
+                .setTitle(R.string.scan_expiry_text)
                 .setItems(sources, (dialog, which) -> {
                     if (which == 0) {
                         launchOcrCamera();
@@ -319,7 +321,7 @@ public class AddProductActivity extends BaseActivity {
             pendingOcrCaptureUri = createOcrCaptureUri();
             ocrPhotoLauncher.launch(pendingOcrCaptureUri);
         } catch (Exception error) {
-            Toast.makeText(this, "Could not open camera for OCR.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.ocr_camera_error, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -349,31 +351,31 @@ public class AddProductActivity extends BaseActivity {
             InputImage image = InputImage.fromFilePath(this, uri);
             TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
             
-            Toast.makeText(this, "Scanning for dates...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.ocr_scanning_dates, Toast.LENGTH_SHORT).show();
             
             recognizer.process(image)
                     .addOnSuccessListener(visionText -> {
                         String rawText = visionText.getText();
                         if (rawText == null || rawText.trim().isEmpty()) {
-                            Toast.makeText(this, "No readable text found in image.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, R.string.ocr_no_text, Toast.LENGTH_SHORT).show();
                             return;
                         }
                         handleOcrText(rawText);
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(this, "OCR failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.ocr_failed_format, e.getMessage()), Toast.LENGTH_SHORT).show();
                     })
                     .addOnCompleteListener(task -> {
                         recognizer.close();
                     });
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.image_process_failed, Toast.LENGTH_SHORT).show();
         }
     }
 
     private void handleOcrText(String rawText) {
-        Toast.makeText(this, "Preparing OCR draft...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.ocr_preparing_draft, Toast.LENGTH_SHORT).show();
         List<DateCandidate> detectedDates = DateParser.extractDateCandidates(rawText);
         AgentRepository.parseProductDraftAsync(rawText, draft -> {
             if (detectedDates.isEmpty()) {
@@ -396,46 +398,50 @@ public class AddProductActivity extends BaseActivity {
         final int[] selectedIndex = {0};
 
         new AlertDialog.Builder(this)
-                .setTitle("Review OCR Scan")
-                .setMessage(ocrDraftSummary(draft) + "\n\nSelect the expiry date detected from the image.")
+                .setTitle(R.string.ocr_scan_review_title)
+                .setMessage(ocrDraftSummary(draft) + "\n\n" + getString(R.string.ocr_scan_review_message))
                 .setSingleChoiceItems(dateStrings, selectedIndex[0], (dialog, which) -> {
                     selectedIndex[0] = which;
                 })
-                .setPositiveButton("Fill Form", (dialog, which) -> {
+                .setPositiveButton(R.string.fill_form, (dialog, which) -> {
                     DateCandidate candidate = dates.get(selectedIndex[0]);
                     applyDetectedDate(candidate, rawText);
                     applyDraftFields(draft, false);
                 })
-                .setNeutralButton("Date Only", (dialog, which) -> {
+                .setNeutralButton(R.string.date_only, (dialog, which) -> {
                     applyDetectedDate(dates.get(selectedIndex[0]), rawText);
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
     private void showOcrDraftWithoutDateDialog(ProductDraft draft, String rawText) {
         new AlertDialog.Builder(this)
-                .setTitle("Review OCR Draft")
-                .setMessage(ocrDraftSummary(draft) + "\n\nNo expiry date was detected. Fill the product details, then choose the expiry date before saving.")
-                .setPositiveButton("Fill Details", (dialog, which) -> {
+                .setTitle(R.string.ocr_draft_review_title)
+                .setMessage(ocrDraftSummary(draft) + "\n\n" + getString(R.string.ocr_draft_review_message))
+                .setPositiveButton(R.string.fill_details, (dialog, which) -> {
                     applyDraftFields(draft, false);
                     pendingExpiryScan = new ExpiryScanEntity();
                     pendingExpiryScan.id = UUID.randomUUID().toString();
                     pendingExpiryScan.rawText = rawText;
                     pendingExpiryScan.confidence = 0.25f;
                     pendingExpiryScan.scannedAt = System.currentTimeMillis();
-                    Toast.makeText(this, "Select an expiry date before saving.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, R.string.select_expiry_before_saving, Toast.LENGTH_LONG).show();
                 })
-                .setNeutralButton("Select Date", (dialog, which) -> showDatePicker(rawText))
-                .setNegativeButton("Cancel", null)
+                .setNeutralButton(R.string.select_date, (dialog, which) -> showDatePicker(rawText))
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
     private String ocrDraftSummary(ProductDraft draft) {
-        return "Name: " + draft.getName()
-                + "\nQuantity: " + draft.getQuantity() + " " + draft.getUnit()
-                + "\nCategory: " + draft.getCategory()
-                + "\nStorage: " + draft.getStorage();
+        return getString(
+                R.string.ocr_draft_summary_format,
+                draft.getName(),
+                draft.getQuantity(),
+                draft.getUnit(),
+                draft.getCategory(),
+                draft.getStorage()
+        );
     }
 
     private void applyDetectedDate(DateCandidate candidate, String rawText) {
@@ -460,7 +466,7 @@ public class AddProductActivity extends BaseActivity {
         if (uri == null) return;
         String path = saveImageToInternalStorage(uri);
         if (path == null) {
-            Toast.makeText(this, "Failed to save photo.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.photo_save_failed, Toast.LENGTH_SHORT).show();
             return;
         }
         deleteUnsavedSelectedPhoto(selectedPhotoPath);
@@ -492,10 +498,10 @@ public class AddProductActivity extends BaseActivity {
 
     private void confirmRemovePhoto() {
         new AlertDialog.Builder(this)
-                .setTitle("Remove photo?")
-                .setMessage("Are you sure you want to remove this photo?")
-                .setPositiveButton("Remove", (dialog, which) -> clearPhoto())
-                .setNegativeButton("Cancel", null)
+                .setTitle(R.string.remove_photo_title)
+                .setMessage(R.string.remove_photo_message)
+                .setPositiveButton(R.string.remove_label, (dialog, which) -> clearPhoto())
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
@@ -514,7 +520,7 @@ public class AddProductActivity extends BaseActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         unitSpinner.setAdapter(adapter);
         if (editingProductId == null) {
-            quantityInput.setText("1");
+            quantityInput.setText(R.string.quantity_default);
         }
     }
 
@@ -525,7 +531,7 @@ public class AddProductActivity extends BaseActivity {
 
     private void refreshCategorySpinner() {
         ProductRepository.getProductsAsync(this, this::refreshCategorySpinner, error -> {
-            Toast.makeText(this, "Could not load categories.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -540,8 +546,8 @@ public class AddProductActivity extends BaseActivity {
         }
 
         List<String> items = new ArrayList<>();
-        items.add("Dairy"); items.add("General"); items.add("Meat");
-        items.add("Pantry"); items.add("Produce"); items.add("Vegetables");
+        items.add(getString(R.string.cat_dairy)); items.add(getString(R.string.cat_general)); items.add(getString(R.string.cat_meat));
+        items.add(getString(R.string.cat_pantry)); items.add(getString(R.string.cat_produce)); items.add(getString(R.string.cat_vegetables));
         items.addAll(existingCustom);
         Collections.sort(items);
 
@@ -564,7 +570,7 @@ public class AddProductActivity extends BaseActivity {
 
     private void showManageCategoriesDialog() {
         ProductRepository.getProductsAsync(this, this::showManageCategoriesDialog, error ->
-                Toast.makeText(this, "Could not load categories.", Toast.LENGTH_SHORT).show());
+                Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
     }
 
     private void showManageCategoriesDialog(List<Product> all) {
@@ -578,8 +584,8 @@ public class AddProductActivity extends BaseActivity {
         }
 
         List<String> allCats = new ArrayList<>();
-        allCats.add("Dairy"); allCats.add("General"); allCats.add("Meat");
-        allCats.add("Pantry"); allCats.add("Produce"); allCats.add("Vegetables");
+        allCats.add(getString(R.string.cat_dairy)); allCats.add(getString(R.string.cat_general)); allCats.add(getString(R.string.cat_meat));
+        allCats.add(getString(R.string.cat_pantry)); allCats.add(getString(R.string.cat_produce)); allCats.add(getString(R.string.cat_vegetables));
         allCats.addAll(customSet);
         Collections.sort(allCats);
 
@@ -626,6 +632,7 @@ public class AddProductActivity extends BaseActivity {
                 editBtn.setLayoutParams(new LinearLayout.LayoutParams(btnSize, btnSize));
                 editBtn.setPadding(pad8, pad8, pad8, pad8);
                 editBtn.setImageResource(editColors[0]);
+                editBtn.setContentDescription(getString(R.string.category_edit_desc_format, cat));
                 editBtn.setScaleType(ImageView.ScaleType.CENTER);
                 editBtn.setColorFilter(getColor(editColors[1]), android.graphics.PorterDuff.Mode.SRC_IN);
                 editBtn.setOnClickListener(v -> {
@@ -637,6 +644,7 @@ public class AddProductActivity extends BaseActivity {
                 deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(btnSize, btnSize));
                 deleteBtn.setPadding(pad8, pad8, pad8, pad8);
                 deleteBtn.setImageResource(deleteColors[0]);
+                deleteBtn.setContentDescription(getString(R.string.category_delete_desc_format, cat));
                 deleteBtn.setScaleType(ImageView.ScaleType.CENTER);
                 deleteBtn.setColorFilter(getColor(deleteColors[1]), android.graphics.PorterDuff.Mode.SRC_IN);
                 deleteBtn.setOnClickListener(v -> {
@@ -651,7 +659,7 @@ public class AddProductActivity extends BaseActivity {
         }
 
         TextView addBtn = new TextView(this);
-        addBtn.setText("+ Add new category");
+        addBtn.setText(R.string.category_add_button);
         addBtn.setTextColor(getColor(R.color.smart_primary_container));
         addBtn.setTextSize(16f);
         addBtn.setPadding(pad16, dpToPx(12), pad16, dpToPx(12));
@@ -660,11 +668,11 @@ public class AddProductActivity extends BaseActivity {
             manageDialogHolder[0].dismiss();
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             final EditText input = new EditText(this);
-            input.setHint("Category name");
+            input.setHint(R.string.category_name_hint);
             input.setPadding(pad16, dpToPx(8), pad16, dpToPx(8));
-            builder.setTitle("Add new category")
+            builder.setTitle(R.string.category_add_title)
                     .setView(input)
-                    .setPositiveButton("Add", (d, w) -> {
+                    .setPositiveButton(R.string.add_label, (d, w) -> {
                         String newCat = input.getText().toString().trim();
                         if (!newCat.isEmpty() && !isBuiltIn(newCat)) {
                             pendingCategories.add(newCat);
@@ -673,15 +681,15 @@ public class AddProductActivity extends BaseActivity {
                             showManageCategoriesDialog();
                         }
                     })
-                    .setNegativeButton("Cancel", (d, w) -> showManageCategoriesDialog())
+                    .setNegativeButton(R.string.cancel, (d, w) -> showManageCategoriesDialog())
                     .show();
         });
         content.addView(addBtn);
 
         manageDialogHolder[0] = new AlertDialog.Builder(this)
-                .setTitle("Manage Categories")
+                .setTitle(R.string.manage_categories_title)
                 .setView(content)
-                .setNegativeButton("Close", null)
+                .setNegativeButton(R.string.close_label, null)
                 .show();
     }
 
@@ -692,9 +700,9 @@ public class AddProductActivity extends BaseActivity {
         input.setSelection(oldName.length());
         int pad16 = dpToPx(16);
         input.setPadding(pad16, dpToPx(8), pad16, dpToPx(8));
-        builder.setTitle("Rename category")
+        builder.setTitle(R.string.rename_category_title)
                 .setView(input)
-                .setPositiveButton("Rename", (d, w) -> {
+                .setPositiveButton(R.string.rename_label, (d, w) -> {
                     String newName = input.getText().toString().trim();
                     if (newName.isEmpty() || isBuiltIn(newName) || newName.equals(oldName)) {
                         onDone.run();
@@ -704,7 +712,7 @@ public class AddProductActivity extends BaseActivity {
                         for (Product p : all) {
                             if (oldName.equals(p.getCategory())) {
                                 ProductRepository.updateProductAsync(this, copyWithCategory(p, newName), null,
-                                        error -> Toast.makeText(this, "Could not update a product category.", Toast.LENGTH_SHORT).show());
+                                        error -> Toast.makeText(this, R.string.category_product_update_error, Toast.LENGTH_SHORT).show());
                             }
                         }
                         pendingCategories.remove(oldName);
@@ -713,36 +721,36 @@ public class AddProductActivity extends BaseActivity {
                         refreshCategorySpinner();
                         onDone.run();
                     }, error -> {
-                        Toast.makeText(this, "Could not rename category.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, R.string.category_rename_error, Toast.LENGTH_SHORT).show();
                         onDone.run();
                     });
                 })
-                .setNegativeButton("Cancel", (d, w) -> onDone.run())
+                .setNegativeButton(R.string.cancel, (d, w) -> onDone.run())
                 .show();
     }
 
     private void showDeleteCategoryDialog(String catToDelete, Runnable onDone) {
         new AlertDialog.Builder(this)
-                .setTitle("Delete \"" + catToDelete + "\"?")
-                .setMessage("Products in this category will be moved to \"General\".")
-                .setPositiveButton("Delete", (d, w) -> {
+                .setTitle(getString(R.string.delete_category_title_format, catToDelete))
+                .setMessage(R.string.category_delete_message)
+                .setPositiveButton(R.string.delete_confirm, (d, w) -> {
                     pendingCategories.remove(catToDelete);
                     ProductRepository.getProductsAsync(this, all -> {
                         for (Product p : all) {
                             if (catToDelete.equals(p.getCategory()) && !p.getId().equals(editingProductId)) {
-                                ProductRepository.updateProductAsync(this, copyWithCategory(p, "General"), null,
-                                        error -> Toast.makeText(this, "Could not update a product category.", Toast.LENGTH_SHORT).show());
+                                ProductRepository.updateProductAsync(this, copyWithCategory(p, getString(R.string.cat_general)), null,
+                                        error -> Toast.makeText(this, R.string.category_product_update_error, Toast.LENGTH_SHORT).show());
                             }
                         }
-                        selectedCategory = "General";
+                        selectedCategory = getString(R.string.cat_general);
                         refreshCategorySpinner();
                         onDone.run();
                     }, error -> {
-                        Toast.makeText(this, "Could not delete category.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, R.string.category_delete_error, Toast.LENGTH_SHORT).show();
                         onDone.run();
                     });
                 })
-                .setNegativeButton("Cancel", (d, w) -> onDone.run())
+                .setNegativeButton(R.string.cancel, (d, w) -> onDone.run())
                 .show();
     }
 
@@ -846,20 +854,20 @@ public class AddProductActivity extends BaseActivity {
     private void populateForEdit(String productId) {
         ProductRepository.getProductByIdAsync(this, productId, product -> {
             if (product == null) {
-                Toast.makeText(this, "Product not found", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
                 finish();
                 return;
             }
             populateProductFields(product);
         }, error -> {
-            Toast.makeText(this, "Product not found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
             finish();
         });
     }
 
     private void populateProductFields(Product product) {
         titleText.setText(R.string.edit_product);
-        subtitleText.setText("Update the product details.");
+        subtitleText.setText(R.string.edit_product_subtitle);
         submitButton.setText(R.string.edit_product);
         submitButton.setIcon(null);
 
@@ -868,7 +876,7 @@ public class AddProductActivity extends BaseActivity {
         selectSpinnerValue(unitSpinner, product.getUnit());
 
         selectedCategory = product.getCategory() == null || product.getCategory().trim().isEmpty()
-                ? "General"
+                ? getString(R.string.cat_general)
                 : product.getCategory();
         refreshCategorySpinner();
 
@@ -897,21 +905,21 @@ public class AddProductActivity extends BaseActivity {
     private void submitProduct() {
         String name = productNameInput.getText().toString().trim();
         if (name.isEmpty()) {
-            Toast.makeText(this, "Enter a product name.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.enter_product_name, Toast.LENGTH_SHORT).show();
             return;
         }
         if (!hasSelectedDate) {
-            Toast.makeText(this, "Select an expiry date.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.select_expiry_before_saving, Toast.LENGTH_SHORT).show();
             return;
         }
 
         String storage = selectedStorage();
         int icon = iconForStorage(storage);
 
-        String category = selectedCategory == null || selectedCategory.isEmpty() ? "General" : selectedCategory;
+        String category = selectedCategory == null || selectedCategory.isEmpty() ? getString(R.string.cat_general) : selectedCategory;
 
         String quantity = quantityInput.getText().toString().trim();
-        if (quantity.isEmpty()) quantity = "1";
+        if (quantity.isEmpty()) quantity = getString(R.string.quantity_default);
         final String finalQuantity = quantity;
         String unit = unitSpinner.getSelectedItem().toString();
         submitButton.setEnabled(false);
@@ -919,7 +927,7 @@ public class AddProductActivity extends BaseActivity {
             ProductRepository.getProductByIdAsync(this, editingProductId, existing -> {
                 if (existing == null) {
                     submitButton.setEnabled(true);
-                    Toast.makeText(this, "Product not found", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 Product updatedProduct = new Product(
@@ -947,14 +955,14 @@ public class AddProductActivity extends BaseActivity {
                         afterProductSaved(updatedProduct, getString(R.string.product_updated));
                     } else {
                         submitButton.setEnabled(true);
-                        Toast.makeText(this, "Product not found", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
                     }
                 }, error -> showSaveFailed());
             }, error -> showSaveFailed());
         } else {
             Product finalProductToSave = new Product(name, category, finalQuantity, unit, storage, selectedDate.getTimeInMillis(), icon, selectedPhotoPath);
             ProductRepository.addProductAsync(this, finalProductToSave,
-                    ignored -> afterProductSaved(finalProductToSave, name + " added."),
+                    ignored -> afterProductSaved(finalProductToSave, getString(R.string.product_added_format, name)),
                     error -> showSaveFailed());
         }
     }
@@ -969,7 +977,7 @@ public class AddProductActivity extends BaseActivity {
             ProductRepository.insertExpiryScanAsync(this, scan,
                     ignored -> finishProductSave(toastMessage),
                     error -> {
-                        Toast.makeText(this, "Product saved, but OCR scan details could not be stored.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, R.string.ocr_save_warning, Toast.LENGTH_SHORT).show();
                         finishProductSave(toastMessage);
                     });
             return;
@@ -986,13 +994,17 @@ public class AddProductActivity extends BaseActivity {
             ProductDraft next = pendingSmartDrafts.remove(0);
             resetFormForSmartDraft();
             applyDraftFields(next, true);
-            Toast.makeText(this, "Next Smart Add item ready. Review and save it.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.smart_add_next_ready, Toast.LENGTH_LONG).show();
             return;
         }
 
         saveCompleted = true;
-        startActivity(new Intent(this, InventoryActivity.class));
+        Intent inventoryIntent = new Intent(this, InventoryActivity.class);
+        inventoryIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        inventoryIntent.putExtra(InventoryActivity.EXTRA_RESET_FILTERS, true);
+        startActivity(inventoryIntent);
         overridePendingTransition(0, 0);
+        finish();
     }
 
     private void resetFormForSmartDraft() {
@@ -1001,16 +1013,16 @@ public class AddProductActivity extends BaseActivity {
         originalPhotoPath = null;
         clearPhotoPreviewOnly();
         productNameInput.setText("");
-        quantityInput.setText("1");
+        quantityInput.setText(R.string.quantity_default);
         selectSpinnerValue(unitSpinner, "pcs");
-        selectedCategory = "General";
+        selectedCategory = getString(R.string.cat_general);
         refreshCategorySpinner();
         selectStorage(R.id.storageRoom);
         hasSelectedDate = false;
         expiryDateInput.setText(R.string.select_expiry_date);
         expiryDateInput.setTextColor(getColor(R.color.smart_secondary));
         titleText.setText(R.string.add_product);
-        subtitleText.setText("Enter details to track expiration.");
+        subtitleText.setText(R.string.add_product_subtitle);
         submitButton.setText(R.string.add_product);
         submitButton.setEnabled(true);
         submitButton.setIconResource(android.R.drawable.ic_menu_add);
@@ -1018,7 +1030,7 @@ public class AddProductActivity extends BaseActivity {
 
     private void showSaveFailed() {
         submitButton.setEnabled(true);
-        Toast.makeText(this, "Could not save product.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.product_save_error, Toast.LENGTH_SHORT).show();
     }
 
     private String selectedStorage() {

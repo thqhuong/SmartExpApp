@@ -17,7 +17,7 @@
         android:layout_width="44dp"
         android:layout_height="44dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Menu"
+        android:contentDescription="@string/app_name"
         android:padding="10dp"
         android:scaleType="center"
         android:src="@drawable/ic_menu_three_lines"
@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginStart="8dp"
-        android:text="SmartExpApp"
+        android:text="@string/app_name_chrome"
         android:textColor="@color/smart_primary_container"
         android:textSize="20sp"
         android:textStyle="bold" />
@@ -44,7 +44,10 @@
         android:background="@drawable/bg_theme_toggle_pill"
         android:gravity="center"
         android:orientation="horizontal"
-        android:padding="2dp">
+        android:padding="2dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="@string/toggle_theme">
 
         <!-- Light Mode Button (Sun) -->
         <FrameLayout
@@ -107,13 +110,15 @@
         android:background="@drawable/bg_search_circle"
         android:clickable="true"
         android:focusable="true"
-        android:foreground="?attr/selectableItemBackgroundBorderless">
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/search_hint">
 
         <ImageView
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_gravity="center"
             android:src="@android:drawable/ic_menu_search"
+            android:contentDescription="@string/search_hint"
             app:tint="@color/smart_on_surface" />
     </FrameLayout>
 

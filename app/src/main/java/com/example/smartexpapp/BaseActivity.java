@@ -16,6 +16,7 @@ import androidx.annotation.IdRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
+import androidx.core.os.LocaleListCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
@@ -34,6 +35,12 @@ public abstract class BaseActivity extends AppCompatActivity {
         // when the current mode doesn't match the preference (e.g. cold start
         // or after a process death). This avoids triggering redundant activity
         // recreations.
+        String languageTag = SettingsRepository.getCachedLanguageTag(this);
+        String currentLanguageTag = AppCompatDelegate.getApplicationLocales().toLanguageTags();
+        if (!languageTag.equals(currentLanguageTag)) {
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag));
+        }
+
         boolean isNightMode = SettingsRepository.getCachedDarkMode(this);
         int targetMode = isNightMode
                 ? AppCompatDelegate.MODE_NIGHT_YES
@@ -59,7 +66,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         View bottomNavigation = findViewById(R.id.bottomNavigation);
 
         if (menuButton != null) {
-            menuButton.setOnClickListener(v -> Toast.makeText(this, "Menu placeholder", Toast.LENGTH_SHORT).show());
+            menuButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            });
         }
 
         View themeTogglePill = findViewById(R.id.themeTogglePill);
@@ -88,7 +99,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                         sunIcon,
                         moonIcon
                 );
-                Toast.makeText(this, "Could not save theme setting.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show();
             });
         };
 
@@ -105,7 +116,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
 
         if (searchButton != null) {
-            searchButton.setOnClickListener(v -> Toast.makeText(this, "Search placeholder", Toast.LENGTH_SHORT).show());
+            searchButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, InventoryActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            });
         }
 
         if (bottomNavigation == null) {

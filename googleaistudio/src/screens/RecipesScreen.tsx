@@ -167,7 +167,9 @@ export default function RecipesScreen({ products }: RecipesScreenProps) {
                 {msg.recipes && msg.recipes.length > 0 && (
                   <div className="w-full flex flex-col gap-3 mt-3">
                     {msg.recipes.map((recipe) => (
-                      <RecipeCard key={recipe.id} recipe={recipe} />
+                      <div key={recipe.id}>
+                        <RecipeCard recipe={recipe} />
+                      </div>
                     ))}
                   </div>
                 )}
@@ -214,7 +216,9 @@ export default function RecipesScreen({ products }: RecipesScreenProps) {
 
         <div className="flex flex-col gap-6">
           {recipes.map((recipe, idx) => (
-            <RecipeCard key={recipe.id} recipe={recipe} isFeatured={idx === 0} />
+            <div key={recipe.id}>
+              <RecipeCard recipe={recipe} isFeatured={idx === 0} />
+            </div>
           ))}
 
           {/* Surprise Me Dashed Bento Box */}

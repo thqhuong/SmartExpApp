@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { AppView } from '../types';
 
 interface AccountDetailsScreenProps {
@@ -17,7 +17,7 @@ export default function AccountDetailsScreen({ onNavigate }: AccountDetailsScree
   const [phone, setPhone] = useState('+1 (555) 019-2834');
   const [saved, setSaved] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

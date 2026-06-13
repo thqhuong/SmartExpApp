@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Product, StorageMethod } from '../types';
 
 interface AddProductScreenProps {
@@ -29,7 +29,7 @@ export default function AddProductScreen({ onAdd }: AddProductScreenProps) {
   const [scanType, setScanType] = useState<'ocr' | 'barcode' | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
