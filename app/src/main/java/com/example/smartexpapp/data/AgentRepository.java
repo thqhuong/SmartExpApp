@@ -3,6 +3,7 @@ package com.example.smartexpapp.data;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 
 import com.example.smartexpapp.BuildConfig;
 import com.example.smartexpapp.R;
@@ -18,6 +19,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -88,15 +91,32 @@ public final class AgentRepository {
         }
 
         String storage = "Room Temp";
-        if (lower.contains("fridge") || lower.contains("refrigerator") || lower.contains("refrigerated") || lower.contains("cool")) {
+        if (lower.contains("fridge")
+                || lower.contains("refrigerator")
+                || lower.contains("refrigerated")
+                || lower.contains("cool")
+                || lower.contains("tu lanh")
+                || lower.contains("tủ lạnh")
+                || lower.contains("ngan mat")
+                || lower.contains("ngăn mát")
+                || lower.contains("cat lanh")
+                || lower.contains("cất lạnh")
+                || lower.contains("bao quan lanh")
+                || lower.contains("bảo quản lạnh")) {
             storage = "Refrigerator";
-        } else if (lower.contains("freezer") || lower.contains("frozen") || lower.contains("freeze")) {
+        } else if (lower.contains("freezer")
+                || lower.contains("frozen")
+                || lower.contains("freeze")
+                || lower.contains("ngan dong")
+                || lower.contains("ngăn đông")
+                || lower.contains("dong lanh")
+                || lower.contains("đông lạnh")) {
             storage = "Freeze";
         }
 
         String category = inferCategory(lower);
         Long expiry = inferExpiryMillis(source);
-        String name = inferProductName(source, quantityMatcher);
+        String name = normalizeProductName(inferProductName(source, quantityMatcher));
 
         return new ProductDraft(
                 name.isEmpty() ? "New Product" : name,
@@ -159,6 +179,7 @@ public final class AgentRepository {
             try {
                 List<Recipe> remote = generateGeminiRecipes(products, prompt, dietaryPreferences);
                 if (!remote.isEmpty()) {
+                    remote = enrichRecipeImages(context, database, remote, products, dietaryPreferences);
                     cacheRecipes(database, remote, "gemini");
                     saveAgentMessage(database, "user", prompt.isEmpty() ? "Suggest recipes" : prompt, relatedProductIds(products), prompt);
                     saveAgentMessage(database, "agent", "Generated recipe suggestions from local inventory.", relatedProductIds(products), prompt);
@@ -166,7 +187,7 @@ public final class AgentRepository {
                             remote,
                             inventoryEmpty
                                     ? "Gemini is configured, but your local inventory is empty. Add products for tailored suggestions."
-                                    : recipeStatus("Generated with Gemini using your local inventory.", dietaryPreferences),
+                                    : recipeStatus(recipeGenerationStatus("Generated with Gemini using your local inventory.", remote), dietaryPreferences),
                             false,
                             inventoryEmpty
                     );
@@ -176,12 +197,21 @@ public final class AgentRepository {
             }
         }
 
+        local = enrichRecipeImages(context, database, local, products, dietaryPreferences);
         cacheRecipes(database, local, "local");
         if (!prompt.isEmpty()) {
             saveAgentMessage(database, "user", prompt, relatedProductIds(products), prompt);
             saveAgentMessage(database, "agent", localFallbackAnswer(products, prompt), relatedProductIds(products), prompt);
         }
-        return localRecipeSuggestionResult(products, dietaryPreferences);
+        String status = inventoryEmpty
+                ? "Your local inventory is empty. These are generic fallback ideas until you add products."
+                : "Using local fallback suggestions from your saved inventory.";
+        return new RecipeSuggestionResult(
+                local,
+                recipeStatus(recipeGenerationStatus(status, local), dietaryPreferences),
+                true,
+                inventoryEmpty
+        );
     }
 
     public static String answerInventoryQuestion(Context context, String prompt) {
@@ -380,7 +410,7 @@ public final class AgentRepository {
                 allIngredients = new ArrayList<>(ingredients);
             }
             List<String> instructions = jsonStringList(item.optJSONArray("instructions"));
-            recipes.add(new Recipe(
+            Recipe recipe = new Recipe(
                     item.optString("title", "Smart Inventory Recipe"),
                     item.optString("summary", "A recipe suggestion based on your local inventory."),
                     ingredients.isEmpty() ? ingredientLabels(products) : ingredients,
@@ -394,9 +424,213 @@ public final class AgentRepository {
                     item.optString("smartTip", null),
                     allIngredients,
                     instructions
-            ));
+            );
+            if (isSafeFoodRecipe(recipe)) {
+                recipes.add(recipe);
+            }
         }
         return recipes;
+    }
+
+    private static List<Recipe> enrichRecipeImages(Context context, AppDatabase database, List<Recipe> recipes,
+                                                   List<Product> products, String dietaryPreferences) {
+        if (BuildConfig.OPENROUTER_API_KEY.trim().isEmpty() || recipes.isEmpty()) {
+            return recipes;
+        }
+
+        List<Recipe> enriched = new ArrayList<>();
+        for (Recipe recipe : recipes) {
+            if (isExistingLocalImage(recipe.getImageUrl())) {
+                enriched.add(recipe);
+                continue;
+            }
+
+            String cachedPath = cachedOpenRouterImagePath(database, recipe);
+            if (cachedPath != null && new File(cachedPath).exists()) {
+                enriched.add(copyRecipeWithImageUrl(recipe, cachedPath));
+                continue;
+            }
+
+            try {
+                String dataOrUrl = callOpenRouterImage(buildOpenRouterRecipeImagePrompt(recipe, products, dietaryPreferences), true);
+                String imagePath = persistOpenRouterImage(context, recipe, dataOrUrl);
+                cacheRecipeImage(database, recipe, imagePath);
+                enriched.add(copyRecipeWithImageUrl(recipe, imagePath));
+            } catch (Exception firstError) {
+                try {
+                    String dataOrUrl = callOpenRouterImage(buildOpenRouterRecipeImagePrompt(recipe, products, dietaryPreferences), false);
+                    String imagePath = persistOpenRouterImage(context, recipe, dataOrUrl);
+                    cacheRecipeImage(database, recipe, imagePath);
+                    enriched.add(copyRecipeWithImageUrl(recipe, imagePath));
+                } catch (Exception ignored) {
+                    enriched.add(recipe);
+                }
+            }
+        }
+        return enriched;
+    }
+
+    private static String callOpenRouterImage(String prompt, boolean includeImageConfig) throws Exception {
+        URL url = new URL("https://openrouter.ai/api/v1/chat/completions");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(12000);
+        connection.setReadTimeout(45000);
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Authorization", "Bearer " + BuildConfig.OPENROUTER_API_KEY);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("HTTP-Referer", "https://smartexpapp.local");
+        connection.setRequestProperty("X-Title", "SmartExpApp");
+        connection.setDoOutput(true);
+
+        JSONObject message = new JSONObject()
+                .put("role", "user")
+                .put("content", prompt);
+        JSONObject payload = new JSONObject()
+                .put("model", BuildConfig.OPENROUTER_IMAGE_MODEL)
+                .put("messages", new JSONArray().put(message))
+                .put("modalities", new JSONArray().put("image"))
+                .put("stream", false);
+        if (includeImageConfig) {
+            payload.put("image_config", new JSONObject()
+                    .put("aspect_ratio", "4:3")
+                    .put("image_size", "1K"));
+        }
+
+        try (OutputStream output = connection.getOutputStream()) {
+            output.write(payload.toString().getBytes(StandardCharsets.UTF_8));
+        }
+
+        int code = connection.getResponseCode();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream(),
+                StandardCharsets.UTF_8));
+        StringBuilder builder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
+        }
+        connection.disconnect();
+        if (code < 200 || code >= 300) {
+            throw new IllegalStateException("OpenRouter image request failed with HTTP " + code);
+        }
+
+        JSONObject json = new JSONObject(builder.toString());
+        JSONArray choices = json.optJSONArray("choices");
+        if (choices == null || choices.length() == 0) {
+            throw new IllegalStateException("OpenRouter image response had no choices");
+        }
+        JSONObject messageJson = choices.getJSONObject(0).optJSONObject("message");
+        if (messageJson == null) {
+            throw new IllegalStateException("OpenRouter image response had no message");
+        }
+        JSONArray images = messageJson.optJSONArray("images");
+        if (images == null || images.length() == 0) {
+            throw new IllegalStateException("OpenRouter image response had no images");
+        }
+        JSONObject image = images.getJSONObject(0);
+        JSONObject imageUrl = image.optJSONObject("image_url");
+        if (imageUrl == null) {
+            imageUrl = image.optJSONObject("imageUrl");
+        }
+        String value = imageUrl == null ? "" : imageUrl.optString("url", "").trim();
+        if (value.isEmpty()) {
+            throw new IllegalStateException("OpenRouter image response had no image URL");
+        }
+        return value;
+    }
+
+    private static String persistOpenRouterImage(Context context, Recipe recipe, String dataOrUrl) throws Exception {
+        if (dataOrUrl == null || dataOrUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("OpenRouter image response was empty");
+        }
+        String value = dataOrUrl.trim();
+        if (!value.startsWith("data:image/")) {
+            return value;
+        }
+
+        int commaIndex = value.indexOf(',');
+        if (commaIndex < 0) {
+            throw new IllegalArgumentException("OpenRouter image data URL was malformed");
+        }
+        String metadata = value.substring(0, commaIndex);
+        String extension = metadata.contains("jpeg") || metadata.contains("jpg") ? ".jpg" : ".png";
+        byte[] bytes = Base64.decode(value.substring(commaIndex + 1), Base64.DEFAULT);
+        File directory = new File(context.getFilesDir(), "openrouter_recipe_images");
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new IllegalStateException("Could not create recipe image directory");
+        }
+        File imageFile = new File(directory, UUID.nameUUIDFromBytes(recipe.getTitle().getBytes(StandardCharsets.UTF_8)).toString() + extension);
+        try (FileOutputStream output = new FileOutputStream(imageFile)) {
+            output.write(bytes);
+        }
+        return imageFile.getAbsolutePath();
+    }
+
+    private static String buildOpenRouterRecipeImagePrompt(Recipe recipe, List<Product> products, String dietaryPreferences) {
+        return "Create a realistic plated food photo for this recipe. "
+                + "Food only. No people, no NSFW content, no gore, no violence, no unsafe or non-edible items. "
+                + "Show a realistic plated edible dish only. "
+                + "No text, no labels, no watermark, no hands, no packaging. "
+                + "Use appetizing natural light, a clean kitchen table, and make the main ingredients visually clear. "
+                + "Recipe title: " + recipe.getTitle() + ". "
+                + "Summary: " + recipe.getSummary() + ". "
+                + "Ingredients: " + String.join(", ", recipe.getAllIngredients()) + ". "
+                + "Dietary preferences: " + dietaryPreferenceContext(dietaryPreferences) + ". "
+                + "Inventory context: " + inventoryContext(products);
+    }
+
+    private static String cachedOpenRouterImagePath(AppDatabase database, Recipe recipe) {
+        RecipeCacheEntity cached = database.recipeCacheDao().getById(openRouterImageCacheId(recipe));
+        return cached == null ? null : cached.imageUrl;
+    }
+
+    private static boolean isExistingLocalImage(String imageUrl) {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            return false;
+        }
+        String path = imageUrl.trim();
+        if (path.startsWith("file://")) {
+            path = path.substring(7);
+        }
+        return path.startsWith("/") && new File(path).exists();
+    }
+
+    private static void cacheRecipeImage(AppDatabase database, Recipe recipe, String imagePath) {
+        long now = System.currentTimeMillis();
+        RecipeCacheEntity entity = new RecipeCacheEntity();
+        entity.id = openRouterImageCacheId(recipe);
+        entity.provider = "openrouter-image";
+        entity.title = recipe.getTitle();
+        entity.imageUrl = imagePath;
+        entity.sourceUrl = BuildConfig.OPENROUTER_IMAGE_MODEL;
+        entity.usedIngredients = String.join(",", recipe.getExpiringIngredients());
+        entity.missingIngredients = "";
+        entity.cachedAt = now;
+        entity.createdAt = now;
+        entity.updatedAt = now;
+        database.recipeCacheDao().insert(entity);
+    }
+
+    private static String openRouterImageCacheId(Recipe recipe) {
+        return UUID.nameUUIDFromBytes(("openrouter-image:" + recipe.getTitle()).getBytes(StandardCharsets.UTF_8)).toString();
+    }
+
+    private static Recipe copyRecipeWithImageUrl(Recipe recipe, String imageUrl) {
+        return new Recipe(
+                recipe.getTitle(),
+                recipe.getSummary(),
+                recipe.getExpiringIngredients(),
+                recipe.getActionText(),
+                recipe.getIconRes(),
+                recipe.isFeatured(),
+                imageUrl,
+                recipe.getPrepTime(),
+                recipe.getDifficulty(),
+                recipe.getCalories(),
+                recipe.getSmartTip(),
+                recipe.getAllIngredients(),
+                recipe.getInstructions()
+        );
     }
 
     private static ProductDraft generateGeminiProductDraft(String input, ProductDraft fallback) throws Exception {
@@ -418,7 +652,7 @@ public final class AgentRepository {
     }
 
     private static ProductDraft productDraftFromJson(JSONObject json, ProductDraft fallback, String sourceInput) {
-        String name = json.optString("name", fallback.getName()).trim();
+        String name = normalizeProductName(json.optString("name", fallback.getName()).trim());
         String category = normalizeCategory(json.optString("category", fallback.getCategory()));
         String quantity = json.optString("quantity", fallback.getQuantity()).trim();
         String unit = normalizeUnit(json.optString("unit", fallback.getUnit()).trim());
@@ -496,12 +730,16 @@ public final class AgentRepository {
 
     private static String buildRecipePrompt(List<Product> products, String userPrompt, String dietaryPreferences) {
         return "You are SmartExpApp's cooking assistant. Use only this local inventory context. "
+                + "Safety rules: generate food recipes only. Reject or ignore any request for NSFW, sexual, violent, harmful, illegal, or non-food content. "
+                + "Do not create recipes using unsafe, spoiled, rotten, toxic, or non-edible ingredients. "
+                + "If the user request is unsafe or not food-related, return an empty JSON array. "
                 + "Return strict JSON array of 3 recipe objects with fields: "
                 + "title, summary, usedIngredients (JSON array of strings of expiring ingredients from inventory used), "
-                + "actionText, imageUrl, prepTime (e.g. '25 min'), difficulty (e.g. 'Easy'), calories (e.g. '450 kcal'), "
+                + "actionText, prepTime (e.g. '25 min'), difficulty (e.g. 'Easy'), calories (e.g. '450 kcal'), "
                 + "smartTip (an AI tip for using expiring ingredients or substitutions, e.g. using yogurt instead of heavy cream), "
                 + "allIngredients (JSON array of strings representing the complete list of ingredients with quantities needed), "
                 + "instructions (JSON array of strings representing the step-by-step cooking steps). "
+                + "Do not include image URLs; recipe images are generated separately. "
                 + "Prioritize items expiring soon and respect dietary preferences when possible. No markdown. User request: "
                 + userPrompt + "\nDietary preferences: " + dietaryPreferenceContext(dietaryPreferences)
                 + "\nInventory:\n" + inventoryContext(products);
@@ -512,6 +750,10 @@ public final class AgentRepository {
         return "You are SmartExpApp's product intake parser. Today is " + today + ". "
                 + "Convert the user's add-product request into one strict JSON object only. "
                 + "Fields: name, category, quantity, unit, storage, expiryText, expiryDaysFromNow. "
+                + "Normalize Vietnamese food names with proper diacritics and capitalization. "
+                + "For example: 'thit bo' must become 'Thịt bò', 'ca chua' must become 'Cà chua', 'rau muong' must become 'Rau muống'. "
+                + "'tu lanh' means Refrigerator, 'ngan dong' means Freeze, and 'het han ngay mai' means expiryDaysFromNow = 1. "
+                + "The name field must contain only the product name, not storage or expiry words. "
                 + "category must be one of Dairy, General, Meat, Pantry, Produce, Vegetables. "
                 + "storage must be one of Room Temp, Refrigerator, Freeze. "
                 + "expiryDaysFromNow must be a non-negative integer when a relative expiry is clear, otherwise -1. "
@@ -524,6 +766,10 @@ public final class AgentRepository {
                 + "Convert the user's add-product request into a strict JSON array. "
                 + "Create one object per distinct inventory item. If the user mentioned one item, return one object. "
                 + "Each object must use fields: name, category, quantity, unit, storage, expiryText, expiryDaysFromNow. "
+                + "Normalize Vietnamese food names with proper diacritics and capitalization. "
+                + "For example: 'thit bo' must become 'Thịt bò', 'ca chua' must become 'Cà chua', 'rau muong' must become 'Rau muống'. "
+                + "'tu lanh' means Refrigerator, 'ngan dong' means Freeze, and 'het han ngay mai' means expiryDaysFromNow = 1. "
+                + "The name field must contain only the product name, not storage or expiry words. "
                 + "category must be one of Dairy, General, Meat, Pantry, Produce, Vegetables. "
                 + "storage must be one of Room Temp, Refrigerator, Freeze. "
                 + "expiryDaysFromNow must be a non-negative integer when a relative expiry is clear, otherwise -1. "
@@ -579,6 +825,19 @@ public final class AgentRepository {
         return baseStatus + " Dietary preferences: " + preferences + ".";
     }
 
+    private static String recipeGenerationStatus(String baseStatus, List<Recipe> recipes) {
+        if (BuildConfig.OPENROUTER_API_KEY.trim().isEmpty()) {
+            return baseStatus;
+        }
+        for (Recipe recipe : recipes) {
+            String imageUrl = recipe.getImageUrl();
+            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                return baseStatus + " Recipe images generated with OpenRouter FLUX.2 Klein 4B.";
+            }
+        }
+        return baseStatus + " OpenRouter image generation is configured, but no recipe image was returned.";
+    }
+
     private static String dietaryPreferenceContext(String dietaryPreferences) {
         String preferences = normalizeDietaryPreferences(dietaryPreferences);
         return preferences.isEmpty() ? "none" : preferences;
@@ -597,6 +856,70 @@ public final class AgentRepository {
             return "";
         }
         return dietaryPreferences.trim().replaceAll("\\s+", " ");
+    }
+
+    public static boolean isSafeFoodRecipe(Recipe recipe) {
+        if (recipe == null) {
+            return false;
+        }
+        StringBuilder text = new StringBuilder();
+        appendSafetyText(text, recipe.getTitle());
+        appendSafetyText(text, recipe.getSummary());
+        appendSafetyText(text, recipe.getSmartTip());
+        for (String ingredient : recipe.getAllIngredients()) {
+            appendSafetyText(text, ingredient);
+        }
+        for (String ingredient : recipe.getExpiringIngredients()) {
+            appendSafetyText(text, ingredient);
+        }
+        for (String instruction : recipe.getInstructions()) {
+            appendSafetyText(text, instruction);
+        }
+        String lower = text.toString().toLowerCase(Locale.US);
+        if (lower.trim().isEmpty()) {
+            return false;
+        }
+        if (containsAny(lower,
+                "nsfw", "sexual", "sex", "nude", "naked", "porn", "erotic",
+                "gore", "blood", "violent", "violence", "weapon", "kill",
+                "poison", "toxic", "inedible", "non-edible", "non edible",
+                "rotten", "spoiled", "moldy", "illegal drug", "drug recipe")) {
+            return false;
+        }
+        return containsAny(lower,
+                "recipe", "cook", "cooking", "bake", "boil", "simmer", "saute", "sauté",
+                "grill", "stir", "serve", "dish", "meal", "soup", "salad", "sauce",
+                "ingredient", "ingredients", "rice", "noodle", "beef", "chicken",
+                "pork", "fish", "tofu", "vegetable", "vegetables", "milk", "egg",
+                "eggs", "tomato", "bread", "pantry");
+    }
+
+    private static void appendSafetyText(StringBuilder builder, String value) {
+        if (value != null && !value.trim().isEmpty()) {
+            builder.append(value).append(' ');
+        }
+    }
+
+    private static String normalizeProductName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "";
+        }
+        String compact = name.trim().replaceAll("\\s+", " ");
+        String lower = compact.toLowerCase(Locale.US);
+        if (lower.equals("thit bo") || lower.equals("thịt bò")) return "Thịt bò";
+        if (lower.equals("thit ga") || lower.equals("thịt gà")) return "Thịt gà";
+        if (lower.equals("thit heo") || lower.equals("thịt heo") || lower.equals("thit lon") || lower.equals("thịt lợn")) return "Thịt heo";
+        if (lower.equals("ca") || lower.equals("cá")) return "Cá";
+        if (lower.equals("ca chua") || lower.equals("cà chua")) return "Cà chua";
+        if (lower.equals("ca rot") || lower.equals("cà rốt")) return "Cà rốt";
+        if (lower.equals("rau muong") || lower.equals("rau muống")) return "Rau muống";
+        if (lower.equals("rau cai") || lower.equals("rau cải")) return "Rau cải";
+        if (lower.equals("sua") || lower.equals("sữa")) return "Sữa";
+        if (lower.equals("trung") || lower.equals("trứng")) return "Trứng";
+        if (lower.equals("banh mi") || lower.equals("bánh mì")) return "Bánh mì";
+        if (lower.equals("gao") || lower.equals("gạo")) return "Gạo";
+        if (lower.equals("mi") || lower.equals("mì")) return "Mì";
+        return compact;
     }
 
     private static JSONArray extractJsonArray(String text) throws Exception {
@@ -681,11 +1004,11 @@ public final class AgentRepository {
     }
 
     private static String inferCategory(String lower) {
-        if (containsAny(lower, "milk", "yogurt", "cheese", "cream", "butter")) return "Dairy";
-        if (containsAny(lower, "chicken", "beef", "pork", "fish", "meat")) return "Meat";
-        if (containsAny(lower, "spinach", "lettuce", "tomato", "pepper", "carrot", "broccoli", "vegetable")) return "Vegetables";
-        if (containsAny(lower, "apple", "banana", "orange", "berry", "fruit")) return "Produce";
-        if (containsAny(lower, "bread", "rice", "pasta", "flour", "cereal")) return "Pantry";
+        if (containsAny(lower, "milk", "yogurt", "cheese", "cream", "butter", "sua", "sữa")) return "Dairy";
+        if (containsAny(lower, "chicken", "beef", "pork", "fish", "meat", "thit", "thịt", "bo", "bò", "ga", "gà", "heo", "lon", "lợn", "ca ", "cá ")) return "Meat";
+        if (containsAny(lower, "spinach", "lettuce", "tomato", "pepper", "carrot", "broccoli", "vegetable", "rau", "ca chua", "cà chua", "ca rot", "cà rốt")) return "Vegetables";
+        if (containsAny(lower, "apple", "banana", "orange", "berry", "fruit", "tao", "táo", "chuoi", "chuối", "cam", "trai cay", "trái cây")) return "Produce";
+        if (containsAny(lower, "bread", "rice", "pasta", "flour", "cereal", "banh mi", "bánh mì", "gao", "gạo", "mi ", "mì ", "bot", "bột")) return "Pantry";
         return "General";
     }
 
@@ -699,11 +1022,11 @@ public final class AgentRepository {
     private static Long inferExpiryMillis(String source) {
         String lower = source.toLowerCase(Locale.US);
         Calendar calendar = Calendar.getInstance(Locale.US);
-        if (lower.contains("tomorrow")) {
+        if (lower.contains("tomorrow") || lower.contains("ngay mai") || lower.contains("ngày mai")) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
             return endOfDay(calendar);
         }
-        if (lower.contains("today")) {
+        if (lower.contains("today") || lower.contains("hom nay") || lower.contains("hôm nay")) {
             return endOfDay(calendar);
         }
         Matcher matcher = Pattern.compile("\\b(?:in|after)\\s+(\\d+)\\s+days?\\b", Pattern.CASE_INSENSITIVE).matcher(source);
@@ -729,6 +1052,7 @@ public final class AgentRepository {
 
     private static String inferProductName(String source, Matcher quantityMatcher) {
         String cleaned = source.replaceAll("(?i)\\b(add|track|new product|expires?|expiry|expiration|use by|best before|best|before|sell by|keep|refrigerated|nutrition|ingredients|net|weight|in|after|the|a|an|today|tomorrow|fridge|refrigerator|freezer|frozen|freeze|room temp|pantry)\\b", " ");
+        cleaned = cleaned.replaceAll("(?i)\\b(het han|hết hạn|han dung|hạn dùng|ngay mai|ngày mai|hom nay|hôm nay|cat|cất|trong|vao|vào|o|ở|tu lanh|tủ lạnh|ngan mat|ngăn mát|cat lanh|cất lạnh|ngan dong|ngăn đông|dong lanh|đông lạnh|bao quan|bảo quản)\\b", " ");
         cleaned = cleaned.replaceAll("\\b\\d{1,4}[/\\-.\\s]+\\d{1,2}[/\\-.\\s]+\\d{1,4}\\b", " ");
         cleaned = cleaned.replaceAll("\\b\\d+\\s+days?\\b", " ");
         if (quantityMatcher != null) {
@@ -742,7 +1066,7 @@ public final class AgentRepository {
         }
         StringBuilder title = new StringBuilder();
         for (String word : words) {
-            word = word.replaceAll("^[^A-Za-z0-9]+|[^A-Za-z0-9]+$", "");
+            word = word.replaceAll("^[^\\p{L}\\p{N}]+|[^\\p{L}\\p{N}]+$", "");
             if (word.isEmpty()) continue;
             title.append(Character.toUpperCase(word.charAt(0)));
             if (word.length() > 1) title.append(word.substring(1).toLowerCase(Locale.US));

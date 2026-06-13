@@ -114,7 +114,7 @@ References used:
 - Lint currently passes for the debug variant.
 - Lint still reports maintainability issues worth tracking over time, especially hardcoded text and unused/prototype resources if stricter checks are enabled.
 - Generated/prototype folders increase repository noise and should be clearly marked as reference or moved out of the shipping source path.
-- The web prototype README claims `npm run dev` starts Express, but `package.json` only runs Vite and no server route exists.
+- The web prototype README now labels `googleaistudio/` as reference-only and says `npm run dev` starts Vite only; no checked-in backend route exists.
 - `INTERNET` permission is declared for optional Gemini calls; document the local/dev API-key setup and future production proxy strategy before release.
 - Android 13+ notification permission handling is present for expiry reminders.
 - No release build hardening is enabled: `minifyEnabled` is false, no signing/release checklist exists, and no privacy policy has been finalized.
@@ -129,7 +129,7 @@ Review and either remove or deliberately wire these:
 - `bottom_nav_menu.xml` and several unused nav icons: custom bottom nav is used instead.
 - Unused drawables reported by lint, especially duplicate dark/glass/nav resources.
 - `ExampleUnitTest` and `ExampleInstrumentedTest`: replace with real smoke/navigation tests or remove.
-- `googleaistudio` Express dependencies and README text if the web backend is not being built.
+- `googleaistudio` README text and Express-only dependencies were cleaned up because the web backend is not being built.
 
 ## 5. Completion Plan
 

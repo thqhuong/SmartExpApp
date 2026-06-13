@@ -35,8 +35,10 @@ import java.util.Comparator;
 import java.util.List;
 
 public class InventoryActivity extends BaseActivity {
+    private static final String[] STORAGE_KEYS = {"All", "Room Temp", "Refrigerator", "Freeze"};
     private static final String TAG = "InventoryActivity";
     public static final String EXTRA_FILTER = "com.example.smartexpapp.extra.FILTER";
+    public static final String EXTRA_RESET_FILTERS = "com.example.smartexpapp.extra.RESET_FILTERS";
     public static final String FILTER_EXPIRING_SOON = "ExpiringSoon";
 
     private LinearLayout productList;
@@ -129,13 +131,16 @@ public class InventoryActivity extends BaseActivity {
         expirySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selected = parent.getItemAtPosition(position).toString();
-                if ("Still good".equals(selected)) {
-                    currentFilter = "StillGood";
-                } else if ("Expired".equals(selected)) {
-                    currentFilter = "Expired";
-                } else {
-                    currentFilter = "All";
+                switch (position) {
+                    case 1:
+                        currentFilter = "StillGood";
+                        break;
+                    case 2:
+                        currentFilter = "Expired";
+                        break;
+                    default:
+                        currentFilter = "All";
+                        break;
                 }
                 renderProducts();
             }
@@ -152,7 +157,11 @@ public class InventoryActivity extends BaseActivity {
         storageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                currentStorage = parent.getItemAtPosition(position).toString();
+                if (position >= 0 && position < STORAGE_KEYS.length) {
+                    currentStorage = STORAGE_KEYS[position];
+                } else {
+                    currentStorage = "All";
+                }
                 renderProducts();
             }
 
@@ -170,13 +179,16 @@ public class InventoryActivity extends BaseActivity {
         sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selected = parent.getItemAtPosition(position).toString();
-                if ("Name".equals(selected)) {
-                    currentSort = "name";
-                } else if ("Newest".equals(selected)) {
-                    currentSort = "newest";
-                } else {
-                    currentSort = "oldest";
+                switch (position) {
+                    case 1:
+                        currentSort = "name";
+                        break;
+                    case 2:
+                        currentSort = "newest";
+                        break;
+                    default:
+                        currentSort = "oldest";
+                        break;
                 }
                 renderProducts();
             }
@@ -188,11 +200,35 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void applyLaunchFilter(Intent intent) {
+        if (intent != null && intent.getBooleanExtra(EXTRA_RESET_FILTERS, false)) {
+            resetInventoryFilters();
+            return;
+        }
         if (intent == null || !FILTER_EXPIRING_SOON.equals(intent.getStringExtra(EXTRA_FILTER))) {
             return;
         }
         currentFilter = FILTER_EXPIRING_SOON;
-        Toast.makeText(this, "Showing items from your expiry reminder.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.reminder_filter_toast, Toast.LENGTH_SHORT).show();
+    }
+
+    private void resetInventoryFilters() {
+        currentSearch = "";
+        currentFilter = "All";
+        currentStorage = "All";
+        currentSort = "oldest";
+
+        if (searchInput != null && searchInput.length() > 0) {
+            searchInput.setText("");
+        }
+        if (expirySpinner != null && expirySpinner.getSelectedItemPosition() != 0) {
+            expirySpinner.setSelection(0);
+        }
+        if (storageSpinner != null && storageSpinner.getSelectedItemPosition() != 0) {
+            storageSpinner.setSelection(0);
+        }
+        if (sortSpinner != null && sortSpinner.getSelectedItemPosition() != 0) {
+            sortSpinner.setSelection(0);
+        }
     }
 
     private void showLoading() {

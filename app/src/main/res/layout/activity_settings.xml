@@ -44,7 +44,7 @@
                         android:layout_height="96dp"
                         android:background="@drawable/bg_avatar"
                         android:clipToOutline="true"
-                        android:contentDescription="Local user"
+                        android:contentDescription="@string/profile_local_user"
                         android:scaleType="centerCrop"
                         android:src="@drawable/ic_nav_profile"
                         app:tint="@color/smart_primary" />
@@ -60,14 +60,16 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:elevation="4dp">
+                        android:elevation="4dp"
+                        android:contentDescription="@string/edit_profile">
 
                         <ImageView
                             android:layout_width="16dp"
                             android:layout_height="16dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_edit"
-                            app:tint="@color/edit_profile_avatar_icon" />
+                            app:tint="@color/edit_profile_avatar_icon"
+                            android:importantForAccessibility="no" />
                     </FrameLayout>
                 </FrameLayout>
 
@@ -77,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:gravity="center"
-                    android:text="Local User"
+                    android:text="@string/profile_local_user"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -86,7 +88,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Stored on this device"
+                    android:text="@string/profile_stored_device"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -108,7 +110,7 @@
                     android:paddingTop="16dp"
                     android:paddingEnd="20dp"
                     android:paddingBottom="12dp"
-                    android:text="PREFERENCES"
+                    android:text="@string/settings_section_preferences"
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -125,7 +127,7 @@
                 android:id="@+id/signOutButton"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:text="Local-only mode"
+                android:text="@string/settings_local_mode"
                 android:textAllCaps="false"
                 android:textColor="@color/smart_error"
                 android:textStyle="bold"

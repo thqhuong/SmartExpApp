@@ -126,6 +126,7 @@ public final class LocalDataExportRepository {
                 .put("dietaryPreferences", settings.dietaryPreferences)
                 .put("displayName", settings.displayName)
                 .put("darkMode", settings.darkMode)
+                .put("languageTag", settings.languageTag)
                 .put("defaultStorageLocationId", settings.defaultStorageLocationId)
                 .put("notificationEnabled", settings.notificationEnabled)
                 .put("createdAt", settings.createdAt)

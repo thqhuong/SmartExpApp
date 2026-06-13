@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SmartExpApp</string>
+    <string name="search_hint">Tìm sản phẩm...</string>
+    <string name="toggle_theme">Chuyển giao diện sáng/tối</string>
+    <string name="empty_inventory">Chưa có sản phẩm</string>
+    <string name="empty_inventory_desc">Thêm sản phẩm để bắt đầu theo dõi hạn dùng.</string>
+    <string name="empty_search">Không tìm thấy sản phẩm</string>
+    <string name="empty_search_desc">Thử từ khóa hoặc bộ lọc khác.</string>
+    <string name="empty_expiring_soon">Không có món sắp hết hạn</string>
+    <string name="empty_expiring_soon_desc">Khoảng nhắc hiện tại của bạn đang trống.</string>
+    <string name="delete_title">Xóa sản phẩm?</string>
+    <string name="delete_message">Bạn có chắc muốn xóa &quot;%s&quot; khỏi kho không?</string>
+    <string name="delete_confirm">Xóa</string>
+    <string name="cancel">Hủy</string>
+    <string name="edit_product">Sửa sản phẩm</string>
+    <string name="add_product">Thêm sản phẩm</string>
+    <string name="filter_expiring">Sắp hết hạn</string>
+    <string name="filter_expired">Đã hết hạn</string>
+    <string name="sort_date">Ngày</string>
+    <string name="sort_name">Tên</string>
+    <string name="sort_newest">Mới nhất</string>
+    <string name="sort_by">Sắp xếp theo</string>
+    <string name="all">Tất cả</string>
+    <string name="product_updated">Đã cập nhật sản phẩm</string>
+    <string name="product_deleted">Đã xóa sản phẩm</string>
+    <string name="error_load">Không thể tải sản phẩm</string>
+
+    <string name="status_expired">ĐÃ HẾT HẠN</string>
+    <string name="status_expiring">SẮP HẾT HẠN</string>
+    <string name="product_meta_format">%1$s - %2$s</string>
+
+    <string name="inventory_title">Kho của tôi</string>
+    <string name="category_label">DANH MỤC</string>
+    <string name="storage_room_temp">Nhiệt độ phòng</string>
+    <string name="storage_cool">Mát</string>
+    <string name="storage_frozen">Đông lạnh</string>
+    <string name="cat_dairy">Sữa</string>
+    <string name="cat_meat">Thịt</string>
+    <string name="cat_produce">Rau quả</string>
+    <string name="cat_pantry">Đồ khô</string>
+    <string name="cat_vegetables">Rau củ</string>
+    <string name="cat_general">Chung</string>
+    <string name="select_expiry_date">Chọn ngày hết hạn</string>
+    <string name="scan_with_camera">Quét bằng camera</string>
+    <string name="recipes_loading">Đang tải gợi ý công thức cục bộ...</string>
+    <string name="recipes_error">Không thể tải gợi ý công thức. Hãy thử lại sau khi thêm sản phẩm.</string>
+
+    <string name="filter_still_good">Còn dùng được</string>
+    <string name="storage_type_label">Kiểu bảo quản</string>
+    <string name="expiry_label">Hạn dùng</string>
+    <string name="filter_storage_room">Nhiệt độ phòng</string>
+    <string name="filter_storage_fridge">Tủ lạnh</string>
+    <string name="filter_storage_freeze">Ngăn đông</string>
+
+    <string-array name="expiry_filter_options">
+        <item>Tất cả</item>
+        <item>Còn dùng được</item>
+        <item>Đã hết hạn</item>
+    </string-array>
+
+    <string-array name="storage_filter_options">
+        <item>Tất cả</item>
+        <item>Nhiệt độ phòng</item>
+        <item>Tủ lạnh</item>
+        <item>Ngăn đông</item>
+    </string-array>
+
+    <string-array name="sort_options">
+        <item>Cũ nhất</item>
+        <item>Tên</item>
+        <item>Mới nhất</item>
+    </string-array>
+
+    <string-array name="unit_options">
+        <item>pcs</item>
+        <item>g</item>
+        <item>kg</item>
+        <item>ml</item>
+        <item>l</item>
+        <item>oz</item>
+        <item>lb</item>
+        <item>cup</item>
+        <item>tbsp</item>
+        <item>tsp</item>
+    </string-array>
+
+    <string name="placeholder_difficulty">Dễ</string>
+    <string name="label_expires_in">Hết hạn sau</string>
+    <string name="label_expiring_soon_uppercase">SẮP HẾT HẠN</string>
+    <string name="app_name_chrome">SmartExpApp</string>
+    <string name="nav_inventory_label">Kho</string>
+    <string name="nav_stats_label">Thống kê</string>
+    <string name="nav_agent_label">Trợ lý</string>
+    <string name="nav_settings_label">Cài đặt</string>
+    <string name="profile_local_user">Người dùng cục bộ</string>
+    <string name="profile_stored_device">Lưu trên thiết bị này</string>
+    <string name="settings_section_preferences">TÙY CHỌN</string>
+    <string name="settings_local_mode">Chế độ chỉ lưu cục bộ</string>
+    <string name="recipe_details_title">Chi tiết công thức</string>
+    <string name="difficulty_easy_uppercase">DỄ</string>
+    <string name="gemini_smart_tip">Mẹo thông minh Gemini</string>
+    <string name="no_recommendations">Chưa có gợi ý chống lãng phí.</string>
+    <string name="label_ingredients">Nguyên liệu</string>
+    <string name="label_instructions">Cách làm</string>
+    <string name="smart_recipe_assistant">Trợ lý công thức thông minh</string>
+    <string name="recipes_intro_desc">Hỏi bằng giọng nói hoặc văn bản. Gemini được dùng khi đã cấu hình; gợi ý cục bộ vẫn hoạt động ngoại tuyến.</string>
+    <string name="ask_by_text">Hỏi bằng văn bản</string>
+    <string name="smart_recipes_title">Công thức thông minh</string>
+    <string name="badge_use_soon">Dùng sớm nhé!</string>
+    <string name="recipes_source_desc">Công thức dựa trên các món trong kho cục bộ sắp hết hạn.</string>
+    <string name="allow_notifications">Cho phép thông báo</string>
+    <string name="allow_notifications_desc">Công tắc chung để bật hoặc tắt mọi cảnh báo của ứng dụng.</string>
+    <string name="reminder_window">Khoảng nhắc</string>
+    <string name="reminder_window_desc">Chọn SmartExp nên đưa món vào nhắc hết hạn sớm trước bao lâu.</string>
+    <string name="expiry_alerts">Cảnh báo hết hạn</string>
+    <string name="active_label">Đang bật</string>
+    <string name="expiry_alerts_desc">Nhận thông báo trước khi đồ trong kho đến ngày hết hạn.</string>
+    <string name="local_daily_checks">Kiểm tra hằng ngày cục bộ</string>
+    <string name="local_label">Cục bộ</string>
+    <string name="local_daily_checks_desc">Việc kiểm tra nhắc nhở chạy cục bộ mỗi ngày khi thông báo được bật.</string>
+    <string name="recipe_suggestions">Gợi ý công thức</string>
+    <string name="in_app_label">Trong ứng dụng</string>
+    <string name="recipe_suggestions_desc">Ý tưởng món ăn hiển thị trong trợ lý và luồng kho, không gửi thành cảnh báo riêng.</string>
+    <string name="ai_fallback">Dự phòng AI</string>
+    <string name="automatic_label">Tự động</string>
+    <string name="ai_fallback_desc">Nếu Gemini không khả dụng hoặc chưa cấu hình, SmartExp vẫn dùng gợi ý cục bộ.</string>
+    <string name="reminder_source_desc">Nhắc hết hạn được xử lý cục bộ từ cơ sở dữ liệu Room của kho.</string>
+    <string name="urgent_attention">CẦN CHÚ Ý GẤP</string>
+    <string name="items_expiring_soon_label">Món sắp hết hạn</string>
+    <string name="immediate_attention_desc">Cần xử lý ngay</string>
+    <string name="total_tracked">Tổng đang theo dõi</string>
+    <string name="waste_prevented">Lãng phí đã tránh</string>
+    <string name="storage_overview">Tổng quan bảo quản</string>
+    <string name="expired_label">Đã hết hạn</string>
+    <string name="urgent_label">Gấp</string>
+    <string name="soon_label">Sắp tới</string>
+    <string name="label_safe">An toàn</string>
+    <string name="view_all_inventory">XEM TOÀN BỘ KHO</string>
+    <string name="edit_profile">Sửa hồ sơ</string>
+    <string name="reminder_1_day">1 ngày</string>
+    <string name="reminder_3_days">3 ngày</string>
+    <string name="reminder_7_days">7 ngày</string>
+    <string name="label_back">Quay lại</string>
+    <string name="label_favorite">Yêu thích</string>
+    <string name="product_image_desc">Ảnh sản phẩm</string>
+    <string name="add_product_subtitle">Nhập chi tiết để theo dõi hạn dùng.</string>
+    <string name="edit_product_subtitle">Cập nhật chi tiết sản phẩm.</string>
+    <string name="smart_add_section">THÊM THÔNG MINH</string>
+    <string name="smart_add_title">Thêm thông minh có AI hỗ trợ</string>
+    <string name="smart_add_desc">Mô tả một hoặc nhiều món bằng giọng nói hoặc văn bản. AI được dùng khi đã cấu hình; bộ phân tích cục bộ luôn sẵn sàng.</string>
+    <string name="start_voice_add">Thêm bằng giọng nói</string>
+    <string name="type_smart_add">Nhập để thêm thông minh</string>
+    <string name="product_name_label">TÊN SẢN PHẨM</string>
+    <string name="product_name_hint">VD: Sữa hữu cơ</string>
+    <string name="quantity_label">SỐ LƯỢNG</string>
+    <string name="quantity_default">1</string>
+    <string name="manage_label">Quản lý</string>
+    <string name="storage_method_label">CÁCH BẢO QUẢN</string>
+    <string name="storage_room_temp_upper">NHIỆT ĐỘ\nPHÒNG</string>
+    <string name="storage_refrigerator_upper">TỦ LẠNH</string>
+    <string name="storage_freeze_upper">NGĂN ĐÔNG</string>
+    <string name="expiry_date_label">NGÀY HẾT HẠN</string>
+    <string name="photo_optional_label">ẢNH (tùy chọn)</string>
+    <string name="tap_add_photo">Chạm để thêm ảnh</string>
+    <string name="add_product_photo_desc">Thêm ảnh sản phẩm</string>
+    <string name="remove_photo">Xóa ảnh</string>
+    <string name="smart_add_hint">Thêm sữa, 1 gallon, hết hạn ngày mai, tủ lạnh</string>
+    <string name="smart_add_voice_prompt">Hãy nói ví dụ: thêm sữa, 1 gallon, hết hạn ngày mai, tủ lạnh</string>
+    <string name="smart_add_dialog_title">Thêm thông minh</string>
+    <string name="smart_add_dialog_message">Mô tả món cần thêm. SmartExp sẽ điền biểu mẫu, sau đó bạn xác nhận trước khi lưu.</string>
+    <string name="parse_label">Phân tích</string>
+    <string name="smart_add_preparing">Đang chuẩn bị bản nháp Thêm thông minh...</string>
+    <string name="smart_add_no_details">Không phát hiện chi tiết sản phẩm.</string>
+    <string name="smart_add_batch_title">Xem lại loạt Thêm thông minh</string>
+    <string name="smart_add_batch_intro_format">Đã phát hiện %1$d món. Bạn sẽ xem lại và lưu từng món trước khi thêm.\n</string>
+    <string name="not_detected">Không phát hiện</string>
+    <string name="smart_add_draft_summary_format">Tên: %1$s\nSố lượng: %2$s %3$s\nDanh mục: %4$s\nBảo quản: %5$s\nHết hạn: %6$s\n\nNguồn: %7$s</string>
+    <string name="ocr_draft_summary_format">Tên: %1$s\nSố lượng: %2$s %3$s\nDanh mục: %4$s\nBảo quản: %5$s</string>
+    <string name="start_review">Bắt đầu xem lại</string>
+    <string name="smart_add_draft_title">Xem lại bản nháp Thêm thông minh</string>
+    <string name="fill_form">Điền biểu mẫu</string>
+    <string name="fill_details">Điền chi tiết</string>
+    <string name="smart_add_review_first_format">Xem lại món 1 trong %1$d.</string>
+    <string name="smart_add_next_ready">Món Thêm thông minh tiếp theo đã sẵn sàng. Hãy xem lại và lưu.</string>
+    <string name="expiry_not_detected">Không phát hiện ngày hết hạn. Vui lòng chọn ngày trước khi lưu.</string>
+    <string name="select_expiry_before_saving">Chọn ngày hết hạn trước khi lưu.</string>
+    <string name="enter_product_name">Nhập tên sản phẩm.</string>
+    <string name="scan_expiry_text">Quét chữ hạn dùng</string>
+    <string name="ocr_source_camera">Camera</string>
+    <string name="ocr_source_gallery">Thư viện</string>
+    <string name="ocr_camera_error">Không thể mở camera để OCR.</string>
+    <string name="ocr_scanning_dates">Đang quét ngày...</string>
+    <string name="ocr_no_text">Không tìm thấy chữ đọc được trong ảnh.</string>
+    <string name="ocr_failed_format">OCR thất bại: %1$s</string>
+    <string name="image_process_failed">Không thể xử lý ảnh</string>
+    <string name="ocr_preparing_draft">Đang chuẩn bị bản nháp OCR...</string>
+    <string name="ocr_scan_review_title">Xem lại kết quả quét OCR</string>
+    <string name="ocr_scan_review_message">Chọn ngày hết hạn được phát hiện từ ảnh.</string>
+    <string name="ocr_draft_review_title">Xem lại bản nháp OCR</string>
+    <string name="ocr_draft_review_message">Không phát hiện ngày hết hạn. Điền chi tiết sản phẩm, rồi chọn ngày hết hạn trước khi lưu.</string>
+    <string name="date_only">Chỉ ngày</string>
+    <string name="select_date">Chọn ngày</string>
+    <string name="photo_save_failed">Không thể lưu ảnh.</string>
+    <string name="remove_photo_title">Xóa ảnh?</string>
+    <string name="remove_photo_message">Bạn có chắc muốn xóa ảnh này không?</string>
+    <string name="remove_label">Xóa</string>
+    <string name="category_add_button">+ Thêm danh mục mới</string>
+    <string name="category_name_hint">Tên danh mục</string>
+    <string name="category_add_title">Thêm danh mục mới</string>
+    <string name="add_label">Thêm</string>
+    <string name="manage_categories_title">Quản lý danh mục</string>
+    <string name="close_label">Đóng</string>
+    <string name="rename_category_title">Đổi tên danh mục</string>
+    <string name="rename_label">Đổi tên</string>
+    <string name="delete_category_title_format">Xóa \"%1$s\"?</string>
+    <string name="category_delete_message">Sản phẩm trong danh mục này sẽ được chuyển sang \"Chung\".</string>
+    <string name="category_edit_desc_format">Đổi tên danh mục %1$s</string>
+    <string name="category_delete_desc_format">Xóa danh mục %1$s</string>
+    <string name="category_product_update_error">Không thể cập nhật danh mục sản phẩm.</string>
+    <string name="category_rename_error">Không thể đổi tên danh mục.</string>
+    <string name="category_delete_error">Không thể xóa danh mục.</string>
+    <string name="category_load_error">Không thể tải danh mục.</string>
+    <string name="product_not_found">Không tìm thấy sản phẩm</string>
+    <string name="product_save_error">Không thể lưu sản phẩm.</string>
+    <string name="product_added_format">Đã thêm %1$s.</string>
+    <string name="ocr_save_warning">Sản phẩm đã được lưu, nhưng không thể lưu chi tiết quét OCR.</string>
+    <string name="settings_notification_title">Cài đặt thông báo</string>
+    <string name="settings_notification_desc">Quản lý cảnh báo hết hạn cục bộ</string>
+    <string name="settings_storage_title">Tùy chọn bảo quản</string>
+    <string name="settings_storage_desc">Vị trí và danh mục mặc định</string>
+    <string name="settings_dietary_title">Tùy chọn ăn uống</string>
+    <string name="settings_dietary_desc">Dẫn hướng công thức cục bộ và Gemini</string>
+    <string name="settings_profile_title">Hồ sơ cục bộ</string>
+    <string name="settings_profile_desc">Hồ sơ và dữ liệu chỉ trên thiết bị</string>
+    <string name="settings_help_title">Trợ giúp &amp; hỗ trợ</string>
+    <string name="settings_help_desc">Câu hỏi thường gặp và thông tin liên hệ</string>
+    <string name="settings_language_title">Ngôn ngữ</string>
+    <string name="settings_language_desc">Tiếng Anh hoặc Tiếng Việt</string>
+    <string name="language_english">Tiếng Anh</string>
+    <string name="language_vietnamese">Tiếng Việt</string>
+    <string name="language_saved">Đã cập nhật ngôn ngữ.</string>
+    <string name="language_save_error">Không thể lưu cài đặt ngôn ngữ.</string>
+    <string name="language_load_error">Không thể tải cài đặt ngôn ngữ.</string>
+    <string name="settings_dark_mode_title">Chế độ tối</string>
+    <string name="settings_dark_mode_desc">Bật/tắt giao diện tối trong toàn ứng dụng</string>
+    <string name="local_only_mode_toast">SmartExpApp đang chạy ở chế độ chỉ lưu cục bộ.</string>
+    <string name="theme_save_error">Không thể lưu cài đặt giao diện.</string>
+    <string name="default_storage_title">Bảo quản mặc định</string>
+    <string name="save_label">Lưu</string>
+    <string name="default_storage_saved_format">Đã đặt bảo quản mặc định thành %1$s.</string>
+    <string name="default_storage_save_error">Không thể lưu tùy chọn bảo quản.</string>
+    <string name="default_storage_load_error">Không thể tải tùy chọn bảo quản.</string>
+    <string name="dietary_preferences_hint">Ăn chay, không sữa, ít muối</string>
+    <string name="dietary_preferences_message">Chỉ dùng trên thiết bị này để dẫn hướng gợi ý công thức.</string>
+    <string name="dietary_preferences_saved">Đã lưu tùy chọn ăn uống.</string>
+    <string name="dietary_preferences_save_error">Không thể lưu tùy chọn ăn uống.</string>
+    <string name="dietary_preferences_cleared">Đã xóa tùy chọn ăn uống.</string>
+    <string name="dietary_preferences_clear_error">Không thể xóa tùy chọn ăn uống.</string>
+    <string name="dietary_preferences_load_error">Không thể tải tùy chọn ăn uống.</string>
+    <string name="clear_label">Xóa</string>
+    <string name="account_local_user_desc">Người dùng cục bộ</string>
+    <string name="account_stored_only_device">Chỉ lưu trên thiết bị này</string>
+    <string name="profile_section">HỒ SƠ</string>
+    <string name="display_name_label">Tên hiển thị</string>
+    <string name="display_name_hint">Tên của bạn</string>
+    <string name="local_mode_label">Chế độ cục bộ</string>
+    <string name="device_only_hint">Chỉ thiết bị</string>
+    <string name="no_sign_in_required">Không cần đăng nhập</string>
+    <string name="ai_access_label">Truy cập AI</string>
+    <string name="optional_api_key_hint">Khóa API tùy chọn</string>
+    <string name="optional_local_api_key">Khóa API cục bộ tùy chọn</string>
+    <string name="local_data_title">Dữ liệu cục bộ</string>
+    <string name="local_data_desc">Kho, bản quét, công thức và nhắc nhở được lưu trong cơ sở dữ liệu của ứng dụng.</string>
+    <string name="authentication_label">Xác thực</string>
+    <string name="auth_not_used_local">Không dùng trong chế độ chỉ lưu cục bộ</string>
+    <string name="chevron_symbol">&gt;</string>
+    <string name="data_privacy_title">Dữ liệu &amp; quyền riêng tư</string>
+    <string name="export_data">Xuất dữ liệu</string>
+    <string name="delete_local_data">Xóa dữ liệu cục bộ</string>
+    <string name="save_local_profile">Lưu hồ sơ cục bộ</string>
+    <string name="profile_load_error">Không thể tải hồ sơ cục bộ.</string>
+    <string name="account_details_title">Chi tiết tài khoản</string>
+    <string name="profile_saved">Đã lưu hồ sơ cục bộ.</string>
+    <string name="profile_save_error">Không thể lưu hồ sơ cục bộ.</string>
+    <string name="export_preparing">Đang chuẩn bị xuất dữ liệu cục bộ...</string>
+    <string name="export_error">Không thể xuất dữ liệu cục bộ.</string>
+    <string name="delete_local_data_title">Xóa dữ liệu cục bộ</string>
+    <string name="delete_local_data_message">Thao tác này sẽ xóa kho, bản quét, bộ nhớ đệm công thức, lịch sử trợ lý và cài đặt hồ sơ cục bộ khỏi thiết bị này.</string>
+    <string name="delete_local_data_progress">Đang xóa dữ liệu cục bộ...</string>
+    <string name="delete_local_data_done">Đã xóa dữ liệu cục bộ.</string>
+    <string name="delete_local_data_error">Không thể xóa dữ liệu cục bộ.</string>
+    <string name="export_subject">Bản xuất dữ liệu cục bộ SmartExpApp</string>
+    <string name="export_chooser_title">Xuất dữ liệu cục bộ</string>
+    <string name="placeholder_recipe_calories">450 KCAL</string>
+    <string name="placeholder_recipe_prep_time">15 phút</string>
+    <string name="placeholder_recipe_detail_time">25 PHÚT</string>
+    <string name="ask_agent_hint">Hỏi về công thức hoặc món sắp hết hạn</string>
+    <string name="ask_agent_title">Hỏi trợ lý SmartExp</string>
+    <string name="ask_label">Hỏi</string>
+    <string name="recipes_checking_inventory">Đang kiểm tra kho cục bộ...</string>
+    <string name="ingredients_empty">Chưa có nguyên liệu.</string>
+    <string name="favorite_saved">Đã lưu công thức vào yêu thích!</string>
+    <string name="favorite_removed">Đã xóa công thức khỏi yêu thích.</string>
+    <string name="reminder_filter_toast">Đang hiển thị món từ nhắc hết hạn của bạn.</string>
+    <string name="btn_generate_recipes">Tạo công thức</string>
+    <string name="recipe_expiring_ingredients_used">NHỮNG SẢN PHẨM SẮP HẾT HẠN ĐƯỢC DÙNG:</string>
+</resources>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { AppView } from '../types';
 
 interface HelpSupportScreenProps {
@@ -20,7 +20,7 @@ export default function HelpSupportScreen({ onNavigate }: HelpSupportScreenProps
     setOpenFaq(openFaq === idx ? null : idx);
   };
 
-  const handleContact = (e: React.FormEvent) => {
+  const handleContact = (e: FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     setSubject('');

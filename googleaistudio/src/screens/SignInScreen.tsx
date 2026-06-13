@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 
 interface SignInScreenProps {
   onSignIn: () => void;
@@ -13,7 +13,7 @@ export default function SignInScreen({ onSignIn }: SignInScreenProps) {
   const [email, setEmail] = useState('alex.johnson@smartexp.io');
   const [password, setPassword] = useState('password123');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSignIn();
   };

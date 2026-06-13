@@ -45,7 +45,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="URGENT ATTENTION"
+                        android:text="@string/urgent_attention"
                         android:textColor="@color/smart_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold"
@@ -55,7 +55,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Items Expiring Soon"
+                        android:text="@string/items_expiring_soon_label"
                         android:textColor="#FF8C00"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -64,7 +64,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Requires immediate attention"
+                        android:text="@string/immediate_attention_desc"
                         android:textColor="@color/smart_secondary"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -80,6 +80,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
+                        android:contentDescription="@string/status_expiring"
                         android:src="@drawable/ic_urgent_triangle" />
 
                     <TextView
@@ -115,13 +116,14 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@drawable/ic_check_circle"
+                        android:contentDescription="@string/total_tracked"
                         app:tint="@color/storage_fridge_icon" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="Total Tracked"
+                        android:text="@string/total_tracked"
                         android:textColor="@color/smart_secondary"
                         android:textSize="14sp" />
 
@@ -147,13 +149,14 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@drawable/ic_leaf"
+                        android:contentDescription="@string/waste_prevented"
                         app:tint="@color/storage_room_icon" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="Waste Prevented"
+                        android:text="@string/waste_prevented"
                         android:textColor="@color/smart_secondary"
                         android:textSize="14sp" />
 
@@ -172,7 +175,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"
-                android:text="Storage Overview"
+                android:text="@string/storage_overview"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -190,7 +193,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"
-                android:text="Expired"
+                android:text="@string/expired_label"
                 android:textColor="@color/smart_error"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -218,7 +221,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="Urgent"
+                android:text="@string/urgent_label"
                 android:textColor="@color/smart_primary_container"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -246,7 +249,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="Soon"
+                android:text="@string/soon_label"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -274,7 +277,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="Safe"
+                android:text="@string/label_safe"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -303,7 +306,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:layout_gravity="center_horizontal"
-                android:text="VIEW ALL INVENTORY"
+                android:text="@string/view_all_inventory"
                 android:textColor="@color/smart_primary"
                 android:textSize="14sp"
                 android:textStyle="bold"

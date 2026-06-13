@@ -41,6 +41,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
+                    android:contentDescription="@string/product_image_desc"
                     android:scaleType="centerCrop" />
                 </FrameLayout>
 
@@ -89,7 +90,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Delete"
+                    android:contentDescription="@string/delete_confirm"
                     android:padding="8dp"
                     android:scaleType="center"
                     android:src="@drawable/ic_close"
@@ -107,7 +108,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Expires in"
+                    android:text="@string/label_expires_in"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
 
@@ -140,7 +141,7 @@
             android:paddingTop="5dp"
             android:paddingEnd="12dp"
             android:paddingBottom="5dp"
-            android:text="EXPIRING SOON"
+            android:text="@string/label_expiring_soon_uppercase"
             android:textColor="@color/smart_on_primary"
             android:textSize="10sp"
             android:textStyle="bold"

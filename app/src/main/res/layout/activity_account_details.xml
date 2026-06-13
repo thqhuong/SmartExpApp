@@ -38,7 +38,7 @@
                     android:layout_height="118dp"
                     android:background="@drawable/bg_avatar"
                     android:clipToOutline="true"
-                    android:contentDescription="Local user"
+                    android:contentDescription="@string/account_local_user_desc"
                     android:scaleType="centerCrop"
                     android:src="@drawable/account_avatar" />
 
@@ -48,7 +48,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:gravity="center"
-                    android:text="Local User"
+                    android:text="@string/profile_local_user"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="30sp"
                     android:textStyle="bold" />
@@ -57,7 +57,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Stored only on this device"
+                    android:text="@string/account_stored_only_device"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -73,7 +73,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="PROFILE"
+                    android:text="@string/profile_section"
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -82,7 +82,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Display Name"
+                    android:text="@string/display_name_label"
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -93,11 +93,11 @@
                     android:layout_height="56dp"
                     android:layout_marginTop="6dp"
                     android:background="@drawable/bg_glass_input"
-                    android:hint="Your Name"
+                    android:hint="@string/display_name_hint"
                     android:inputType="textPersonName"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Local User"
+                    android:text="@string/profile_local_user"
                     android:textColor="@color/smart_on_surface"
                     android:textColorHint="@color/smart_muted" />
 
@@ -105,7 +105,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Local Mode"
+                    android:text="@string/local_mode_label"
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -116,11 +116,11 @@
                     android:layout_marginTop="6dp"
                     android:background="@drawable/bg_glass_input"
                     android:enabled="false"
-                    android:hint="Device only"
+                    android:hint="@string/device_only_hint"
                     android:inputType="none"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="No sign-in required"
+                    android:text="@string/no_sign_in_required"
                     android:textColor="@color/smart_on_surface"
                     android:textColorHint="@color/smart_muted" />
 
@@ -128,7 +128,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="AI Access"
+                    android:text="@string/ai_access_label"
                     android:textColor="@color/smart_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -139,11 +139,11 @@
                     android:layout_marginTop="6dp"
                     android:background="@drawable/bg_glass_input"
                     android:enabled="false"
-                    android:hint="Optional API key"
+                    android:hint="@string/optional_api_key_hint"
                     android:inputType="none"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Optional local API key"
+                    android:text="@string/optional_local_api_key"
                     android:textColor="@color/smart_on_surface"
                     android:textColorHint="@color/smart_muted" />
             </LinearLayout>
@@ -159,7 +159,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Local Data"
+                    android:text="@string/local_data_title"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -173,7 +173,7 @@
                     android:minHeight="56dp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Inventory, scans, recipes, and reminders are stored in the app database."
+                    android:text="@string/local_data_desc"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -196,7 +196,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Authentication"
+                            android:text="@string/authentication_label"
                             android:textColor="@color/smart_on_surface"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -205,7 +205,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Not used in local-only mode"
+                            android:text="@string/auth_not_used_local"
                             android:textColor="@color/smart_secondary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -214,7 +214,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=">"
+                        android:text="@string/chevron_symbol"
                         android:textColor="@color/smart_secondary"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -232,7 +232,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Data &amp; Privacy"
+                    android:text="@string/data_privacy_title"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -244,12 +244,13 @@
                     android:layout_marginTop="14dp"
                     android:background="@drawable/bg_glass_input"
                     android:clickable="true"
+                    android:contentDescription="@string/export_data"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Export Data"
+                    android:text="@string/export_data"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -261,12 +262,13 @@
                     android:layout_marginTop="12dp"
                     android:background="@drawable/bg_glass_input"
                     android:clickable="true"
+                    android:contentDescription="@string/delete_local_data"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="Delete Local Data"
+                    android:text="@string/delete_local_data"
                     android:textColor="@color/smart_error"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -277,7 +279,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="22dp"
-                android:text="Save Local Profile"
+                android:text="@string/save_local_profile"
                 android:textAllCaps="false"
                 android:textColor="@color/smart_on_primary"
                 android:textStyle="bold"
