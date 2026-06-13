@@ -3,8 +3,6 @@ package com.example.smartexpapp;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -22,8 +20,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.notifications.ReminderScheduler;
 import com.example.smartexpapp.util.CategoryColorHelper;
@@ -32,7 +30,6 @@ import com.example.smartexpapp.util.ViewUtils;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class InventoryActivity extends BaseActivity {
@@ -53,14 +50,8 @@ public class InventoryActivity extends BaseActivity {
     private Spinner storageSpinner;
     private Spinner sortSpinner;
 
-    private String currentSearch = "";
-    private String currentFilter = "All";
-    private String currentStorage = "All";
-    private String currentSort = "oldest";
     private List<Product> latestProducts = new ArrayList<>();
-
-    private final Handler searchHandler = new Handler(Looper.getMainLooper());
-    private Runnable searchRunnable;
+    private InventoryViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,12 +70,41 @@ public class InventoryActivity extends BaseActivity {
         storageSpinner = findViewById(R.id.storageSpinner);
         sortSpinner = findViewById(R.id.sortSpinner);
 
+        AppContainer appContainer = ((SmartExpApplication) getApplicationContext()).appContainer;
+        InventoryViewModelFactory factory = new InventoryViewModelFactory(appContainer.getProductRepository());
+        viewModel = new ViewModelProvider(this, factory).get(InventoryViewModel.class);
+
         setupSearch();
         setupSpinners();
         applyLaunchFilter(getIntent());
 
-        showLoading();
-        renderProducts();
+        setupObservers();
+
+        viewModel.loadProducts();
+    }
+
+    private void setupObservers() {
+        viewModel.getProducts().observe(this, products -> {
+            latestProducts = products;
+            bindProducts(products);
+        });
+
+        viewModel.getIsLoading().observe(this, isLoading -> {
+            if (Boolean.TRUE.equals(isLoading)) {
+                showLoading();
+            } else {
+                hideLoading();
+            }
+        });
+
+        viewModel.getIsError().observe(this, isError -> {
+            if (Boolean.TRUE.equals(isError)) {
+                hideLoading();
+                productList.setVisibility(View.GONE);
+                emptyState.setVisibility(View.GONE);
+                errorState.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     @Override
@@ -92,13 +112,13 @@ public class InventoryActivity extends BaseActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         applyLaunchFilter(intent);
-        renderProducts();
+        viewModel.loadProducts();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        renderProducts();
+        viewModel.loadProducts();
     }
 
     private void setupSearch() {
@@ -109,14 +129,7 @@ public class InventoryActivity extends BaseActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (searchRunnable != null) {
-                    searchHandler.removeCallbacks(searchRunnable);
-                }
-                searchRunnable = () -> {
-                    currentSearch = s.toString();
-                    renderProducts();
-                };
-                searchHandler.postDelayed(searchRunnable, 300);
+                viewModel.setSearchQuery(s.toString());
             }
 
             @Override
@@ -133,18 +146,19 @@ public class InventoryActivity extends BaseActivity {
         expirySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String filter;
                 switch (position) {
                     case 1:
-                        currentFilter = "StillGood";
+                        filter = "StillGood";
                         break;
                     case 2:
-                        currentFilter = "Expired";
+                        filter = "Expired";
                         break;
                     default:
-                        currentFilter = "All";
+                        filter = "All";
                         break;
                 }
-                renderProducts();
+                viewModel.setExpiryFilter(filter);
             }
 
             @Override
@@ -159,18 +173,13 @@ public class InventoryActivity extends BaseActivity {
         storageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position >= 0 && position < STORAGE_KEYS.length) {
-                    currentStorage = STORAGE_KEYS[position];
-                } else {
-                    currentStorage = "All";
-                }
-                renderProducts();
+                String storage = (position >= 0 && position < STORAGE_KEYS.length) ? STORAGE_KEYS[position] : "All";
+                viewModel.setStorageFilter(storage);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                currentStorage = "All";
-                renderProducts();
+                viewModel.setStorageFilter("All");
             }
         });
 
@@ -181,18 +190,19 @@ public class InventoryActivity extends BaseActivity {
         sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String sort;
                 switch (position) {
                     case 1:
-                        currentSort = "name";
+                        sort = "name";
                         break;
                     case 2:
-                        currentSort = "newest";
+                        sort = "newest";
                         break;
                     default:
-                        currentSort = "oldest";
+                        sort = "oldest";
                         break;
                 }
-                renderProducts();
+                viewModel.setSortOrder(sort);
             }
 
             @Override
@@ -209,16 +219,11 @@ public class InventoryActivity extends BaseActivity {
         if (intent == null || !FILTER_EXPIRING_SOON.equals(intent.getStringExtra(EXTRA_FILTER))) {
             return;
         }
-        currentFilter = FILTER_EXPIRING_SOON;
+        viewModel.applyLaunchFilter(FILTER_EXPIRING_SOON);
         Toast.makeText(this, R.string.reminder_filter_toast, Toast.LENGTH_SHORT).show();
     }
 
     private void resetInventoryFilters() {
-        currentSearch = "";
-        currentFilter = "All";
-        currentStorage = "All";
-        currentSort = "oldest";
-
         if (searchInput != null && searchInput.length() > 0) {
             searchInput.setText("");
         }
@@ -231,6 +236,7 @@ public class InventoryActivity extends BaseActivity {
         if (sortSpinner != null && sortSpinner.getSelectedItemPosition() != 0) {
             sortSpinner.setSelection(0);
         }
+        viewModel.resetFilters();
     }
 
     private void showLoading() {
@@ -245,65 +251,6 @@ public class InventoryActivity extends BaseActivity {
         productList.setVisibility(View.VISIBLE);
     }
 
-    private void renderProducts() {
-        ProductRepository.searchAsync(this, currentSearch, products -> {
-            latestProducts = new ArrayList<>(products);
-            List<Product> filtered = filterProducts(products);
-            List<Product> sorted = sortProducts(filtered);
-            bindProducts(sorted);
-            hideLoading();
-        }, e -> {
-            Log.e(TAG, "Failed to render products", e);
-            hideLoading();
-            productList.setVisibility(View.GONE);
-            emptyState.setVisibility(View.GONE);
-            errorState.setVisibility(View.VISIBLE);
-        });
-    }
-
-    private List<Product> filterProducts(List<Product> products) {
-        List<Product> filtered = new ArrayList<>();
-        for (Product product : products) {
-            if (matchesFilter(product) && matchesStorage(product)) {
-                filtered.add(product);
-            }
-        }
-        return filtered;
-    }
-
-    private boolean matchesStorage(Product product) {
-        return "All".equals(currentStorage) || currentStorage.equals(product.getStorage());
-    }
-
-    private boolean matchesFilter(Product product) {
-        if ("All".equals(currentFilter)) {
-            return true;
-        }
-        if ("StillGood".equals(currentFilter)) {
-            return !product.isExpired();
-        }
-        if (FILTER_EXPIRING_SOON.equals(currentFilter)) {
-            return product.isExpiringSoon();
-        }
-        return product.isExpired();
-    }
-
-    private List<Product> sortProducts(List<Product> products) {
-        List<Product> sorted = new ArrayList<>(products);
-        switch (currentSort) {
-            case "name":
-                sorted.sort(Comparator.comparing(Product::getName, String.CASE_INSENSITIVE_ORDER));
-                break;
-            case "newest":
-                sorted.sort((a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
-                break;
-            default:
-                sorted.sort(Comparator.comparingInt(Product::getDaysUntilExpiry));
-                break;
-        }
-        return sorted;
-    }
-
     private void bindProducts(List<Product> products) {
         productList.removeAllViews();
 
@@ -311,6 +258,9 @@ public class InventoryActivity extends BaseActivity {
             productList.setVisibility(View.GONE);
             errorState.setVisibility(View.GONE);
             emptyState.setVisibility(View.VISIBLE);
+
+            String currentSearch = viewModel.getCurrentSearch();
+            String currentFilter = viewModel.getCurrentFilter();
 
             if (!currentSearch.isEmpty()) {
                 emptyTitle.setText(R.string.empty_search);
@@ -437,7 +387,7 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void openEditDialog(Product product) {
-        new EditProductDialog(product, this::renderProducts, latestProducts).show(this);
+        new EditProductDialog(product, viewModel::loadProducts, latestProducts).show(this);
     }
 
     private void confirmDelete(Product product) {
@@ -445,11 +395,11 @@ public class InventoryActivity extends BaseActivity {
                 .setTitle(R.string.delete_title)
                 .setMessage(getString(R.string.delete_message, product.getName()))
                 .setPositiveButton(R.string.delete_confirm,
-                        (dialog, which) -> ProductRepository.deleteProductAsync(this, product.getId(), deleted -> {
+                        (dialog, which) -> viewModel.deleteProduct(product.getId(), deleted -> {
                             if (Boolean.TRUE.equals(deleted)) {
                                 Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
                                 ReminderScheduler.runSoon(this);
-                                renderProducts();
+                                viewModel.loadProducts();
                             }
                         }, error -> {
                             Log.e(TAG, "Failed to delete product", error);
@@ -460,19 +410,19 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void markConsumed(Product product) {
-        ProductRepository.markConsumedAsync(this, product.getId(), getString(R.string.note_marked_from_inventory),
+        viewModel.markConsumed(product.getId(), getString(R.string.note_marked_from_inventory),
                 updated -> onStatusUpdated(updated, getString(R.string.toast_mark_consumed_format, product.getName())),
                 this::onStatusUpdateFailed);
     }
 
     private void markWasted(Product product) {
-        ProductRepository.markWastedAsync(this, product.getId(), getString(R.string.note_marked_from_inventory),
+        viewModel.markWasted(product.getId(), getString(R.string.note_marked_from_inventory),
                 updated -> onStatusUpdated(updated, getString(R.string.toast_mark_wasted_format, product.getName())),
                 this::onStatusUpdateFailed);
     }
 
     private void markDonated(Product product) {
-        ProductRepository.markDonatedAsync(this, product.getId(), getString(R.string.note_marked_from_inventory),
+        viewModel.markDonated(product.getId(), getString(R.string.note_marked_from_inventory),
                 updated -> onStatusUpdated(updated, getString(R.string.toast_mark_donated_format, product.getName())),
                 this::onStatusUpdateFailed);
     }
@@ -481,7 +431,7 @@ public class InventoryActivity extends BaseActivity {
         if (Boolean.TRUE.equals(updated)) {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             ReminderScheduler.runSoon(this);
-            renderProducts();
+            viewModel.loadProducts();
         }
     }
 

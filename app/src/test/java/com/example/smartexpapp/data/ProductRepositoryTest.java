@@ -31,6 +31,7 @@ import static org.junit.Assert.assertTrue;
 @Config(sdk = 35)
 public class ProductRepositoryTest {
     private AppDatabase database;
+    private ProductRepository repository;
 
     @Before
     public void setUp() {
@@ -38,6 +39,7 @@ public class ProductRepositoryTest {
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase.class)
                 .allowMainThreadQueries()
                 .build();
+        repository = new ProductRepository(context, database);
     }
 
     @After
@@ -48,30 +50,30 @@ public class ProductRepositoryTest {
     @Test
     public void addReadUpdateAndDeleteProduct() {
         Product milk = product("milk-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 5);
-        ProductRepository.addProduct(database, milk);
+        repository.addProduct(milk);
 
-        List<Product> products = ProductRepository.getProducts(database);
+        List<Product> products = repository.getProducts();
         assertEquals(1, products.size());
         assertEquals("Milk", products.get(0).getName());
         assertEquals(LocalDataContract.STORAGE_REFRIGERATOR_ID, products.get(0).getStorageLocationId());
 
         Product updated = copyWithName(milk, "Organic Milk");
-        assertTrue(ProductRepository.updateProduct(database, updated));
-        assertEquals("Organic Milk", ProductRepository.getProductById(database, milk.getId()).getName());
+        assertTrue(repository.updateProduct(updated));
+        assertEquals("Organic Milk", repository.getProductById(milk.getId()).getName());
 
-        assertTrue(ProductRepository.deleteProduct(database, milk.getId()));
-        assertTrue(ProductRepository.getProducts(database).isEmpty());
-        assertNull(ProductRepository.getProductById(database, milk.getId()));
+        assertTrue(repository.deleteProduct(milk.getId()));
+        assertTrue(repository.getProducts().isEmpty());
+        assertNull(repository.getProductById(milk.getId()));
     }
 
     @Test
     public void getProductsReturnsActiveProductsSortedByExpiryDate() {
         Product far = product("far-id", "Pasta", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 30);
         Product soon = product("soon-id", "Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
-        ProductRepository.addProduct(database, far);
-        ProductRepository.addProduct(database, soon);
+        repository.addProduct(far);
+        repository.addProduct(soon);
 
-        List<Product> products = ProductRepository.getProducts(database);
+        List<Product> products = repository.getProducts();
 
         assertEquals(2, products.size());
         assertEquals("Yogurt", products.get(0).getName());
@@ -83,17 +85,17 @@ public class ProductRepositoryTest {
         Product yogurt = product("yogurt-id", "Greek Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
         Product peas = product("peas-id", "Frozen Peas", "Vegetables", LocalDataContract.STORAGE_FREEZE_NAME, 90);
         Product expired = product("bread-id", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, -1);
-        ProductRepository.addProduct(database, yogurt);
-        ProductRepository.addProduct(database, peas);
-        ProductRepository.addProduct(database, expired);
+        repository.addProduct(yogurt);
+        repository.addProduct(peas);
+        repository.addProduct(expired);
 
-        assertEquals(1, ProductRepository.search(database, "yogurt").size());
-        assertEquals(1, ProductRepository.filter(database, ProductStatus.ACTIVE, LocalDataContract.STORAGE_FREEZE_ID).size());
-        assertEquals("Bread", ProductRepository.getExpiredProducts(database).get(0).getName());
+        assertEquals(1, repository.search("yogurt").size());
+        assertEquals(1, repository.filter(ProductStatus.ACTIVE, LocalDataContract.STORAGE_FREEZE_ID).size());
+        assertEquals("Bread", repository.getExpiredProducts().get(0).getName());
 
         long start = startOfToday();
         long end = expiryMillisForOffset(3);
-        List<Product> expiringSoon = ProductRepository.getExpiringBetween(database, start, end);
+        List<Product> expiringSoon = repository.getExpiringBetween(start, end);
         assertEquals(1, expiringSoon.size());
         assertEquals("Greek Yogurt", expiringSoon.get(0).getName());
     }
@@ -103,12 +105,12 @@ public class ProductRepositoryTest {
         Product activeSoon = product("active-soon-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 1);
         Product activeLate = product("active-late-id", "Pasta", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 9);
         Product consumedSoon = product("consumed-soon-id", "Spinach", "Vegetables", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 1);
-        ProductRepository.addProduct(database, activeSoon);
-        ProductRepository.addProduct(database, activeLate);
-        ProductRepository.addProduct(database, consumedSoon);
-        ProductRepository.markConsumed(database, consumedSoon.getId(), "Used");
+        repository.addProduct(activeSoon);
+        repository.addProduct(activeLate);
+        repository.addProduct(consumedSoon);
+        repository.markConsumed(consumedSoon.getId(), "Used");
 
-        List<Product> expiring = ProductRepository.getExpiringBetween(database, startOfToday(), expiryMillisForOffset(3));
+        List<Product> expiring = repository.getExpiringBetween(startOfToday(), expiryMillisForOffset(3));
 
         assertEquals(1, expiring.size());
         assertEquals("Milk", expiring.get(0).getName());
@@ -117,14 +119,14 @@ public class ProductRepositoryTest {
     @Test
     public void markConsumedUpdatesStatusAndWritesInventoryAction() {
         Product yogurt = product("yogurt-id", "Greek Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
-        ProductRepository.addProduct(database, yogurt);
+        repository.addProduct(yogurt);
 
-        assertTrue(ProductRepository.markConsumed(database, yogurt.getId(), "Used in breakfast"));
+        assertTrue(repository.markConsumed(yogurt.getId(), "Used in breakfast"));
 
-        Product updated = ProductRepository.getProductById(database, yogurt.getId());
+        Product updated = repository.getProductById(yogurt.getId());
         assertNotNull(updated);
         assertEquals(ProductStatus.CONSUMED, updated.getStatus());
-        assertTrue(ProductRepository.getProducts(database).isEmpty());
+        assertTrue(repository.getProducts().isEmpty());
         assertEquals(1, database.inventoryActionDao().getForProduct(yogurt.getId()).size());
         assertEquals(ProductStatus.CONSUMED, database.inventoryActionDao().getForProduct(yogurt.getId()).get(0).actionType);
     }
@@ -134,15 +136,15 @@ public class ProductRepositoryTest {
         Product consumed = product("consumed-id", "Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
         Product donated = product("donated-id", "Beans", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 10);
         Product wasted = product("wasted-id", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 1);
-        ProductRepository.addProduct(database, consumed);
-        ProductRepository.addProduct(database, donated);
-        ProductRepository.addProduct(database, wasted);
+        repository.addProduct(consumed);
+        repository.addProduct(donated);
+        repository.addProduct(wasted);
 
-        ProductRepository.markConsumed(database, consumed.getId(), "Used");
-        ProductRepository.markDonated(database, donated.getId(), "Shared");
-        ProductRepository.markWasted(database, wasted.getId(), "Spoiled");
+        repository.markConsumed(consumed.getId(), "Used");
+        repository.markDonated(donated.getId(), "Shared");
+        repository.markWasted(wasted.getId(), "Spoiled");
 
-        assertEquals(2, ProductRepository.getWastePreventedCount(database));
+        assertEquals(2, repository.getWastePreventedCount());
     }
 
     @Test
@@ -151,13 +153,13 @@ public class ProductRepositoryTest {
         Product expired = product("expired-id", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, -1);
         Product safe = product("safe-id", "Pasta", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 20);
         Product consumed = product("consumed-id", "Spinach", "Vegetables", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
-        ProductRepository.addProduct(database, urgent);
-        ProductRepository.addProduct(database, expired);
-        ProductRepository.addProduct(database, safe);
-        ProductRepository.addProduct(database, consumed);
-        ProductRepository.markConsumed(database, consumed.getId(), "Used before expiry");
+        repository.addProduct(urgent);
+        repository.addProduct(expired);
+        repository.addProduct(safe);
+        repository.addProduct(consumed);
+        repository.markConsumed(consumed.getId(), "Used before expiry");
 
-        ProductRepository.DashboardSnapshot snapshot = ProductRepository.getDashboardSnapshot(database);
+        ProductRepository.DashboardSnapshot snapshot = repository.getDashboardSnapshot();
 
         assertEquals(3, snapshot.getTotalTracked());
         assertEquals(1, snapshot.getUrgentCount());
@@ -180,11 +182,11 @@ public class ProductRepositoryTest {
     @Test
     public void ensureLocalDefaultsPreservesExistingProducts() {
         Product custom = product("custom-id", "Custom Item", "General", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 7);
-        ProductRepository.addProduct(database, custom);
+        repository.addProduct(custom);
 
         ProductRepository.ensureLocalDefaults(database);
 
-        List<Product> products = ProductRepository.getProducts(database);
+        List<Product> products = repository.getProducts();
         assertEquals(1, products.size());
         assertEquals("Custom Item", products.get(0).getName());
     }
