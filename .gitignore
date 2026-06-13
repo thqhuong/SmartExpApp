@@ -13,6 +13,12 @@
 .externalNativeBuild
 .cxx
 local.properties
+/.idea/misc.xml
+
+
+# Ignore Wrangler cache and temporary files
+**/cloudflare-recipe-images/.wrangler/
+
 
 # --- Added NodeJS and Web Ignore Rules ---
 

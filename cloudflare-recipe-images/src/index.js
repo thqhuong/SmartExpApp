@@ -231,7 +231,7 @@ async function handleGenerateRecipes(request, env) {
           content: recipePrompt
         }
       ],
-      temperature: 0.4,
+      temperature: 0.6,
       max_tokens: 1200,
       response_format: {
         type: "json_schema",
@@ -370,8 +370,12 @@ function buildRecipePrompt(userPrompt, languageTag, dietaryPreferences, products
     languageInstruction,
     requestInstruction,
     "Generate food recipes only. If the user request is unsafe or not food-related, return an empty recipes array.",
-    "Return exactly 3 practical recipe objects unless the request is unsafe.",
+    "Return exactly 3 distinct, diverse, and different practical recipe objects unless the request is unsafe (do not suggest duplicate or highly similar dishes).",
+    "Crucial: The 3 recipes must be highly diverse and distinct from each other in cooking method (e.g. one sauté/skillet, one soup/stew, one baked or salad) and cuisine style. Do not suggest variations of the same dish.",
     "Fields required: title, summary, usedIngredients, actionText, prepTime, difficulty, calories, smartTip, allIngredients, instructions.",
+    "prepTime must be a very short string indicating only duration, e.g., '20 min' or '1 hour' (no descriptive sentences).",
+    "difficulty must be strictly one of 'Easy', 'Medium', or 'Hard' (or Vietnamese equivalents).",
+    "calories must be a very short string strictly in the format 'XXX kcal', e.g., '450 kcal' (no descriptive sentences).",
     "usedIngredients must contain only inventory items that naturally fit; use an empty array when no inventory item fits.",
     "allIngredients must contain the complete ingredient list with quantities.",
     "instructions must contain concise step-by-step cooking instructions.",
@@ -433,14 +437,19 @@ function normalizeRecipe(item) {
   }
   const usedIngredients = normalizeStringArray(item.usedIngredients, 12);
   const allIngredients = normalizeStringArray(item.allIngredients, 24);
+  const prepTimeVal = cleanParam(item && item.prepTime, 30) || "20 min";
+  const prepTime = prepTimeVal.length > 12 ? "20 min" : prepTimeVal;
+  const difficulty = cleanParam(item && item.difficulty, 30) || "Medium";
+  const caloriesVal = cleanParam(item && item.calories, 30) || "400 kcal";
+  const calories = caloriesVal.length > 12 ? "400 kcal" : caloriesVal;
   return {
     title,
     summary: cleanParam(item.summary, 280) || "A practical recipe suggestion for your inventory.",
     usedIngredients,
     actionText: cleanParam(item.actionText, 40) || "View Recipe",
-    prepTime: cleanParam(item.prepTime, 30) || "20 min",
-    difficulty: cleanParam(item.difficulty, 30) || "Medium",
-    calories: cleanParam(item.calories, 30) || "400 kcal",
+    prepTime,
+    difficulty,
+    calories,
     smartTip: cleanParam(item.smartTip, 220),
     allIngredients: allIngredients.length ? allIngredients : usedIngredients,
     instructions: normalizeStringArray(item.instructions, 12)
