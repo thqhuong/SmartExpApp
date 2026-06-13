@@ -24,9 +24,8 @@ export default function AddProductScreen({ onAdd }: AddProductScreenProps) {
   };
   const [expiryDate, setExpiryDate] = useState(getTomorrowDateString());
 
-  // OCR/Barcode Scanner State
+  // OCR scanner state
   const [scanning, setScanning] = useState(false);
-  const [scanType, setScanType] = useState<'ocr' | 'barcode' | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
@@ -46,8 +45,7 @@ export default function AddProductScreen({ onAdd }: AddProductScreenProps) {
     onAdd(newProduct);
   };
 
-  const handleScan = (type: 'ocr' | 'barcode') => {
-    setScanType(type);
+  const handleScan = () => {
     setScanning(true);
     setScanSuccess(false);
 
@@ -55,22 +53,12 @@ export default function AddProductScreen({ onAdd }: AddProductScreenProps) {
     setTimeout(() => {
       setScanning(false);
       setScanSuccess(true);
-      if (type === 'ocr') {
-        const offset = Math.floor(Math.random() * 5) + 2; // 2 to 6 days
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + offset);
-        setExpiryDate(targetDate.toISOString().split('T')[0]);
-        // Fill name if empty
-        if (!name) setName('Scanned Product');
-      } else {
-        setName('Whole Wheat Sourdough Loaf');
-        setCategory('Pantry');
-        setUnit('1 Loaf');
-        setStorage(StorageMethod.ROOM_TEMP);
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + 5);
-        setExpiryDate(targetDate.toISOString().split('T')[0]);
-      }
+      const offset = Math.floor(Math.random() * 5) + 2; // 2 to 6 days
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + offset);
+      setExpiryDate(targetDate.toISOString().split('T')[0]);
+      // Fill name if empty
+      if (!name) setName('Scanned Product');
     }, 2000);
   };
 
@@ -78,29 +66,19 @@ export default function AddProductScreen({ onAdd }: AddProductScreenProps) {
     <div className="flex flex-col gap-6 pb-24">
       <div className="flex flex-col gap-1">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-50">Add New Product</h2>
-        <p className="text-sm text-slate-500 dark:text-zinc-400">Log new items manually or use quick scan tools</p>
+        <p className="text-sm text-slate-500 dark:text-zinc-400">Log new items manually or scan an expiry date</p>
       </div>
 
-      {/* Quick Scan Tools */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Quick Scan Tool */}
+      <div className="grid grid-cols-1 gap-4">
         <button
-          onClick={() => handleScan('ocr')}
+          onClick={handleScan}
           className="glass-card rounded-2xl py-4 px-3 flex flex-col items-center justify-center gap-2 border border-white/50 dark:border-white/10 hover:border-brand-primary/40 dark:hover:border-brand-primary/40 transition-all select-none cursor-pointer active:scale-95 group"
         >
           <span className="material-symbols-outlined text-3xl text-brand-primary group-hover:scale-105 transition-transform">
             photo_camera
           </span>
           <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">Scan Expiry Date</span>
-        </button>
-
-        <button
-          onClick={() => handleScan('barcode')}
-          className="glass-card rounded-2xl py-4 px-3 flex flex-col items-center justify-center gap-2 border border-white/50 dark:border-white/10 hover:border-brand-primary/40 dark:hover:border-brand-primary/40 transition-all select-none cursor-pointer active:scale-95 group"
-        >
-          <span className="material-symbols-outlined text-3xl text-blue-500 group-hover:scale-105 transition-transform">
-            barcode_scanner
-          </span>
-          <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">Scan Barcode</span>
         </button>
       </div>
 
@@ -110,7 +88,7 @@ export default function AddProductScreen({ onAdd }: AddProductScreenProps) {
           <div className="glass-card p-6 rounded-3xl w-80 flex flex-col items-center gap-4 text-center border border-white/40">
             <div className="w-16 h-16 rounded-full border-4 border-brand-primary border-t-transparent animate-spin flex items-center justify-center"></div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
-              {scanType === 'ocr' ? 'Analyzing Expiry Date...' : 'Looking up barcode...'}
+              Analyzing Expiry Date...
             </h3>
             <p className="text-xs text-slate-500">Hold steady while processing packing labels</p>
           </div>
@@ -122,7 +100,7 @@ export default function AddProductScreen({ onAdd }: AddProductScreenProps) {
         {scanSuccess && (
           <div className="flex items-center gap-2 text-xs font-bold text-emerald-500 bg-emerald-500/10 px-4 py-2.5 rounded-xl border border-emerald-500/20 select-none">
             <span className="material-symbols-outlined text-sm">check_circle</span>
-            {scanType === 'ocr' ? 'OCR Date detected successfully!' : 'Barcode lookup complete!'}
+            OCR date detected successfully!
           </div>
         )}
 

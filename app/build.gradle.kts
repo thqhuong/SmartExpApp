@@ -10,11 +10,14 @@ val localProperties = Properties().apply {
         file.inputStream().use(::load)
     }
 }
-val geminiApiKey = providers.environmentVariable("GEMINI_API_KEY")
-    .orElse(localProperties.getProperty("GEMINI_API_KEY", ""))
+val aiWorkerUrl = providers.environmentVariable("AI_WORKER_URL")
+    .orElse(localProperties.getProperty("AI_WORKER_URL", ""))
     .get()
-val openRouterApiKey = providers.environmentVariable("OPENROUTER_API_KEY")
-    .orElse(localProperties.getProperty("OPENROUTER_API_KEY", ""))
+val recipeImageWorkerUrl = providers.environmentVariable("RECIPE_IMAGE_WORKER_URL")
+    .orElse(localProperties.getProperty("RECIPE_IMAGE_WORKER_URL", aiWorkerUrl))
+    .get()
+val productParserWorkerUrl = providers.environmentVariable("PRODUCT_PARSER_WORKER_URL")
+    .orElse(localProperties.getProperty("PRODUCT_PARSER_WORKER_URL", if (aiWorkerUrl.isNotBlank()) aiWorkerUrl else recipeImageWorkerUrl))
     .get()
 
 android {
@@ -31,10 +34,9 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "GEMINI_API_KEY", "\"${geminiApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
-        buildConfigField("String", "GEMINI_MODEL", "\"gemini-3.1-flash-lite\"")
-        buildConfigField("String", "OPENROUTER_API_KEY", "\"${openRouterApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
-        buildConfigField("String", "OPENROUTER_IMAGE_MODEL", "\"black-forest-labs/flux.2-klein-4b\"")
+        buildConfigField("String", "AI_WORKER_URL", "\"${aiWorkerUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField("String", "RECIPE_IMAGE_WORKER_URL", "\"${recipeImageWorkerUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField("String", "PRODUCT_PARSER_WORKER_URL", "\"${productParserWorkerUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {

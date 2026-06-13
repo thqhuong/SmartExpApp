@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="add_product_progress_format">Thêm sản phẩm (%1$d/%2$d)</string>
+    <string name="skip_label">Bỏ qua</string>
+    <string name="smart_add_item_skipped">Đã bỏ qua món Thêm thông minh.</string>
     <string name="app_name">SmartExpApp</string>
     <string name="search_hint">Tìm sản phẩm...</string>
     <string name="toggle_theme">Chuyển giao diện sáng/tối</string>
@@ -99,12 +102,12 @@
     <string name="settings_local_mode">Chế độ chỉ lưu cục bộ</string>
     <string name="recipe_details_title">Chi tiết công thức</string>
     <string name="difficulty_easy_uppercase">DỄ</string>
-    <string name="gemini_smart_tip">Mẹo thông minh Gemini</string>
+    <string name="gemini_smart_tip">Mẹo thông minh AI</string>
     <string name="no_recommendations">Chưa có gợi ý chống lãng phí.</string>
     <string name="label_ingredients">Nguyên liệu</string>
     <string name="label_instructions">Cách làm</string>
     <string name="smart_recipe_assistant">Trợ lý công thức thông minh</string>
-    <string name="recipes_intro_desc">Hỏi bằng giọng nói hoặc văn bản. Gemini được dùng khi đã cấu hình; gợi ý cục bộ vẫn hoạt động ngoại tuyến.</string>
+    <string name="recipes_intro_desc">Hỏi bằng giọng nói hoặc văn bản. Cloudflare AI được dùng khi đã cấu hình; gợi ý cục bộ vẫn hoạt động ngoại tuyến.</string>
     <string name="ask_by_text">Hỏi bằng văn bản</string>
     <string name="smart_recipes_title">Công thức thông minh</string>
     <string name="badge_use_soon">Dùng sớm nhé!</string>
@@ -124,7 +127,7 @@
     <string name="recipe_suggestions_desc">Ý tưởng món ăn hiển thị trong trợ lý và luồng kho, không gửi thành cảnh báo riêng.</string>
     <string name="ai_fallback">Dự phòng AI</string>
     <string name="automatic_label">Tự động</string>
-    <string name="ai_fallback_desc">Nếu Gemini không khả dụng hoặc chưa cấu hình, SmartExp vẫn dùng gợi ý cục bộ.</string>
+    <string name="ai_fallback_desc">Nếu Cloudflare AI không khả dụng hoặc chưa cấu hình, SmartExp vẫn dùng gợi ý cục bộ.</string>
     <string name="reminder_source_desc">Nhắc hết hạn được xử lý cục bộ từ cơ sở dữ liệu Room của kho.</string>
     <string name="urgent_attention">CẦN CHÚ Ý GẤP</string>
     <string name="items_expiring_soon_label">Món sắp hết hạn</string>
@@ -221,6 +224,12 @@
     <string name="category_rename_error">Không thể đổi tên danh mục.</string>
     <string name="category_delete_error">Không thể xóa danh mục.</string>
     <string name="category_load_error">Không thể tải danh mục.</string>
+    <string name="category_builtin_cannot_edit_format">\"%1$s\" là danh mục mặc định</string>
+    <string name="category_builtin_cannot_delete_format">\"%1$s\" là danh mục mặc định</string>
+    <string name="category_already_exists_format">Danh mục \"%1$s\" đã tồn tại</string>
+    <string name="category_delete_message_with_products">Sản phẩm trong danh mục này sẽ được chuyển sang \"Chung\".</string>
+    <string name="category_delete_message_empty">Bạn có chắc muốn xóa danh mục này?</string>
+    <string name="edit_photo_in_add_screen">Chỉnh sửa ảnh trong màn hình thêm sản phẩm</string>
     <string name="product_not_found">Không tìm thấy sản phẩm</string>
     <string name="product_save_error">Không thể lưu sản phẩm.</string>
     <string name="product_added_format">Đã thêm %1$s.</string>
@@ -230,7 +239,7 @@
     <string name="settings_storage_title">Tùy chọn bảo quản</string>
     <string name="settings_storage_desc">Vị trí và danh mục mặc định</string>
     <string name="settings_dietary_title">Tùy chọn ăn uống</string>
-    <string name="settings_dietary_desc">Dẫn hướng công thức cục bộ và Gemini</string>
+    <string name="settings_dietary_desc">Dẫn hướng công thức cục bộ và AI</string>
     <string name="settings_profile_title">Hồ sơ cục bộ</string>
     <string name="settings_profile_desc">Hồ sơ và dữ liệu chỉ trên thiết bị</string>
     <string name="settings_help_title">Trợ giúp &amp; hỗ trợ</string>

@@ -69,6 +69,7 @@ public class AddProductActivity extends BaseActivity {
     private String selectedCategory = "General";
     private TextView expiryDateInput;
     private MaterialButton submitButton;
+    private MaterialButton skipSmartDraftButton;
     private TextView titleText;
     private TextView subtitleText;
     private ImageView productPhoto;
@@ -88,6 +89,8 @@ public class AddProductActivity extends BaseActivity {
     private final Set<String> pendingCategories = new HashSet<>();
     private android.app.Dialog manageDialog;
     private final List<ProductDraft> pendingSmartDrafts = new ArrayList<>();
+    private int smartDraftTotalCount;
+    private int smartDraftCurrentIndex;
 
     private final ActivityResultLauncher<String> pickPhotoLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), this::onPhotoPicked);
@@ -125,6 +128,7 @@ public class AddProductActivity extends BaseActivity {
         btnManageCategories = findViewById(R.id.btnManageCategories);
         expiryDateInput = findViewById(R.id.expiryDateInput);
         submitButton = findViewById(R.id.addProductButton);
+        skipSmartDraftButton = findViewById(R.id.skipSmartDraftButton);
         titleText = findViewById(R.id.addProductTitle);
         subtitleText = findViewById(R.id.addProductSubtitle);
         productPhoto = findViewById(R.id.productPhoto);
@@ -148,6 +152,7 @@ public class AddProductActivity extends BaseActivity {
         setupStorageOptions();
         expiryDateInput.setOnClickListener(v -> showDatePicker());
         submitButton.setOnClickListener(v -> submitProduct());
+        skipSmartDraftButton.setOnClickListener(v -> skipCurrentSmartDraft());
 
         if (editingProductId != null) {
             populateForEdit(editingProductId);
@@ -192,7 +197,7 @@ public class AddProductActivity extends BaseActivity {
 
     private void parseSmartAddDraft(String input) {
         Toast.makeText(this, R.string.smart_add_preparing, Toast.LENGTH_SHORT).show();
-        AgentRepository.parseProductDraftsAsync(input, this::showSmartDraftConfirmation);
+        AgentRepository.parseProductDraftsAsync(this, input, this::showSmartDraftConfirmation);
     }
 
     private void showSmartDraftConfirmation(List<ProductDraft> drafts) {
@@ -250,12 +255,16 @@ public class AddProductActivity extends BaseActivity {
 
     private void applySmartDraft(ProductDraft draft) {
         pendingSmartDrafts.clear();
+        smartDraftTotalCount = 0;
+        smartDraftCurrentIndex = 0;
         resetFormForSmartDraft();
         applyDraftFields(draft, true);
     }
 
     private void applySmartDraftBatch(List<ProductDraft> drafts) {
         pendingSmartDrafts.clear();
+        smartDraftTotalCount = drafts.size();
+        smartDraftCurrentIndex = 1;
         if (drafts.size() > 1) {
             pendingSmartDrafts.addAll(drafts.subList(1, drafts.size()));
         }
@@ -379,7 +388,7 @@ public class AddProductActivity extends BaseActivity {
     private void handleOcrText(String rawText) {
         Toast.makeText(this, R.string.ocr_preparing_draft, Toast.LENGTH_SHORT).show();
         List<DateCandidate> detectedDates = DateParser.extractDateCandidates(rawText);
-        AgentRepository.parseProductDraftAsync(rawText, draft -> {
+        AgentRepository.parseProductDraftAsync(this, rawText, draft -> {
             if (detectedDates.isEmpty()) {
                 showOcrDraftWithoutDateDialog(draft, rawText);
             } else {
@@ -912,10 +921,12 @@ public class AddProductActivity extends BaseActivity {
         final String finalQuantity = quantity;
         String unit = unitSpinner.getSelectedItem().toString();
         submitButton.setEnabled(false);
+        skipSmartDraftButton.setEnabled(false);
         if (editingProductId != null) {
             ProductRepository.getProductByIdAsync(this, editingProductId, existing -> {
                 if (existing == null) {
                     submitButton.setEnabled(true);
+                    skipSmartDraftButton.setEnabled(true);
                     Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -944,6 +955,7 @@ public class AddProductActivity extends BaseActivity {
                         afterProductSaved(updatedProduct, getString(R.string.product_updated));
                     } else {
                         submitButton.setEnabled(true);
+                        skipSmartDraftButton.setEnabled(true);
                         Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
                     }
                 }, error -> showSaveFailed());
@@ -979,14 +991,11 @@ public class AddProductActivity extends BaseActivity {
         ReminderScheduler.scheduleDaily(this);
         ReminderScheduler.runSoon(this);
 
-        if (!pendingSmartDrafts.isEmpty()) {
-            ProductDraft next = pendingSmartDrafts.remove(0);
-            resetFormForSmartDraft();
-            applyDraftFields(next, true);
-            Toast.makeText(this, R.string.smart_add_next_ready, Toast.LENGTH_LONG).show();
+        if (moveToNextSmartDraft(true)) {
             return;
         }
 
+        clearSmartDraftBatch();
         saveCompleted = true;
         Intent inventoryIntent = new Intent(this, InventoryActivity.class);
         inventoryIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -994,6 +1003,45 @@ public class AddProductActivity extends BaseActivity {
         startActivity(inventoryIntent);
         overridePendingTransition(0, 0);
         finish();
+    }
+
+    private boolean moveToNextSmartDraft(boolean showToast) {
+        if (pendingSmartDrafts.isEmpty()) {
+            return false;
+        }
+        ProductDraft next = pendingSmartDrafts.remove(0);
+        smartDraftCurrentIndex++;
+        resetFormForSmartDraft();
+        applyDraftFields(next, true);
+        updateSmartDraftActions();
+        if (showToast) {
+            Toast.makeText(this, R.string.smart_add_next_ready, Toast.LENGTH_LONG).show();
+        }
+        return true;
+    }
+
+    private void skipCurrentSmartDraft() {
+        deleteUnsavedSelectedPhoto(selectedPhotoPath);
+        if (moveToNextSmartDraft(false)) {
+            Toast.makeText(this, R.string.smart_add_item_skipped, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        clearSmartDraftBatch();
+        Toast.makeText(this, R.string.smart_add_item_skipped, Toast.LENGTH_SHORT).show();
+        saveCompleted = true;
+        Intent inventoryIntent = new Intent(this, InventoryActivity.class);
+        inventoryIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        inventoryIntent.putExtra(InventoryActivity.EXTRA_RESET_FILTERS, true);
+        startActivity(inventoryIntent);
+        overridePendingTransition(0, 0);
+        finish();
+    }
+
+    private void clearSmartDraftBatch() {
+        pendingSmartDrafts.clear();
+        smartDraftTotalCount = 0;
+        smartDraftCurrentIndex = 0;
+        updateSmartDraftActions();
     }
 
     private void resetFormForSmartDraft() {
@@ -1012,13 +1060,25 @@ public class AddProductActivity extends BaseActivity {
         expiryDateInput.setTextColor(getColor(R.color.smart_secondary));
         titleText.setText(R.string.add_product);
         subtitleText.setText(R.string.add_product_subtitle);
-        submitButton.setText(R.string.add_product);
         submitButton.setEnabled(true);
         submitButton.setIconResource(android.R.drawable.ic_menu_add);
+        skipSmartDraftButton.setEnabled(true);
+        updateSmartDraftActions();
+    }
+
+    private void updateSmartDraftActions() {
+        if (smartDraftTotalCount > 1 && smartDraftCurrentIndex > 0) {
+            skipSmartDraftButton.setVisibility(View.VISIBLE);
+            submitButton.setText(getString(R.string.add_product_progress_format, smartDraftCurrentIndex, smartDraftTotalCount));
+        } else {
+            skipSmartDraftButton.setVisibility(View.GONE);
+            submitButton.setText(editingProductId == null ? R.string.add_product : R.string.edit_product);
+        }
     }
 
     private void showSaveFailed() {
         submitButton.setEnabled(true);
+        skipSmartDraftButton.setEnabled(true);
         Toast.makeText(this, R.string.product_save_error, Toast.LENGTH_SHORT).show();
     }
 

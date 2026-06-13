@@ -147,7 +147,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="Gemini AI"
+                        android:text="Cloudflare AI"
                         android:textColor="@color/smart_on_surface"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -329,7 +329,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Explore documentation to master inventory tracking with Gemini AI."
+                    android:text="Explore documentation to master inventory tracking with Cloudflare AI."
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
