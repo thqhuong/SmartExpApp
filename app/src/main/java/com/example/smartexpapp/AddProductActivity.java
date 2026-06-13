@@ -37,6 +37,7 @@ import com.example.smartexpapp.util.DateParser;
 import com.example.smartexpapp.util.DateParser.DateCandidate;
 import com.example.smartexpapp.util.ImageLoader;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
@@ -85,6 +86,7 @@ public class AddProductActivity extends BaseActivity {
     private boolean userSelectedStorage;
     private boolean saveCompleted;
     private final Set<String> pendingCategories = new HashSet<>();
+    private android.app.Dialog manageDialog;
     private final List<ProductDraft> pendingSmartDrafts = new ArrayList<>();
 
     private final ActivityResultLauncher<String> pickPhotoLauncher =
@@ -267,7 +269,7 @@ public class AddProductActivity extends BaseActivity {
         quantityInput.setText(draft.getQuantity());
         selectSpinnerValue(unitSpinner, draft.getUnit());
 
-        selectedCategory = draft.getCategory();
+        selectedCategory = canonicalCategory(draft.getCategory());
         if (!isBuiltIn(selectedCategory)) {
             pendingCategories.add(selectedCategory);
         }
@@ -539,7 +541,7 @@ public class AddProductActivity extends BaseActivity {
         Set<String> existingCustom = new HashSet<>();
         existingCustom.addAll(pendingCategories);
         for (Product p : allProducts) {
-            String cat = p.getCategory();
+            String cat = canonicalCategory(p.getCategory());
             if (cat != null && !isBuiltIn(cat) && !cat.trim().isEmpty()) {
                 existingCustom.add(cat);
             }
@@ -548,7 +550,9 @@ public class AddProductActivity extends BaseActivity {
         List<String> items = new ArrayList<>();
         items.add(getString(R.string.cat_dairy)); items.add(getString(R.string.cat_general)); items.add(getString(R.string.cat_meat));
         items.add(getString(R.string.cat_pantry)); items.add(getString(R.string.cat_produce)); items.add(getString(R.string.cat_vegetables));
-        items.addAll(existingCustom);
+        for (String custom : existingCustom) {
+            items.add(custom);
+        }
         Collections.sort(items);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
@@ -556,13 +560,21 @@ public class AddProductActivity extends BaseActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         categorySpinner.setAdapter(adapter);
 
-        int pos = items.indexOf(selectedCategory);
+        String canonicalSelected = canonicalCategory(selectedCategory);
+        int pos = -1;
+        for (int i = 0; i < items.size(); i++) {
+            if (canonicalCategory(items.get(i)).equals(canonicalSelected)) {
+                pos = i;
+                break;
+            }
+        }
         if (pos >= 0) categorySpinner.setSelection(pos);
 
         categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedCategory = parent.getItemAtPosition(position).toString();
+                String display = parent.getItemAtPosition(position).toString();
+                selectedCategory = canonicalCategory(display);
             }
             @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
@@ -575,9 +587,14 @@ public class AddProductActivity extends BaseActivity {
 
     private void showManageCategoriesDialog(List<Product> all) {
         Set<String> customSet = new HashSet<>();
-        customSet.addAll(pendingCategories);
+        for (String pc : pendingCategories) {
+            String canonicalPc = canonicalCategory(pc);
+            if (!isBuiltIn(canonicalPc)) {
+                customSet.add(canonicalPc);
+            }
+        }
         for (Product p : all) {
-            String cat = p.getCategory();
+            String cat = canonicalCategory(p.getCategory());
             if (cat != null && !isBuiltIn(cat) && !cat.trim().isEmpty()) {
                 customSet.add(cat);
             }
@@ -586,138 +603,97 @@ public class AddProductActivity extends BaseActivity {
         List<String> allCats = new ArrayList<>();
         allCats.add(getString(R.string.cat_dairy)); allCats.add(getString(R.string.cat_general)); allCats.add(getString(R.string.cat_meat));
         allCats.add(getString(R.string.cat_pantry)); allCats.add(getString(R.string.cat_produce)); allCats.add(getString(R.string.cat_vegetables));
-        allCats.addAll(customSet);
+        for (String custom : customSet) {
+            allCats.add(custom);
+        }
         Collections.sort(allCats);
 
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        int pad16 = dpToPx(16);
-        int pad8 = dpToPx(8);
-        content.setPadding(pad16, pad8, pad16, pad8);
-
-        int[] editColors = {android.R.drawable.ic_menu_edit, R.color.smart_primary_container};
-        int[] deleteColors = {android.R.drawable.ic_menu_delete, R.color.smart_error};
-
-        android.app.AlertDialog[] manageDialogHolder = new android.app.AlertDialog[1];
+        View content = getLayoutInflater().inflate(R.layout.dialog_manage_categories, null);
+        LinearLayout categoryList = content.findViewById(R.id.categoryList);
+        MaterialButton btnAdd = content.findViewById(R.id.btnAddCategory);
 
         for (String cat : allCats) {
-            boolean builtin = isBuiltIn(cat);
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dpToPx(56)));
-            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            String canonicalCat = canonicalCategory(cat);
+            boolean builtin = isBuiltIn(canonicalCat);
+            View row = getLayoutInflater().inflate(R.layout.item_manage_category, categoryList, false);
 
-            View dot = new View(this);
-            int dotSize = dpToPx(12);
-            dot.setLayoutParams(new LinearLayout.LayoutParams(dotSize, dotSize));
-            dot.setBackgroundResource(R.drawable.bg_category_dot);
-            dot.getBackground().setTint(getColor(CategoryColorHelper.getColor(cat)));
+            View dot = row.findViewById(R.id.categoryDot);
+            dot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, cat)));
 
-            TextView name = new TextView(this);
+            TextView name = row.findViewById(R.id.categoryName);
             name.setText(cat);
-            name.setTextSize(16f);
-            name.setLayoutParams(new LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
             name.setTextColor(getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
-            name.setPadding(dpToPx(12), 0, 0, 0);
 
-            row.addView(dot);
-            row.addView(name);
+            MaterialButton editBtn = row.findViewById(R.id.btnEditCategory);
+            MaterialButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
 
-            if (!builtin) {
-                ImageButton editBtn = new ImageButton(this);
-                int btnSize = dpToPx(48);
-                editBtn.setLayoutParams(new LinearLayout.LayoutParams(btnSize, btnSize));
-                editBtn.setPadding(pad8, pad8, pad8, pad8);
-                editBtn.setImageResource(editColors[0]);
-                editBtn.setContentDescription(getString(R.string.category_edit_desc_format, cat));
-                editBtn.setScaleType(ImageView.ScaleType.CENTER);
-                editBtn.setColorFilter(getColor(editColors[1]), android.graphics.PorterDuff.Mode.SRC_IN);
-                editBtn.setOnClickListener(v -> {
-                    manageDialogHolder[0].dismiss();
-                    showRenameCategoryDialog(cat, () -> showManageCategoriesDialog());
-                });
-
-                ImageButton deleteBtn = new ImageButton(this);
-                deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(btnSize, btnSize));
-                deleteBtn.setPadding(pad8, pad8, pad8, pad8);
-                deleteBtn.setImageResource(deleteColors[0]);
-                deleteBtn.setContentDescription(getString(R.string.category_delete_desc_format, cat));
-                deleteBtn.setScaleType(ImageView.ScaleType.CENTER);
-                deleteBtn.setColorFilter(getColor(deleteColors[1]), android.graphics.PorterDuff.Mode.SRC_IN);
-                deleteBtn.setOnClickListener(v -> {
-                    manageDialogHolder[0].dismiss();
-                    showDeleteCategoryDialog(cat, () -> showManageCategoriesDialog());
-                });
-
-                row.addView(editBtn);
-                row.addView(deleteBtn);
+            if (builtin) {
+                editBtn.setVisibility(View.GONE);
+                deleteBtn.setVisibility(View.GONE);
+            } else {
+                editBtn.setVisibility(View.VISIBLE);
+                deleteBtn.setVisibility(View.VISIBLE);
+                editBtn.setOnClickListener(v -> showRenameCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
+                deleteBtn.setOnClickListener(v -> showDeleteCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
             }
-            content.addView(row);
+
+            categoryList.addView(row);
         }
 
-        TextView addBtn = new TextView(this);
-        addBtn.setText(R.string.category_add_button);
-        addBtn.setTextColor(getColor(R.color.smart_primary_container));
-        addBtn.setTextSize(16f);
-        addBtn.setPadding(pad16, dpToPx(12), pad16, dpToPx(12));
-        addBtn.setGravity(android.view.Gravity.CENTER);
-        addBtn.setOnClickListener(v -> {
-            manageDialogHolder[0].dismiss();
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            final EditText input = new EditText(this);
-            input.setHint(R.string.category_name_hint);
-            input.setPadding(pad16, dpToPx(8), pad16, dpToPx(8));
-            builder.setTitle(R.string.category_add_title)
-                    .setView(input)
+        btnAdd.setOnClickListener(v -> {
+            View inputLayout = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
+            EditText input = inputLayout.findViewById(android.R.id.edit);
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.category_add_title)
+                    .setView(inputLayout)
                     .setPositiveButton(R.string.add_label, (d, w) -> {
                         String newCat = input.getText().toString().trim();
-                        if (!newCat.isEmpty() && !isBuiltIn(newCat)) {
-                            pendingCategories.add(newCat);
-                            selectedCategory = newCat;
+                        String canonicalNew = canonicalCategory(newCat);
+                        if (!newCat.isEmpty() && !isBuiltIn(canonicalNew)) {
+                            pendingCategories.add(canonicalNew);
+                            selectedCategory = canonicalNew;
                             refreshCategorySpinner();
                             showManageCategoriesDialog();
                         }
                     })
-                    .setNegativeButton(R.string.cancel, (d, w) -> showManageCategoriesDialog())
+                    .setNegativeButton(R.string.cancel, null)
                     .show();
         });
-        content.addView(addBtn);
 
-        manageDialogHolder[0] = new AlertDialog.Builder(this)
+        if (manageDialog != null && manageDialog.isShowing()) {
+            manageDialog.dismiss();
+        }
+        manageDialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.manage_categories_title)
                 .setView(content)
-                .setNegativeButton(R.string.close_label, null)
+                .setPositiveButton(R.string.close_label, null)
                 .show();
     }
 
     private void showRenameCategoryDialog(String oldName, Runnable onDone) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        final EditText input = new EditText(this);
+        View inputLayout = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
+        EditText input = inputLayout.findViewById(android.R.id.edit);
         input.setText(oldName);
         input.setSelection(oldName.length());
-        int pad16 = dpToPx(16);
-        input.setPadding(pad16, dpToPx(8), pad16, dpToPx(8));
-        builder.setTitle(R.string.rename_category_title)
-                .setView(input)
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.rename_category_title)
+                .setView(inputLayout)
                 .setPositiveButton(R.string.rename_label, (d, w) -> {
                     String newName = input.getText().toString().trim();
-                    if (newName.isEmpty() || isBuiltIn(newName) || newName.equals(oldName)) {
-                        onDone.run();
+                    String canonicalNew = canonicalCategory(newName);
+                    if (newName.isEmpty() || isBuiltIn(canonicalNew) || canonicalNew.equals(oldName)) {
                         return;
                     }
                     ProductRepository.getProductsAsync(this, all -> {
                         for (Product p : all) {
-                            if (oldName.equals(p.getCategory())) {
-                                ProductRepository.updateProductAsync(this, copyWithCategory(p, newName), null,
+                            if (oldName.equals(canonicalCategory(p.getCategory()))) {
+                                ProductRepository.updateProductAsync(this, copyWithCategory(p, canonicalNew), null,
                                         error -> Toast.makeText(this, R.string.category_product_update_error, Toast.LENGTH_SHORT).show());
                             }
                         }
                         pendingCategories.remove(oldName);
-                        pendingCategories.add(newName);
-                        if (selectedCategory.equals(oldName)) selectedCategory = newName;
+                        pendingCategories.add(canonicalNew);
+                        if (canonicalCategory(selectedCategory).equals(oldName)) selectedCategory = canonicalNew;
                         refreshCategorySpinner();
                         onDone.run();
                     }, error -> {
@@ -725,24 +701,24 @@ public class AddProductActivity extends BaseActivity {
                         onDone.run();
                     });
                 })
-                .setNegativeButton(R.string.cancel, (d, w) -> onDone.run())
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
     private void showDeleteCategoryDialog(String catToDelete, Runnable onDone) {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.delete_category_title_format, catToDelete))
                 .setMessage(R.string.category_delete_message)
                 .setPositiveButton(R.string.delete_confirm, (d, w) -> {
                     pendingCategories.remove(catToDelete);
                     ProductRepository.getProductsAsync(this, all -> {
                         for (Product p : all) {
-                            if (catToDelete.equals(p.getCategory()) && !p.getId().equals(editingProductId)) {
-                                ProductRepository.updateProductAsync(this, copyWithCategory(p, getString(R.string.cat_general)), null,
+                            if (catToDelete.equals(canonicalCategory(p.getCategory())) && !p.getId().equals(editingProductId)) {
+                                ProductRepository.updateProductAsync(this, copyWithCategory(p, "General"), null,
                                         error -> Toast.makeText(this, R.string.category_product_update_error, Toast.LENGTH_SHORT).show());
                             }
                         }
-                        selectedCategory = getString(R.string.cat_general);
+                        selectedCategory = "General";
                         refreshCategorySpinner();
                         onDone.run();
                     }, error -> {
@@ -750,7 +726,7 @@ public class AddProductActivity extends BaseActivity {
                         onDone.run();
                     });
                 })
-                .setNegativeButton(R.string.cancel, (d, w) -> onDone.run())
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
@@ -774,6 +750,19 @@ public class AddProductActivity extends BaseActivity {
         return "Dairy".equals(category) || "General".equals(category)
                 || "Meat".equals(category) || "Pantry".equals(category)
                 || "Produce".equals(category) || "Vegetables".equals(category);
+    }
+
+    private String canonicalCategory(String category) {
+        if (category == null) return null;
+        String[] builtinCanonical = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
+        int[] builtinResIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
+                R.string.cat_pantry, R.string.cat_produce, R.string.cat_vegetables};
+        for (int i = 0; i < builtinCanonical.length; i++) {
+            if (builtinCanonical[i].equals(category) || getString(builtinResIds[i]).equals(category)) {
+                return builtinCanonical[i];
+            }
+        }
+        return category;
     }
 
     private void setupStorageOptions() {
@@ -876,8 +865,8 @@ public class AddProductActivity extends BaseActivity {
         selectSpinnerValue(unitSpinner, product.getUnit());
 
         selectedCategory = product.getCategory() == null || product.getCategory().trim().isEmpty()
-                ? getString(R.string.cat_general)
-                : product.getCategory();
+                ? "General"
+                : canonicalCategory(product.getCategory());
         refreshCategorySpinner();
 
         String imgPath = product.getImageUrl();
@@ -916,7 +905,7 @@ public class AddProductActivity extends BaseActivity {
         String storage = selectedStorage();
         int icon = iconForStorage(storage);
 
-        String category = selectedCategory == null || selectedCategory.isEmpty() ? getString(R.string.cat_general) : selectedCategory;
+        String category = selectedCategory == null || selectedCategory.isEmpty() ? "General" : canonicalCategory(selectedCategory);
 
         String quantity = quantityInput.getText().toString().trim();
         if (quantity.isEmpty()) quantity = getString(R.string.quantity_default);
@@ -1015,7 +1004,7 @@ public class AddProductActivity extends BaseActivity {
         productNameInput.setText("");
         quantityInput.setText(R.string.quantity_default);
         selectSpinnerValue(unitSpinner, "pcs");
-        selectedCategory = getString(R.string.cat_general);
+        selectedCategory = "General";
         refreshCategorySpinner();
         selectStorage(R.id.storageRoom);
         hasSelectedDate = false;
