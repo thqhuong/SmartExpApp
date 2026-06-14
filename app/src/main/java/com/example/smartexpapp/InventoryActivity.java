@@ -67,7 +67,8 @@ public class InventoryActivity extends BaseActivity {
             Log.e(TAG, "Error checking Firebase Auth state", e);
         }
 
-        boolean guestModeEnabled = getSharedPreferences("auth_prefs", MODE_PRIVATE).getBoolean("guest_mode_enabled", false);
+        boolean guestModeEnabled = getSharedPreferences("auth_prefs", MODE_PRIVATE).getBoolean("guest_mode_enabled",
+                false);
         if (!isAuthenticated && !guestModeEnabled) {
             Intent intent = new Intent(this, SignInActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

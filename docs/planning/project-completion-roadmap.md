@@ -443,10 +443,9 @@ Use existing planned work areas from `docs/planning/general-route.md`, but keep 
 2. `03-inventory-crud`: RecyclerView, status actions, category/storage cleanup, validation.
 3. `04-expiry-reminders`: notifications, settings persistence, scheduling.
 4. `05-ocr-expiry-scan`: OCR UX, scan metadata, image handling.
-5. `06-barcode-product-lookup`: [CANCELLED]
-6. `07-agent-assistant`: typed agent, recipe cache, optional backend proxy.
-7. `08-stats-settings`: computed stats, account/settings honesty, export/delete local data.
-8. `09-testing-docs-submission`: UI tests, CI, screenshots, README, release checklist.
+5. `07-agent-assistant`: typed agent, recipe cache, optional backend proxy.
+6. `08-stats-settings`: computed stats, account/settings honesty, export/delete local data.
+7. `09-testing-docs-submission`: UI tests, CI, screenshots, README, release checklist.
 
 ## 8. Definition of Done for the Project
 
