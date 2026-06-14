@@ -58,6 +58,7 @@ public class RecipesActivity extends BaseActivity {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private TextToSpeech textToSpeech;
     private boolean ttsReady;
+    private boolean imageRefreshInFlight;
     private TextView recipeStateText;
     private ChipGroup recipePromptChipGroup;
 
@@ -225,6 +226,8 @@ public class RecipesActivity extends BaseActivity {
                 mainHandler.post(() -> {
                     Toast.makeText(this, answer, Toast.LENGTH_LONG).show();
                     speak(answer);
+                    defaultSessionRecipeResult = result;
+                    saveRecipeResultToPrefs(result);
                     renderRecipeResult(result);
                 });
             } catch (Exception error) {
@@ -267,18 +270,30 @@ public class RecipesActivity extends BaseActivity {
     }
 
     private void triggerRecipeGeneration() {
-        Toast.makeText(this, R.string.recipes_checking_inventory, Toast.LENGTH_SHORT).show();
-        setRecipeState(getString(R.string.recipes_loading), false);
+        triggerRecipeGeneration(true);
+    }
+
+    private void triggerRecipeGeneration(boolean showLoadingFeedback) {
+        if (showLoadingFeedback) {
+            Toast.makeText(this, R.string.recipes_checking_inventory, Toast.LENGTH_SHORT).show();
+            setRecipeState(getString(R.string.recipes_loading), false);
+        }
         executor.execute(() -> {
             try {
                 RecipeSuggestionResult result = AgentRepository.getRecipeSuggestionResult(this, "");
                 mainHandler.post(() -> {
+                    imageRefreshInFlight = false;
                     defaultSessionRecipeResult = result;
                     saveRecipeResultToPrefs(result);
                     renderRecipeResult(result);
                 });
             } catch (Exception error) {
-                mainHandler.post(() -> showRecipeLoadError());
+                mainHandler.post(() -> {
+                    imageRefreshInFlight = false;
+                    if (showLoadingFeedback) {
+                        showRecipeLoadError();
+                    }
+                });
             }
         });
     }
@@ -286,6 +301,7 @@ public class RecipesActivity extends BaseActivity {
     private void loadDefaultRecipesOncePerSession() {
         if (defaultSessionRecipeResult != null) {
             renderRecipeResult(defaultSessionRecipeResult);
+            refreshRecipesIfImagesMissing(defaultSessionRecipeResult);
             return;
         }
 
@@ -293,6 +309,7 @@ public class RecipesActivity extends BaseActivity {
         if (cached != null) {
             defaultSessionRecipeResult = cached;
             renderRecipeResult(cached);
+            refreshRecipesIfImagesMissing(cached);
             return;
         }
 
@@ -303,6 +320,19 @@ public class RecipesActivity extends BaseActivity {
 
         defaultSessionRecipeLoadAttempted = true;
         triggerRecipeGeneration();
+    }
+
+    private void refreshRecipesIfImagesMissing(RecipeSuggestionResult result) {
+        if (imageRefreshInFlight || result == null || BuildConfig.RECIPE_IMAGE_WORKER_URL.trim().isEmpty()) {
+            return;
+        }
+        for (Recipe recipe : result.getRecipes()) {
+            if (recipe.getImageUrl() == null || recipe.getImageUrl().trim().isEmpty()) {
+                imageRefreshInFlight = true;
+                triggerRecipeGeneration(false);
+                return;
+            }
+        }
     }
 
     private void saveRecipeResultToPrefs(RecipeSuggestionResult result) {
@@ -425,9 +455,21 @@ public class RecipesActivity extends BaseActivity {
 
     private void renderRecipeResult(RecipeSuggestionResult result) {
         setRecipeState(result.getStatusMessage(), result.isInventoryEmpty() || result.isLocalFallback());
+        ImageLoader.prefetch(this, recipeImageUrls(result.getRecipes()));
         ProductRepository.getProductsAsync(this,
                 products -> renderRecipes(result.getRecipes(), products),
                 error -> renderRecipes(result.getRecipes(), new ArrayList<>()));
+    }
+
+    private List<String> recipeImageUrls(List<Recipe> recipes) {
+        List<String> imageUrls = new ArrayList<>();
+        for (Recipe recipe : recipes) {
+            String imageUrl = recipe.getImageUrl();
+            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                imageUrls.add(imageUrl);
+            }
+        }
+        return imageUrls;
     }
 
     private void renderRecipes(List<Recipe> recipes, List<Product> products) {
@@ -472,7 +514,11 @@ public class RecipesActivity extends BaseActivity {
 
         TextView caloriesView = item.findViewById(R.id.recipeCardCalories);
         if (caloriesView != null) {
-            caloriesView.setText(recipe.getCalories().toUpperCase());
+            String cal = recipe.getCalories();
+            if (cal != null && cal.length() > 12) {
+                cal = "400 kcal";
+            }
+            caloriesView.setText(cal != null ? cal.toUpperCase() : "");
         }
 
         TextView difficultyView = item.findViewById(R.id.recipeCardDifficulty);
@@ -482,7 +528,11 @@ public class RecipesActivity extends BaseActivity {
 
         TextView prepTimeView = item.findViewById(R.id.recipeCardPrepTime);
         if (prepTimeView != null) {
-            prepTimeView.setText(recipe.getPrepTime());
+            String prep = recipe.getPrepTime();
+            if (prep != null && prep.length() > 12) {
+                prep = "20 min";
+            }
+            prepTimeView.setText(prep);
         }
 
         View ingredientsContainer = item.findViewById(R.id.recipeIngredientsContainer);

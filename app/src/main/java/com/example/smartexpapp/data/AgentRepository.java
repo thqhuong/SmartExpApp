@@ -3,7 +3,6 @@ package com.example.smartexpapp.data;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Base64;
 
 import com.example.smartexpapp.BuildConfig;
 import com.example.smartexpapp.R;
@@ -19,13 +18,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,17 +145,26 @@ public final class AgentRepository {
         parseProductDraftsAsync(input, drafts -> callback.onResult(drafts.get(0)));
     }
 
+    public static void parseProductDraftAsync(Context context, String input, ProductRepository.Callback<ProductDraft> callback) {
+        parseProductDraftsAsync(context, input, drafts -> callback.onResult(drafts.get(0)));
+    }
+
     public static void parseProductDraftsAsync(String input, ProductRepository.Callback<List<ProductDraft>> callback) {
+        parseProductDraftsAsync(null, input, callback);
+    }
+
+    public static void parseProductDraftsAsync(Context context, String input, ProductRepository.Callback<List<ProductDraft>> callback) {
         EXECUTOR.execute(() -> {
             List<ProductDraft> drafts = parseProductDrafts(input);
-            if (!BuildConfig.GEMINI_API_KEY.trim().isEmpty()) {
+            if (!BuildConfig.PRODUCT_PARSER_WORKER_URL.trim().isEmpty()) {
                 try {
-                    List<ProductDraft> geminiDrafts = generateGeminiProductDrafts(input, drafts);
-                    if (!geminiDrafts.isEmpty()) {
-                        drafts = geminiDrafts;
+                    String languageTag = context == null ? "en" : SettingsRepository.getSettings(context).getLanguageTag();
+                    List<ProductDraft> cloudflareDrafts = generateCloudflareProductDrafts(input, drafts, languageTag);
+                    if (!cloudflareDrafts.isEmpty()) {
+                        drafts = cloudflareDrafts;
                     }
                 } catch (Exception ignored) {
-                    // Local parsing keeps Smart Add usable without network, quota, or valid key setup.
+                    // Local parsing keeps Smart Add usable if Cloudflare is unavailable.
                 }
             }
             List<ProductDraft> result = drafts;
@@ -170,24 +179,25 @@ public final class AgentRepository {
     public static RecipeSuggestionResult getRecipeSuggestionResult(Context context, String userPrompt) {
         AppDatabase database = AppDatabase.getInstance(context);
         List<Product> products = ProductRepository.getProducts(context);
-        String dietaryPreferences = SettingsRepository.getSettings(database).getDietaryPreferences();
+        SettingsRepository.SettingsSnapshot settings = SettingsRepository.getSettings(database);
+        String dietaryPreferences = settings.getDietaryPreferences();
+        String languageTag = settings.getLanguageTag();
         List<Recipe> local = localRecipeSuggestions(products, dietaryPreferences);
         String prompt = userPrompt == null ? "" : userPrompt.trim();
         boolean inventoryEmpty = products.isEmpty();
 
-        if (!BuildConfig.GEMINI_API_KEY.trim().isEmpty()) {
+        String aiWorkerUrl = aiWorkerBaseUrl();
+        if (!aiWorkerUrl.isEmpty()) {
             try {
-                List<Recipe> remote = generateGeminiRecipes(products, prompt, dietaryPreferences);
+                List<Recipe> remote = generateCloudflareRecipes(aiWorkerUrl, products, prompt, dietaryPreferences, languageTag);
                 if (!remote.isEmpty()) {
                     remote = enrichRecipeImages(context, database, remote, products, dietaryPreferences);
-                    cacheRecipes(database, remote, "gemini");
+                    cacheRecipes(database, remote, "cloudflare");
                     saveAgentMessage(database, "user", prompt.isEmpty() ? "Suggest recipes" : prompt, relatedProductIds(products), prompt);
-                    saveAgentMessage(database, "agent", "Generated recipe suggestions from local inventory.", relatedProductIds(products), prompt);
+                    saveAgentMessage(database, "agent", "Generated recipe suggestions with Cloudflare Workers AI.", relatedProductIds(products), prompt);
                     return new RecipeSuggestionResult(
                             remote,
-                            inventoryEmpty
-                                    ? "Gemini is configured, but your local inventory is empty. Add products for tailored suggestions."
-                                    : recipeStatus(recipeGenerationStatus("Generated with Gemini using your local inventory.", remote), dietaryPreferences),
+                            recipeStatus(recipeGenerationStatus(remoteRecipeStatus(inventoryEmpty, !prompt.isEmpty(), languageTag), remote), dietaryPreferences),
                             false,
                             inventoryEmpty
                     );
@@ -201,11 +211,9 @@ public final class AgentRepository {
         cacheRecipes(database, local, "local");
         if (!prompt.isEmpty()) {
             saveAgentMessage(database, "user", prompt, relatedProductIds(products), prompt);
-            saveAgentMessage(database, "agent", localFallbackAnswer(products, prompt), relatedProductIds(products), prompt);
+            saveAgentMessage(database, "agent", localFallbackAnswer(products, prompt, languageTag), relatedProductIds(products), prompt);
         }
-        String status = inventoryEmpty
-                ? "Your local inventory is empty. These are generic fallback ideas until you add products."
-                : "Using local fallback suggestions from your saved inventory.";
+        String status = localRecipeStatus(inventoryEmpty, languageTag);
         return new RecipeSuggestionResult(
                 local,
                 recipeStatus(recipeGenerationStatus(status, local), dietaryPreferences),
@@ -218,10 +226,12 @@ public final class AgentRepository {
         List<Product> products = ProductRepository.getProducts(context);
         AppDatabase database = AppDatabase.getInstance(context);
         String safePrompt = prompt == null ? "" : prompt.trim();
+        String languageTag = SettingsRepository.getSettings(database).getLanguageTag();
 
-        if (!BuildConfig.GEMINI_API_KEY.trim().isEmpty()) {
+        String aiWorkerUrl = aiWorkerBaseUrl();
+        if (!aiWorkerUrl.isEmpty()) {
             try {
-                String answer = callGemini(buildInventoryPrompt(products, safePrompt));
+                String answer = generateCloudflareInventoryAnswer(aiWorkerUrl, products, safePrompt, languageTag);
                 if (!answer.trim().isEmpty()) {
                     saveAgentMessage(database, "user", safePrompt, relatedProductIds(products), safePrompt);
                     saveAgentMessage(database, "agent", answer, relatedProductIds(products), safePrompt);
@@ -232,7 +242,7 @@ public final class AgentRepository {
             }
         }
 
-        String answer = localFallbackAnswer(products, safePrompt);
+        String answer = localFallbackAnswer(products, safePrompt, languageTag);
         saveAgentMessage(database, "user", safePrompt, relatedProductIds(products), safePrompt);
         saveAgentMessage(database, "agent", answer, relatedProductIds(products), safePrompt);
         return answer;
@@ -392,16 +402,27 @@ public final class AgentRepository {
 
     public static RecipeSuggestionResult localRecipeSuggestionResult(List<Product> products, String dietaryPreferences) {
         boolean inventoryEmpty = products.isEmpty();
-        String status = inventoryEmpty
-                ? "Your local inventory is empty. These are generic fallback ideas until you add products."
-                : "Using local fallback suggestions from your saved inventory.";
+        String status = localRecipeStatus(inventoryEmpty, "en");
         return new RecipeSuggestionResult(localRecipeSuggestions(products, dietaryPreferences), recipeStatus(status, dietaryPreferences), true, inventoryEmpty);
     }
 
-    private static List<Recipe> generateGeminiRecipes(List<Product> products, String userPrompt, String dietaryPreferences) throws Exception {
-        String response = callGemini(buildRecipePrompt(products, userPrompt, dietaryPreferences));
-        JSONArray array = extractJsonArray(response);
+    private static List<Recipe> generateCloudflareRecipes(String baseUrl, List<Product> products, String userPrompt,
+                                                          String dietaryPreferences, String languageTag) throws Exception {
+        JSONObject payload = new JSONObject()
+                .put("prompt", userPrompt == null ? "" : userPrompt)
+                .put("languageTag", languageTag == null ? "en" : languageTag)
+                .put("dietaryPreferences", dietaryPreferences == null ? "" : dietaryPreferences)
+                .put("products", productsPayload(products));
+        JSONObject response = postWorkerJson(workerEndpoint(baseUrl, "/generate-recipes"), payload, "Recipe generation");
+        return recipesFromWorkerResponse(response, products);
+    }
+
+    static List<Recipe> recipesFromWorkerResponse(JSONObject response, List<Product> products) throws Exception {
+        JSONArray array = response.optJSONArray("recipes");
         List<Recipe> recipes = new ArrayList<>();
+        if (array == null) {
+            return recipes;
+        }
         for (int i = 0; i < array.length() && recipes.size() < 3; i++) {
             JSONObject item = array.getJSONObject(i);
             List<String> ingredients = jsonStringList(item.optJSONArray("usedIngredients"));
@@ -410,6 +431,11 @@ public final class AgentRepository {
                 allIngredients = new ArrayList<>(ingredients);
             }
             List<String> instructions = jsonStringList(item.optJSONArray("instructions"));
+            String prepTimeVal = item.optString("prepTime", "20 min");
+            String prepTime = prepTimeVal.length() > 12 ? "20 min" : prepTimeVal;
+            String difficulty = item.optString("difficulty", "Medium");
+            String caloriesVal = item.optString("calories", "400 kcal");
+            String calories = caloriesVal.length() > 12 ? "400 kcal" : caloriesVal;
             Recipe recipe = new Recipe(
                     item.optString("title", "Smart Inventory Recipe"),
                     item.optString("summary", "A recipe suggestion based on your local inventory."),
@@ -418,9 +444,9 @@ public final class AgentRepository {
                     android.R.drawable.ic_menu_gallery,
                     recipes.isEmpty(),
                     item.optString("imageUrl", null),
-                    item.optString("prepTime", "20 min"),
-                    item.optString("difficulty", "Medium"),
-                    item.optString("calories", "400 kcal"),
+                    prepTime,
+                    difficulty,
+                    calories,
                     item.optString("smartTip", null),
                     allIngredients,
                     instructions
@@ -434,175 +460,100 @@ public final class AgentRepository {
 
     private static List<Recipe> enrichRecipeImages(Context context, AppDatabase database, List<Recipe> recipes,
                                                    List<Product> products, String dietaryPreferences) {
-        if (BuildConfig.OPENROUTER_API_KEY.trim().isEmpty() || recipes.isEmpty()) {
+        if (BuildConfig.RECIPE_IMAGE_WORKER_URL.trim().isEmpty() || recipes.isEmpty()) {
             return recipes;
         }
 
         List<Recipe> enriched = new ArrayList<>();
         for (Recipe recipe : recipes) {
-            if (isExistingLocalImage(recipe.getImageUrl())) {
+            if (hasImageUrl(recipe.getImageUrl())) {
                 enriched.add(recipe);
                 continue;
             }
 
-            String cachedPath = cachedOpenRouterImagePath(database, recipe);
-            if (cachedPath != null && new File(cachedPath).exists()) {
-                enriched.add(copyRecipeWithImageUrl(recipe, cachedPath));
+            String cachedUrl = cachedRecipeImageUrl(database, recipe);
+            if (hasImageUrl(cachedUrl)) {
+                enriched.add(copyRecipeWithImageUrl(recipe, cachedUrl));
                 continue;
             }
 
-            try {
-                String dataOrUrl = callOpenRouterImage(buildOpenRouterRecipeImagePrompt(recipe, products, dietaryPreferences), true);
-                String imagePath = persistOpenRouterImage(context, recipe, dataOrUrl);
-                cacheRecipeImage(database, recipe, imagePath);
-                enriched.add(copyRecipeWithImageUrl(recipe, imagePath));
-            } catch (Exception firstError) {
-                try {
-                    String dataOrUrl = callOpenRouterImage(buildOpenRouterRecipeImagePrompt(recipe, products, dietaryPreferences), false);
-                    String imagePath = persistOpenRouterImage(context, recipe, dataOrUrl);
-                    cacheRecipeImage(database, recipe, imagePath);
-                    enriched.add(copyRecipeWithImageUrl(recipe, imagePath));
-                } catch (Exception ignored) {
-                    enriched.add(recipe);
-                }
+            String imageUrl = buildRecipeImageWorkerUrl(BuildConfig.RECIPE_IMAGE_WORKER_URL, recipe, products, dietaryPreferences);
+            if (hasImageUrl(imageUrl)) {
+                cacheRecipeImage(database, recipe, imageUrl);
+                enriched.add(copyRecipeWithImageUrl(recipe, imageUrl));
+            } else {
+                enriched.add(recipe);
             }
         }
         return enriched;
     }
 
-    private static String callOpenRouterImage(String prompt, boolean includeImageConfig) throws Exception {
-        URL url = new URL("https://openrouter.ai/api/v1/chat/completions");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setConnectTimeout(12000);
-        connection.setReadTimeout(45000);
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Authorization", "Bearer " + BuildConfig.OPENROUTER_API_KEY);
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setRequestProperty("HTTP-Referer", "https://smartexpapp.local");
-        connection.setRequestProperty("X-Title", "SmartExpApp");
-        connection.setDoOutput(true);
-
-        JSONObject message = new JSONObject()
-                .put("role", "user")
-                .put("content", prompt);
-        JSONObject payload = new JSONObject()
-                .put("model", BuildConfig.OPENROUTER_IMAGE_MODEL)
-                .put("messages", new JSONArray().put(message))
-                .put("modalities", new JSONArray().put("image"))
-                .put("stream", false);
-        if (includeImageConfig) {
-            payload.put("image_config", new JSONObject()
-                    .put("aspect_ratio", "4:3")
-                    .put("image_size", "1K"));
+    static String buildRecipeImageWorkerUrl(String baseUrl, Recipe recipe, List<Product> products, String dietaryPreferences) {
+        if (baseUrl == null || baseUrl.trim().isEmpty() || recipe == null) {
+            return null;
         }
-
-        try (OutputStream output = connection.getOutputStream()) {
-            output.write(payload.toString().getBytes(StandardCharsets.UTF_8));
+        String normalizedBase = baseUrl.trim();
+        while (normalizedBase.endsWith("/")) {
+            normalizedBase = normalizedBase.substring(0, normalizedBase.length() - 1);
         }
-
-        int code = connection.getResponseCode();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream(),
-                StandardCharsets.UTF_8));
-        StringBuilder builder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-        }
-        connection.disconnect();
-        if (code < 200 || code >= 300) {
-            throw new IllegalStateException("OpenRouter image request failed with HTTP " + code);
-        }
-
-        JSONObject json = new JSONObject(builder.toString());
-        JSONArray choices = json.optJSONArray("choices");
-        if (choices == null || choices.length() == 0) {
-            throw new IllegalStateException("OpenRouter image response had no choices");
-        }
-        JSONObject messageJson = choices.getJSONObject(0).optJSONObject("message");
-        if (messageJson == null) {
-            throw new IllegalStateException("OpenRouter image response had no message");
-        }
-        JSONArray images = messageJson.optJSONArray("images");
-        if (images == null || images.length() == 0) {
-            throw new IllegalStateException("OpenRouter image response had no images");
-        }
-        JSONObject image = images.getJSONObject(0);
-        JSONObject imageUrl = image.optJSONObject("image_url");
-        if (imageUrl == null) {
-            imageUrl = image.optJSONObject("imageUrl");
-        }
-        String value = imageUrl == null ? "" : imageUrl.optString("url", "").trim();
-        if (value.isEmpty()) {
-            throw new IllegalStateException("OpenRouter image response had no image URL");
-        }
-        return value;
+        String ingredients = String.join(", ", limitedImageIngredients(recipe, products));
+        return normalizedBase
+                + "/recipe-image?title=" + encodeQueryParam(recipe.getTitle())
+                + "&ingredients=" + encodeQueryParam(ingredients)
+                + "&diet=" + encodeQueryParam(dietaryPreferenceContext(dietaryPreferences));
     }
 
-    private static String persistOpenRouterImage(Context context, Recipe recipe, String dataOrUrl) throws Exception {
-        if (dataOrUrl == null || dataOrUrl.trim().isEmpty()) {
-            throw new IllegalArgumentException("OpenRouter image response was empty");
+    private static List<String> limitedImageIngredients(Recipe recipe, List<Product> products) {
+        List<String> ingredients = new ArrayList<>();
+        for (String ingredient : recipe.getAllIngredients()) {
+            if (ingredient != null && !ingredient.trim().isEmpty()) {
+                ingredients.add(ingredient.trim());
+                if (ingredients.size() == 8) {
+                    break;
+                }
+            }
         }
-        String value = dataOrUrl.trim();
-        if (!value.startsWith("data:image/")) {
-            return value;
+        if (ingredients.isEmpty()) {
+            for (Product product : products) {
+                if (product != null && product.getName() != null && !product.getName().trim().isEmpty()) {
+                    ingredients.add(product.getName().trim());
+                    if (ingredients.size() == 8) {
+                        break;
+                    }
+                }
+            }
         }
-
-        int commaIndex = value.indexOf(',');
-        if (commaIndex < 0) {
-            throw new IllegalArgumentException("OpenRouter image data URL was malformed");
+        if (ingredients.isEmpty()) {
+            ingredients.add("pantry ingredients");
         }
-        String metadata = value.substring(0, commaIndex);
-        String extension = metadata.contains("jpeg") || metadata.contains("jpg") ? ".jpg" : ".png";
-        byte[] bytes = Base64.decode(value.substring(commaIndex + 1), Base64.DEFAULT);
-        File directory = new File(context.getFilesDir(), "openrouter_recipe_images");
-        if (!directory.exists() && !directory.mkdirs()) {
-            throw new IllegalStateException("Could not create recipe image directory");
-        }
-        File imageFile = new File(directory, UUID.nameUUIDFromBytes(recipe.getTitle().getBytes(StandardCharsets.UTF_8)).toString() + extension);
-        try (FileOutputStream output = new FileOutputStream(imageFile)) {
-            output.write(bytes);
-        }
-        return imageFile.getAbsolutePath();
+        return ingredients;
     }
 
-    private static String buildOpenRouterRecipeImagePrompt(Recipe recipe, List<Product> products, String dietaryPreferences) {
-        return "Create a realistic plated food photo for this recipe. "
-                + "Food only. No people, no NSFW content, no gore, no violence, no unsafe or non-edible items. "
-                + "Show a realistic plated edible dish only. "
-                + "No text, no labels, no watermark, no hands, no packaging. "
-                + "Use appetizing natural light, a clean kitchen table, and make the main ingredients visually clear. "
-                + "Recipe title: " + recipe.getTitle() + ". "
-                + "Summary: " + recipe.getSummary() + ". "
-                + "Ingredients: " + String.join(", ", recipe.getAllIngredients()) + ". "
-                + "Dietary preferences: " + dietaryPreferenceContext(dietaryPreferences) + ". "
-                + "Inventory context: " + inventoryContext(products);
+    private static String encodeQueryParam(String value) {
+        try {
+            return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("UTF-8 encoding is unavailable", e);
+        }
     }
 
-    private static String cachedOpenRouterImagePath(AppDatabase database, Recipe recipe) {
-        RecipeCacheEntity cached = database.recipeCacheDao().getById(openRouterImageCacheId(recipe));
+    private static String cachedRecipeImageUrl(AppDatabase database, Recipe recipe) {
+        RecipeCacheEntity cached = database.recipeCacheDao().getById(recipeImageCacheId(recipe));
         return cached == null ? null : cached.imageUrl;
     }
 
-    private static boolean isExistingLocalImage(String imageUrl) {
-        if (imageUrl == null || imageUrl.trim().isEmpty()) {
-            return false;
-        }
-        String path = imageUrl.trim();
-        if (path.startsWith("file://")) {
-            path = path.substring(7);
-        }
-        return path.startsWith("/") && new File(path).exists();
+    private static boolean hasImageUrl(String imageUrl) {
+        return imageUrl != null && !imageUrl.trim().isEmpty();
     }
 
     private static void cacheRecipeImage(AppDatabase database, Recipe recipe, String imagePath) {
         long now = System.currentTimeMillis();
         RecipeCacheEntity entity = new RecipeCacheEntity();
-        entity.id = openRouterImageCacheId(recipe);
-        entity.provider = "openrouter-image";
+        entity.id = recipeImageCacheId(recipe);
+        entity.provider = "cloudflare-worker-image";
         entity.title = recipe.getTitle();
         entity.imageUrl = imagePath;
-        entity.sourceUrl = BuildConfig.OPENROUTER_IMAGE_MODEL;
+        entity.sourceUrl = BuildConfig.RECIPE_IMAGE_WORKER_URL;
         entity.usedIngredients = String.join(",", recipe.getExpiringIngredients());
         entity.missingIngredients = "";
         entity.cachedAt = now;
@@ -611,8 +562,8 @@ public final class AgentRepository {
         database.recipeCacheDao().insert(entity);
     }
 
-    private static String openRouterImageCacheId(Recipe recipe) {
-        return UUID.nameUUIDFromBytes(("openrouter-image:" + recipe.getTitle()).getBytes(StandardCharsets.UTF_8)).toString();
+    private static String recipeImageCacheId(Recipe recipe) {
+        return UUID.nameUUIDFromBytes(("cloudflare-worker-image:" + recipe.getTitle()).getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     private static Recipe copyRecipeWithImageUrl(Recipe recipe, String imageUrl) {
@@ -633,22 +584,145 @@ public final class AgentRepository {
         );
     }
 
-    private static ProductDraft generateGeminiProductDraft(String input, ProductDraft fallback) throws Exception {
-        String response = callGemini(buildProductDraftPrompt(input));
-        JSONObject json = extractJsonObject(response);
-        return productDraftFromJson(json, fallback, input);
+    private static String generateCloudflareInventoryAnswer(String baseUrl, List<Product> products, String prompt, String languageTag) throws Exception {
+        JSONObject payload = new JSONObject()
+                .put("prompt", prompt == null ? "" : prompt)
+                .put("languageTag", languageTag == null ? "en" : languageTag)
+                .put("products", productsPayload(products));
+        JSONObject response = postWorkerJson(workerEndpoint(baseUrl, "/answer-inventory"), payload, "Inventory answer");
+        return response.optString("answer", "");
     }
 
-    private static List<ProductDraft> generateGeminiProductDrafts(String input, List<ProductDraft> fallbacks) throws Exception {
-        String response = callGemini(buildProductDraftsPrompt(input));
-        JSONArray array = extractJsonArray(response);
+    private static JSONArray productsPayload(List<Product> products) throws Exception {
+        JSONArray array = new JSONArray();
+        if (products == null) {
+            return array;
+        }
+        for (Product product : products) {
+            if (product == null) {
+                continue;
+            }
+            array.put(new JSONObject()
+                    .put("name", product.getName())
+                    .put("category", product.getCategory())
+                    .put("quantity", product.getQuantity())
+                    .put("unit", product.getUnit())
+                    .put("storage", product.getStorage())
+                    .put("expiryStatus", product.getExpiryStatus())
+                    .put("daysUntilExpiry", product.getDaysUntilExpiry()));
+            if (array.length() == 40) {
+                break;
+            }
+        }
+        return array;
+    }
+
+    private static List<ProductDraft> generateCloudflareProductDrafts(String input, List<ProductDraft> fallbacks, String languageTag) throws Exception {
+        JSONObject response = callProductParserWorker(input, languageTag);
+        return productDraftsFromParserWorkerResponse(response, fallbacks, input);
+    }
+
+    static List<ProductDraft> productDraftsFromParserWorkerResponse(JSONObject response, List<ProductDraft> fallbacks, String input) throws Exception {
+        JSONArray array = response.optJSONArray("items");
         List<ProductDraft> drafts = new ArrayList<>();
+        if (array == null) {
+            return drafts;
+        }
+        boolean[] usedFallbacks = new boolean[fallbacks == null ? 0 : fallbacks.size()];
         for (int i = 0; i < array.length() && drafts.size() < 12; i++) {
             JSONObject json = array.getJSONObject(i);
-            ProductDraft fallback = i < fallbacks.size() ? fallbacks.get(i) : parseProductDraft(json.optString("name", input));
+            ProductDraft fallback = matchingFallbackDraft(json.optString("name", ""), fallbacks, usedFallbacks, i, input);
             drafts.add(productDraftFromJson(json, fallback, input));
         }
         return drafts;
+    }
+
+    private static ProductDraft matchingFallbackDraft(String remoteName, List<ProductDraft> fallbacks, boolean[] usedFallbacks, int index, String input) {
+        if (fallbacks == null || fallbacks.isEmpty()) {
+            return parseProductDraft(remoteName == null || remoteName.trim().isEmpty() ? input : remoteName);
+        }
+        String remoteKey = productMatchKey(remoteName);
+        for (int i = 0; i < fallbacks.size(); i++) {
+            if (usedFallbacks[i]) {
+                continue;
+            }
+            String fallbackKey = productMatchKey(fallbacks.get(i).getName());
+            if (!remoteKey.isEmpty()
+                    && !fallbackKey.isEmpty()
+                    && (remoteKey.contains(fallbackKey) || fallbackKey.contains(remoteKey))) {
+                usedFallbacks[i] = true;
+                return fallbacks.get(i);
+            }
+        }
+        if (index < fallbacks.size() && !usedFallbacks[index]) {
+            usedFallbacks[index] = true;
+            return fallbacks.get(index);
+        }
+        return parseProductDraft(remoteName == null || remoteName.trim().isEmpty() ? input : remoteName);
+    }
+
+    private static JSONObject callProductParserWorker(String input, String languageTag) throws Exception {
+        JSONObject payload = new JSONObject()
+                .put("input", input == null ? "" : input)
+                .put("languageTag", languageTag == null ? "en" : languageTag);
+        return postWorkerJson(productParserEndpoint(BuildConfig.PRODUCT_PARSER_WORKER_URL), payload, "Product parser");
+    }
+
+    private static JSONObject postWorkerJson(String endpoint, JSONObject payload, String label) throws Exception {
+        URL url = new URL(endpoint);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(8000);
+        connection.setReadTimeout(20000);
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setDoOutput(true);
+
+        try (OutputStream output = connection.getOutputStream()) {
+            output.write(payload.toString().getBytes(StandardCharsets.UTF_8));
+        }
+
+        int code = connection.getResponseCode();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream(),
+                StandardCharsets.UTF_8));
+        StringBuilder builder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
+        }
+        connection.disconnect();
+        if (code < 200 || code >= 300) {
+            throw new IllegalStateException(label + " request failed with HTTP " + code);
+        }
+        return new JSONObject(builder.toString());
+    }
+
+    private static String aiWorkerBaseUrl() {
+        if (!BuildConfig.AI_WORKER_URL.trim().isEmpty()) {
+            return BuildConfig.AI_WORKER_URL.trim();
+        }
+        if (!BuildConfig.RECIPE_IMAGE_WORKER_URL.trim().isEmpty()) {
+            return BuildConfig.RECIPE_IMAGE_WORKER_URL.trim();
+        }
+        return BuildConfig.PRODUCT_PARSER_WORKER_URL.trim();
+    }
+
+    static String productParserEndpoint(String baseUrl) {
+        return workerEndpoint(baseUrl, "/parse-product");
+    }
+
+    static String workerEndpoint(String baseUrl, String path) {
+        if (baseUrl == null || baseUrl.trim().isEmpty()) {
+            return "";
+        }
+        String normalized = baseUrl.trim();
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        if (normalized.endsWith(path)) {
+            return normalized;
+        }
+        return normalized + path;
     }
 
     private static ProductDraft productDraftFromJson(JSONObject json, ProductDraft fallback, String sourceInput) {
@@ -656,16 +730,17 @@ public final class AgentRepository {
         String category = normalizeCategory(json.optString("category", fallback.getCategory()));
         String quantity = json.optString("quantity", fallback.getQuantity()).trim();
         String unit = normalizeUnit(json.optString("unit", fallback.getUnit()).trim());
-        String storage = normalizeStorage(json.optString("storage", fallback.getStorage()));
+        String remoteStorage = normalizeStorage(json.optString("storage", fallback.getStorage()));
+        String storage = shouldPreferFallbackStorage(fallback) ? fallback.getStorage() : remoteStorage;
 
         long expiryMillis = fallback.getExpiryDateMillis();
         boolean hasExpiry = fallback.hasExpiryDate();
-        if (json.has("expiryDaysFromNow") && json.optInt("expiryDaysFromNow", -1) >= 0) {
+        if (!hasExpiry && sourceHasExpiryCue(fallback.getSourceText()) && json.has("expiryDaysFromNow") && json.optInt("expiryDaysFromNow", -1) >= 0) {
             Calendar calendar = Calendar.getInstance(Locale.US);
             calendar.add(Calendar.DAY_OF_YEAR, json.optInt("expiryDaysFromNow"));
             expiryMillis = endOfDay(calendar);
             hasExpiry = true;
-        } else {
+        } else if (!hasExpiry && sourceHasExpiryCue(fallback.getSourceText())) {
             String expiryText = json.optString("expiryText", "").trim();
             Long detected = expiryText.isEmpty() ? null : inferExpiryMillis(expiryText);
             if (detected != null) {
@@ -686,63 +761,64 @@ public final class AgentRepository {
         );
     }
 
-    private static String callGemini(String prompt) throws Exception {
-        URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/"
-                + BuildConfig.GEMINI_MODEL + ":generateContent");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setConnectTimeout(8000);
-        connection.setReadTimeout(12000);
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setRequestProperty("x-goog-api-key", BuildConfig.GEMINI_API_KEY);
-        connection.setDoOutput(true);
-
-        JSONObject part = new JSONObject().put("text", prompt);
-        JSONObject content = new JSONObject().put("parts", new JSONArray().put(part));
-        JSONObject payload = new JSONObject().put("contents", new JSONArray().put(content));
-        try (OutputStream output = connection.getOutputStream()) {
-            output.write(payload.toString().getBytes(StandardCharsets.UTF_8));
+    private static boolean shouldPreferFallbackStorage(ProductDraft fallback) {
+        if (fallback == null || fallback.getStorage() == null) {
+            return false;
         }
-
-        int code = connection.getResponseCode();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream(),
-                StandardCharsets.UTF_8));
-        StringBuilder builder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-        }
-        connection.disconnect();
-        if (code < 200 || code >= 300) {
-            throw new IllegalStateException("Gemini request failed with HTTP " + code);
-        }
-
-        JSONObject json = new JSONObject(builder.toString());
-        JSONArray candidates = json.optJSONArray("candidates");
-        if (candidates == null || candidates.length() == 0) return "";
-        JSONObject contentJson = candidates.getJSONObject(0).optJSONObject("content");
-        if (contentJson == null) return "";
-        JSONArray parts = contentJson.optJSONArray("parts");
-        if (parts == null || parts.length() == 0) return "";
-        return parts.getJSONObject(0).optString("text", "");
+        String storage = fallback.getStorage();
+        String source = fallback.getSourceText() == null ? "" : fallback.getSourceText().toLowerCase(Locale.US);
+        return !storage.equals("Room Temp")
+                || source.contains("room temp")
+                || source.contains("pantry");
     }
 
-    private static String buildRecipePrompt(List<Product> products, String userPrompt, String dietaryPreferences) {
-        return "You are SmartExpApp's cooking assistant. Use only this local inventory context. "
+    private static boolean sourceHasExpiryCue(String sourceText) {
+        if (sourceText == null) {
+            return false;
+        }
+        String lower = sourceText.toLowerCase(Locale.US);
+        return lower.contains("expire")
+                || lower.contains("expiry")
+                || lower.contains("best before")
+                || lower.contains("use by")
+                || lower.contains("sell by")
+                || lower.contains("tomorrow")
+                || lower.contains("today")
+                || lower.contains("het han")
+                || lower.contains("han dung")
+                || lower.contains("ngay mai")
+                || lower.contains("hom nay")
+                || Pattern.compile("\\b(?:in|after)\\s+\\d+\\s+days?\\b", Pattern.CASE_INSENSITIVE).matcher(sourceText).find()
+                || Pattern.compile("\\b\\d{1,4}[/\\-.\\s]+\\d{1,2}[/\\-.\\s]+\\d{1,4}\\b").matcher(sourceText).find();
+    }
+
+    static String buildRecipePrompt(List<Product> products, String userPrompt, String dietaryPreferences, String languageTag) {
+        String safePrompt = userPrompt == null ? "" : userPrompt.trim();
+        boolean hasUserPrompt = !safePrompt.isEmpty();
+        String languageInstruction = recipeLanguageInstruction(languageTag);
+        String requestInstruction = hasUserPrompt
+                ? "The user typed a recipe request. Satisfy that request first, even if it needs ingredients not currently in inventory. Use inventory items when they naturally fit, especially expiring items, but do not force every recipe to use only inventory."
+                : "No specific user recipe request was provided. Suggest practical recipes that prioritize local inventory items, especially items expiring soon. You may add common pantry ingredients when needed.";
+        return "You are SmartExpApp's cooking assistant. " + languageInstruction + " "
+                + requestInstruction + " "
                 + "Safety rules: generate food recipes only. Reject or ignore any request for NSFW, sexual, violent, harmful, illegal, or non-food content. "
                 + "Do not create recipes using unsafe, spoiled, rotten, toxic, or non-edible ingredients. "
                 + "If the user request is unsafe or not food-related, return an empty JSON array. "
-                + "Return strict JSON array of 3 recipe objects with fields: "
-                + "title, summary, usedIngredients (JSON array of strings of expiring ingredients from inventory used), "
-                + "actionText, prepTime (e.g. '25 min'), difficulty (e.g. 'Easy'), calories (e.g. '450 kcal'), "
-                + "smartTip (an AI tip for using expiring ingredients or substitutions, e.g. using yogurt instead of heavy cream), "
+                + "Return strict JSON array of 3 distinct, diverse, and different recipe objects (do not suggest duplicate or highly similar dishes) with fields: "
+                + "title, summary, usedIngredients (JSON array of inventory ingredients used; use an empty array when no inventory item fits), "
+                + "actionText, "
+                + "prepTime (must be a very short string indicating only duration, e.g., '25 min' or '1 hour', no sentences), "
+                + "difficulty (must be strictly one of 'Easy', 'Medium', or 'Hard' or Vietnamese equivalent), "
+                + "calories (must be a very short string strictly in the format 'XXX kcal', e.g., '450 kcal', no descriptive sentences), "
+                + "smartTip (an AI tip for cooking, substitutions, or using expiring ingredients), "
                 + "allIngredients (JSON array of strings representing the complete list of ingredients with quantities needed), "
                 + "instructions (JSON array of strings representing the step-by-step cooking steps). "
+                + "Crucial: The 3 recipes must be highly diverse and distinct from each other in cooking method (e.g. one sauté/skillet, one soup/stew, one baked or salad) and cuisine style. Do not suggest variations of the same dish. "
                 + "Do not include image URLs; recipe images are generated separately. "
-                + "Prioritize items expiring soon and respect dietary preferences when possible. No markdown. User request: "
-                + userPrompt + "\nDietary preferences: " + dietaryPreferenceContext(dietaryPreferences)
-                + "\nInventory:\n" + inventoryContext(products);
+                + "Respect dietary preferences when possible. No markdown. User request: "
+                + safePrompt + "\nApp language: " + languageContext(languageTag)
+                + "\nDietary preferences: " + dietaryPreferenceContext(dietaryPreferences)
+                + "\nInventory context, optional unless no user request is provided:\n" + inventoryContext(products);
     }
 
     private static String buildProductDraftPrompt(String input) {
@@ -776,9 +852,11 @@ public final class AgentRepository {
                 + "Do not include markdown or explanatory text. User request: " + (input == null ? "" : input);
     }
 
-    private static String buildInventoryPrompt(List<Product> products, String userPrompt) {
-        return "You are SmartExpApp's local inventory assistant. Answer concisely using only this inventory. "
-                + "Do not claim to save, delete, or change inventory. User request: "
+    private static String buildInventoryPrompt(List<Product> products, String userPrompt, String languageTag) {
+        return "You are SmartExpApp's assistant. " + recipeLanguageInstruction(languageTag) + " "
+                + "Answer concisely. Do not claim to save, delete, or change inventory. "
+                + "If the user asks for recipes, cooking ideas, or a specific dish, say that recipe suggestions are being refreshed below and mention any matching inventory items only when useful. "
+                + "Do not reject recipe requests just because the ingredients are not in inventory. User request: "
                 + userPrompt + "\nInventory:\n" + inventoryContext(products);
     }
 
@@ -801,17 +879,34 @@ public final class AgentRepository {
     }
 
     private static String localFallbackAnswer(List<Product> products, String prompt) {
+        return localFallbackAnswer(products, prompt, "en");
+    }
+
+    private static String localFallbackAnswer(List<Product> products, String prompt, String languageTag) {
+        boolean vietnamese = isVietnamese(languageTag);
         List<Product> sorted = new ArrayList<>(products);
         sorted.sort(Comparator.comparingInt(Product::getDaysUntilExpiry));
         if (sorted.isEmpty()) {
-            return "Your local inventory is empty. Add a product first, then I can suggest what to cook or track.";
+            return vietnamese
+                    ? "Kho cục bộ của bạn đang trống. Tôi vẫn có thể gợi ý công thức theo yêu cầu bạn nhập."
+                    : "Your local inventory is empty. I can still suggest recipes from your typed request.";
         }
         Product first = sorted.get(0);
         Product second = sorted.size() > 1 ? sorted.get(1) : null;
         if (prompt.toLowerCase(Locale.US).contains("recipe") || prompt.toLowerCase(Locale.US).contains("cook")) {
+            if (vietnamese) {
+                return "Tôi đã làm mới gợi ý công thức theo yêu cầu của bạn"
+                        + " và ưu tiên dùng " + first.getName()
+                        + (second == null ? "" : " cùng " + second.getName())
+                        + " khi phù hợp.";
+            }
             return "Use " + first.getName()
                     + (second == null ? "" : " with " + second.getName())
-                    + " first. I also refreshed the recipe suggestions from your local inventory.";
+                    + " when it fits. I also refreshed the recipe suggestions from your request.";
+        }
+        if (vietnamese) {
+            return first.getName() + " cần được chú ý trước vì trạng thái là " + first.getExpiryStatus()
+                    + ". Hãy xem các gợi ý công thức bên dưới.";
         }
         return first.getName() + " needs attention first because its status is " + first.getExpiryStatus()
                 + ". Check the recipe suggestions below for ways to use it.";
@@ -825,22 +920,64 @@ public final class AgentRepository {
         return baseStatus + " Dietary preferences: " + preferences + ".";
     }
 
+    private static String localRecipeStatus(boolean inventoryEmpty, String languageTag) {
+        if (isVietnamese(languageTag)) {
+            return inventoryEmpty
+                    ? "Kho cục bộ đang trống. Đây là các gợi ý chung; bạn cũng có thể nhập món muốn nấu."
+                    : "Đang dùng gợi ý cục bộ từ kho đã lưu và yêu cầu của bạn.";
+        }
+        return inventoryEmpty
+                ? "Your local inventory is empty. These are generic fallback ideas; you can also type a recipe request."
+                : "Using local fallback suggestions from your saved inventory and request.";
+    }
+
+    private static String remoteRecipeStatus(boolean inventoryEmpty, boolean hasUserPrompt, String languageTag) {
+        if (isVietnamese(languageTag)) {
+            if (hasUserPrompt) {
+                return "Đã tạo công thức bằng Cloudflare Workers AI theo yêu cầu của bạn.";
+            }
+            return inventoryEmpty
+                    ? "Cloudflare Workers AI đã tạo gợi ý chung vì kho cục bộ đang trống."
+                    : "Đã tạo công thức bằng Cloudflare Workers AI từ kho cục bộ của bạn.";
+        }
+        if (hasUserPrompt) {
+            return "Generated with Cloudflare Workers AI from your recipe request.";
+        }
+        return inventoryEmpty
+                ? "Cloudflare Workers AI generated general recipe ideas because your local inventory is empty."
+                : "Generated with Cloudflare Workers AI using your local inventory.";
+    }
+
     private static String recipeGenerationStatus(String baseStatus, List<Recipe> recipes) {
-        if (BuildConfig.OPENROUTER_API_KEY.trim().isEmpty()) {
+        if (BuildConfig.RECIPE_IMAGE_WORKER_URL.trim().isEmpty()) {
             return baseStatus;
         }
         for (Recipe recipe : recipes) {
             String imageUrl = recipe.getImageUrl();
             if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                return baseStatus + " Recipe images generated with OpenRouter FLUX.2 Klein 4B.";
+                return baseStatus + " Recipe images are served by Cloudflare Workers AI.";
             }
         }
-        return baseStatus + " OpenRouter image generation is configured, but no recipe image was returned.";
+        return baseStatus + " Recipe image generation is configured, but no image URL was prepared.";
     }
 
     private static String dietaryPreferenceContext(String dietaryPreferences) {
         String preferences = normalizeDietaryPreferences(dietaryPreferences);
         return preferences.isEmpty() ? "none" : preferences;
+    }
+
+    private static String recipeLanguageInstruction(String languageTag) {
+        return isVietnamese(languageTag)
+                ? "Write every user-facing recipe field in Vietnamese, including title, summary, actionText, difficulty, smartTip, allIngredients, and instructions. Keep units understandable for Vietnamese users."
+                : "Write every user-facing recipe field in English, including title, summary, actionText, difficulty, smartTip, allIngredients, and instructions.";
+    }
+
+    private static String languageContext(String languageTag) {
+        return isVietnamese(languageTag) ? "Vietnamese (vi)" : "English (en)";
+    }
+
+    private static boolean isVietnamese(String languageTag) {
+        return languageTag != null && languageTag.trim().toLowerCase(Locale.US).startsWith("vi");
     }
 
     private static String dietaryPreferenceNote(String dietaryPreferences) {
@@ -891,7 +1028,12 @@ public final class AgentRepository {
                 "grill", "stir", "serve", "dish", "meal", "soup", "salad", "sauce",
                 "ingredient", "ingredients", "rice", "noodle", "beef", "chicken",
                 "pork", "fish", "tofu", "vegetable", "vegetables", "milk", "egg",
-                "eggs", "tomato", "bread", "pantry");
+                "eggs", "tomato", "bread", "pantry",
+                "công thức", "nấu", "món", "món ăn", "bữa ăn", "nguyên liệu",
+                "xào", "luộc", "hầm", "nướng", "chiên", "rán", "trộn", "phục vụ",
+                "cơm", "mì", "bún", "phở", "súp", "canh", "salad", "nước sốt",
+                "thịt bò", "thịt gà", "thịt heo", "cá", "đậu phụ", "rau", "sữa",
+                "trứng", "cà chua", "bánh mì");
     }
 
     private static void appendSafetyText(StringBuilder builder, String value) {
@@ -920,26 +1062,6 @@ public final class AgentRepository {
         if (lower.equals("gao") || lower.equals("gạo")) return "Gạo";
         if (lower.equals("mi") || lower.equals("mì")) return "Mì";
         return compact;
-    }
-
-    private static JSONArray extractJsonArray(String text) throws Exception {
-        String trimmed = text.trim();
-        int start = trimmed.indexOf('[');
-        int end = trimmed.lastIndexOf(']');
-        if (start < 0 || end <= start) {
-            throw new IllegalArgumentException("Gemini response did not contain a JSON array");
-        }
-        return new JSONArray(trimmed.substring(start, end + 1));
-    }
-
-    private static JSONObject extractJsonObject(String text) throws Exception {
-        String trimmed = text.trim();
-        int start = trimmed.indexOf('{');
-        int end = trimmed.lastIndexOf('}');
-        if (start < 0 || end <= start) {
-            throw new IllegalArgumentException("Gemini response did not contain a JSON object");
-        }
-        return new JSONObject(trimmed.substring(start, end + 1));
     }
 
     private static List<String> jsonStringList(JSONArray array) {
@@ -1019,6 +1141,25 @@ public final class AgentRepository {
         return false;
     }
 
+    private static String productMatchKey(String value) {
+        if (value == null) {
+            return "";
+        }
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D')
+                .toLowerCase(Locale.US)
+                .replaceAll("[^a-z0-9 ]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+        if (normalized.equals("thit bo")) return "beef";
+        if (normalized.equals("thit ga")) return "chicken";
+        if (normalized.equals("thit heo") || normalized.equals("thit lon")) return "pork";
+        if (normalized.equals("ca chua")) return "tomato";
+        return normalized;
+    }
+
     private static Long inferExpiryMillis(String source) {
         String lower = source.toLowerCase(Locale.US);
         Calendar calendar = Calendar.getInstance(Locale.US);
@@ -1094,7 +1235,7 @@ public final class AgentRepository {
                 if (candidate.isEmpty()) {
                     continue;
                 }
-                if (!containsProductDetail(candidate) && candidate.contains(",")) {
+                if (candidate.contains(",") && shouldSplitCommaItems(candidate)) {
                     for (String commaPart : candidate.split(",")) {
                         String commaCandidate = stripLeadingAddVerb(commaPart.trim());
                         if (!commaCandidate.isEmpty()) {
@@ -1122,6 +1263,34 @@ public final class AgentRepository {
         }
         parts.add(input.substring(start).trim());
         return parts;
+    }
+
+    private static boolean shouldSplitCommaItems(String input) {
+        String[] parts = input.split(",");
+        int itemLikeParts = 0;
+        for (String part : parts) {
+            if (isLikelyCommaItem(part.trim())) {
+                itemLikeParts++;
+            }
+        }
+        return itemLikeParts >= 2;
+    }
+
+    private static boolean isLikelyCommaItem(String input) {
+        String candidate = stripLeadingAddVerb(input.trim());
+        if (candidate.isEmpty()) {
+            return false;
+        }
+        String lower = candidate.toLowerCase(Locale.US);
+        boolean hasQuantity = QUANTITY_PATTERN.matcher(lower).find();
+        if (lower.matches("^\\d.*")) {
+            return false;
+        }
+        if (lower.matches("^(expires?|expiry|expiration|best|before|use by|sell by|in|after|today|tomorrow|fridge|refrigerator|freezer|room temp|pantry)\\b.*")
+                && !hasQuantity) {
+            return false;
+        }
+        return hasQuantity || !containsProductDetail(candidate);
     }
 
     private static String stripLeadingAddVerb(String input) {

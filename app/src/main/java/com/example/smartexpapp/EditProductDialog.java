@@ -32,6 +32,7 @@ import java.util.Set;
 public class EditProductDialog {
     private final Product product;
     private final Runnable onUpdated;
+    private final List<Product> productsSnapshot;
 
     private final Calendar selectedDate = Calendar.getInstance();
     private int selectedStorageId;
@@ -52,8 +53,13 @@ public class EditProductDialog {
     private final Set<String> pendingCategories = new HashSet<>();
 
     public EditProductDialog(Product product, Runnable onUpdated) {
+        this(product, onUpdated, Collections.emptyList());
+    }
+
+    public EditProductDialog(Product product, Runnable onUpdated, List<Product> productsSnapshot) {
         this.product = product;
         this.onUpdated = onUpdated;
+        this.productsSnapshot = productsSnapshot == null ? Collections.emptyList() : new ArrayList<>(productsSnapshot);
     }
 
     public void show(BaseActivity activity) {
@@ -184,10 +190,9 @@ public class EditProductDialog {
     }
 
     private void refreshCategorySpinner(BaseActivity activity) {
-        List<Product> allProducts = ProductRepository.getProducts(activity);
         Set<String> existingCustom = new HashSet<>();
         existingCustom.addAll(pendingCategories);
-        for (Product p : allProducts) {
+        for (Product p : productsSnapshot) {
             String cat = canonicalCategory(activity, p.getCategory());
             if (cat != null && !isBuiltIn(cat) && !cat.trim().isEmpty()) {
                 existingCustom.add(cat);
@@ -232,7 +237,6 @@ public class EditProductDialog {
     }
 
     private void showManageCategoriesDialog(BaseActivity activity) {
-        List<Product> all = ProductRepository.getProducts(activity);
         Set<String> customSet = new HashSet<>();
         for (String pc : pendingCategories) {
             String canonicalPc = canonicalCategory(activity, pc);
@@ -240,7 +244,7 @@ public class EditProductDialog {
                 customSet.add(canonicalPc);
             }
         }
-        for (Product p : all) {
+        for (Product p : productsSnapshot) {
             String cat = canonicalCategory(activity, p.getCategory());
             if (cat != null && !isBuiltIn(cat) && !cat.trim().isEmpty()) {
                 customSet.add(cat);
@@ -345,11 +349,10 @@ public class EditProductDialog {
                     if (newName.isEmpty() || isBuiltIn(canonicalNew) || canonicalNew.equals(oldName)) {
                         return;
                     }
-                    List<Product> all = ProductRepository.getProducts(activity);
-                    for (Product p : all) {
+                    for (Product p : productsSnapshot) {
                         if (oldName.equals(canonicalCategory(activity, p.getCategory()))) {
                             Product updated = copyWithCategory(p, canonicalNew);
-                            ProductRepository.updateProduct(activity, updated);
+                            ProductRepository.updateProductAsync(activity, updated, null, null);
                         }
                     }
                     if (pendingCategories.remove(oldName)) pendingCategories.add(canonicalNew);
@@ -363,7 +366,7 @@ public class EditProductDialog {
 
     private void showDeleteCategoryDialog(BaseActivity activity, String catToDelete, Runnable onDone) {
         int productCount = 0;
-        for (Product p : ProductRepository.getProducts(activity)) {
+        for (Product p : productsSnapshot) {
             if (catToDelete.equals(canonicalCategory(activity, p.getCategory()))) productCount++;
         }
         String message = productCount > 0
@@ -374,11 +377,10 @@ public class EditProductDialog {
                 .setMessage(message)
                 .setPositiveButton(R.string.delete_confirm, (d, w) -> {
                     pendingCategories.remove(catToDelete);
-                    List<Product> all = ProductRepository.getProducts(activity);
-                    for (Product p : all) {
+                    for (Product p : productsSnapshot) {
                         if (catToDelete.equals(canonicalCategory(activity, p.getCategory()))) {
                             Product updated = copyWithCategory(p, "General");
-                            ProductRepository.updateProduct(activity, updated);
+                            ProductRepository.updateProductAsync(activity, updated, null, null);
                         }
                     }
                     selectedCategory = "General";
@@ -415,7 +417,7 @@ public class EditProductDialog {
 
     private boolean categoryExistsInProducts(BaseActivity activity, String cat) {
         String canonicalCat = canonicalCategory(activity, cat);
-        for (Product p : ProductRepository.getProducts(activity)) {
+        for (Product p : productsSnapshot) {
             if (canonicalCat.equals(canonicalCategory(activity, p.getCategory()))) return true;
         }
         return false;
@@ -483,11 +485,12 @@ public class EditProductDialog {
                 product.getSyncStatus(),
                 product.getLastSyncedAt()
         );
-        ProductRepository.updateProduct(activity, updated);
-        Toast.makeText(activity, R.string.product_updated, Toast.LENGTH_SHORT).show();
-        dialog.dismiss();
-        if (onUpdated != null) {
-            onUpdated.run();
-        }
+        ProductRepository.updateProductAsync(activity, updated, saved -> {
+            Toast.makeText(activity, R.string.product_updated, Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+            if (onUpdated != null) {
+                onUpdated.run();
+            }
+        }, error -> Toast.makeText(activity, R.string.error_load, Toast.LENGTH_SHORT).show());
     }
 }

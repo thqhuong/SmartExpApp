@@ -15,6 +15,8 @@
     <string name="cancel">Cancel</string>
     <string name="edit_product">Edit Product</string>
     <string name="add_product">Add Product</string>
+    <string name="add_product_progress_format">Add Product (%1$d of %2$d)</string>
+    <string name="skip_label">Skip</string>
     <string name="filter_expiring">Expiring Soon</string>
     <string name="filter_expired">Expired</string>
     <string name="sort_date">Date</string>
@@ -26,8 +28,8 @@
     <string name="product_deleted">Product deleted</string>
     <string name="error_load">Failed to load products</string>
 
-    <string name="status_expired">EXPIRED</string>
-    <string name="status_expiring">EXPIRING SOON</string>
+    <string name="status_expired">ĐÃ HẾT HẠN</string>
+    <string name="status_expiring">SẮP HẾT HẠN</string>
     <string name="product_meta_format">%1$s - %2$s</string>
 
     <!-- Inventory Strings -->
@@ -101,12 +103,12 @@
     <string name="settings_local_mode">Local-only mode</string>
     <string name="recipe_details_title">Recipe Details</string>
     <string name="difficulty_easy_uppercase">EASY</string>
-    <string name="gemini_smart_tip">Gemini Smart Tip</string>
+    <string name="gemini_smart_tip">Smart AI Tip</string>
     <string name="no_recommendations">No waste recommendations available.</string>
     <string name="label_ingredients">Ingredients</string>
     <string name="label_instructions">Instructions</string>
     <string name="smart_recipe_assistant">Smart Recipe Assistant</string>
-    <string name="recipes_intro_desc">Ask by voice or text. Gemini is used when configured; local recipe suggestions stay available offline.</string>
+    <string name="recipes_intro_desc">Ask by voice or text. Cloudflare AI is used when configured; local recipe suggestions stay available offline.</string>
     <string name="ask_by_text">Ask by Text</string>
     <string name="smart_recipes_title">Smart Recipes</string>
     <string name="badge_use_soon">Use these soon!</string>
@@ -126,7 +128,7 @@
     <string name="recipe_suggestions_desc">Recipe ideas are shown inside the assistant and inventory flows, not pushed as separate alerts.</string>
     <string name="ai_fallback">AI Fallback</string>
     <string name="automatic_label">Automatic</string>
-    <string name="ai_fallback_desc">If Gemini is unavailable or not configured, SmartExp keeps using local suggestions.</string>
+    <string name="ai_fallback_desc">If Cloudflare AI is unavailable or not configured, SmartExp keeps using local suggestions.</string>
     <string name="reminder_source_desc">Expiry reminders are processed locally from your Room inventory database.</string>
     <string name="urgent_attention">URGENT ATTENTION</string>
     <string name="items_expiring_soon_label">Items Expiring Soon</string>
@@ -185,6 +187,7 @@
     <string name="fill_details">Fill Details</string>
     <string name="smart_add_review_first_format">Review item 1 of %1$d.</string>
     <string name="smart_add_next_ready">Next Smart Add item ready. Review and save it.</string>
+    <string name="smart_add_item_skipped">Smart Add item skipped.</string>
     <string name="expiry_not_detected">Expiry date was not detected. Please select one before saving.</string>
     <string name="select_expiry_before_saving">Select an expiry date before saving.</string>
     <string name="enter_product_name">Enter a product name.</string>
@@ -238,7 +241,7 @@
     <string name="settings_storage_title">Storage Preferences</string>
     <string name="settings_storage_desc">Default locations and categories</string>
     <string name="settings_dietary_title">Dietary Preferences</string>
-    <string name="settings_dietary_desc">Guide local and Gemini recipes</string>
+    <string name="settings_dietary_desc">Guide local and AI recipes</string>
     <string name="settings_profile_title">Local Profile</string>
     <string name="settings_profile_desc">Device-only profile and local data</string>
     <string name="settings_help_title">Help &amp; Support</string>
@@ -313,4 +316,36 @@
     <string name="reminder_filter_toast">Showing items from your expiry reminder.</string>
     <string name="btn_generate_recipes">Generate recipes</string>
     <string name="recipe_expiring_ingredients_used">EXPIRING INGREDIENTS USED:</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_mark_consumed">Mark consumed</string>
+    <string name="action_mark_wasted">Mark wasted</string>
+    <string name="action_mark_donated">Mark donated</string>
+    <string name="action_delete">Delete</string>
+    <string name="toast_mark_consumed_format">%1$s marked consumed.</string>
+    <string name="toast_mark_wasted_format">%1$s marked wasted.</string>
+    <string name="toast_mark_donated_format">%1$s marked donated.</string>
+    <string name="note_marked_from_inventory">Marked from inventory</string>
+
+    <!-- Authentication Strings -->
+    <string name="sign_out_label">Sign Out</string>
+    <string name="login_error_empty">Please enter both email and password.</string>
+    <string name="login_error_invalid_email">Please enter a valid email address.</string>
+    <string name="login_error_short_password">Password must be at least 6 characters.</string>
+    <string name="login_failed_format">Sign in failed: %1$s</string>
+    <string name="registration_failed_format">Registration failed: %1$s</string>
+    <string name="google_sign_in_failed">Google sign in failed: %1$s</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Please fill in the details to register.</string>
+    <string name="register_btn_label">Register</string>
+    <string name="register_toggle_label">Already have an account? Sign In</string>
+    <string name="display_name_empty_error">Please enter your name.</string>
+    <string name="firebase_config_error">Firebase authentication is not configured on this device.</string>
+    <string name="forgot_password_dialog_title">Reset Password</string>
+    <string name="forgot_password_dialog_message">Send password reset link to %1$s?</string>
+    <string name="forgot_password_email_sent">Password reset email sent.</string>
+    <string name="forgot_password_email_failed">Failed to send reset link: %1$s</string>
+    <string name="forgot_password_email_empty">Please enter your email address first.</string>
+    <string name="signing_in_progress">Signing in...</string>
+    <string name="registering_in_progress">Registering...</string>
+    <string name="signIn_btn_label">Sign In</string>
 </resources>

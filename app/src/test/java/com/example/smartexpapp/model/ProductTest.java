@@ -14,30 +14,30 @@ public class ProductTest {
     public void expiryCalculationsUseExpiryDateMillis() {
         Product expired = productExpiringIn(-1);
         assertEquals(-1, expired.getDaysUntilExpiry());
-        assertEquals("Expired", expired.getExpiryStatus());
-        assertEquals("EXPIRED", expired.getDashboardBadge());
+        assertEquals("Đã hết hạn", expired.getExpiryStatus());
+        assertEquals("HẾT HẠN", expired.getDashboardBadge());
         assertEquals(100, expired.getExpiryProgress());
 
         Product today = productExpiringIn(0);
         assertEquals(0, today.getDaysUntilExpiry());
-        assertEquals("Today", today.getExpiryStatus());
-        assertEquals("TODAY", today.getDashboardBadge());
+        assertEquals("Hôm nay", today.getExpiryStatus());
+        assertEquals("HÔM NAY", today.getDashboardBadge());
         assertEquals(100, today.getExpiryProgress());
 
         Product soon = productExpiringIn(1);
         assertEquals(1, soon.getDaysUntilExpiry());
-        assertEquals("1 Day", soon.getExpiryStatus());
+        assertEquals("1 Ngày", soon.getExpiryStatus());
         assertTrue(soon.isExpiringSoon());
         assertTrue(soon.getExpiryProgress() > 0);
 
         Product safe = productExpiringIn(10);
         assertEquals(10, safe.getDaysUntilExpiry());
-        assertEquals("10 Days", safe.getExpiryStatus());
+        assertEquals("10 Ngày", safe.getExpiryStatus());
         assertFalse(safe.isExpiringSoon());
 
         Product longRange = productExpiringIn(90);
         assertEquals(90, longRange.getDaysUntilExpiry());
-        assertEquals("3 Months", longRange.getExpiryStatus());
+        assertEquals("3 Tháng", longRange.getExpiryStatus());
         assertFalse(longRange.isExpiringSoon());
         assertEquals(0, longRange.getExpiryProgress());
     }
@@ -47,8 +47,8 @@ public class ProductTest {
         Product product = new Product("Milk", "Dairy", "1 Gal", "Refrigerator", 1, 0);
 
         assertEquals("1 Gal", product.getAmount());
-        assertEquals("1 Day", product.getExpiryStatus());
-        assertEquals("TOMORROW", product.getDashboardBadge());
+        assertEquals("1 Ngày", product.getExpiryStatus());
+        assertEquals("NGÀY MAI", product.getDashboardBadge());
         assertTrue(product.isExpiringSoon());
     }
 
@@ -75,8 +75,8 @@ public class ProductTest {
                 null
         );
 
-        assertEquals("Expired", product.getExpiryStatus());
-        assertEquals("EXPIRED", product.getDashboardBadge());
+        assertEquals("Đã hết hạn", product.getExpiryStatus());
+        assertEquals("HẾT HẠN", product.getDashboardBadge());
     }
 
     private Product productExpiringIn(int days) {
