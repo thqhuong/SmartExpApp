@@ -56,6 +56,26 @@ public class InventoryActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Authentication and guest mode check
+        boolean isAuthenticated = false;
+        try {
+            if (!com.google.firebase.FirebaseApp.getApps(this).isEmpty()) {
+                isAuthenticated = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking Firebase Auth state", e);
+        }
+
+        boolean guestModeEnabled = getSharedPreferences("auth_prefs", MODE_PRIVATE).getBoolean("guest_mode_enabled", false);
+        if (!isAuthenticated && !guestModeEnabled) {
+            Intent intent = new Intent(this, SignInActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_inventory);
         setupChrome(R.id.nav_inventory);
 

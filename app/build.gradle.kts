@@ -24,7 +24,12 @@ if (!googleServicesFile.exists()) {
                   "package_name": "com.example.smartexpapp"
                 }
               },
-              "oauth_client": [],
+              "oauth_client": [
+                {
+                  "client_id": "1234567890-placeholder.apps.googleusercontent.com",
+                  "client_type": 3
+                }
+              ],
               "api_key": [
                 {
                   "current_key": "placeholder_api_key_value"

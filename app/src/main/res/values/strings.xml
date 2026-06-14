@@ -325,4 +325,27 @@
     <string name="toast_mark_wasted_format">%1$s marked wasted.</string>
     <string name="toast_mark_donated_format">%1$s marked donated.</string>
     <string name="note_marked_from_inventory">Marked from inventory</string>
+
+    <!-- Authentication Strings -->
+    <string name="sign_out_label">Sign Out</string>
+    <string name="login_error_empty">Please enter both email and password.</string>
+    <string name="login_error_invalid_email">Please enter a valid email address.</string>
+    <string name="login_error_short_password">Password must be at least 6 characters.</string>
+    <string name="login_failed_format">Sign in failed: %1$s</string>
+    <string name="registration_failed_format">Registration failed: %1$s</string>
+    <string name="google_sign_in_failed">Google sign in failed: %1$s</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Please fill in the details to register.</string>
+    <string name="register_btn_label">Register</string>
+    <string name="register_toggle_label">Already have an account? Sign In</string>
+    <string name="display_name_empty_error">Please enter your name.</string>
+    <string name="firebase_config_error">Firebase authentication is not configured on this device.</string>
+    <string name="forgot_password_dialog_title">Reset Password</string>
+    <string name="forgot_password_dialog_message">Send password reset link to %1$s?</string>
+    <string name="forgot_password_email_sent">Password reset email sent.</string>
+    <string name="forgot_password_email_failed">Failed to send reset link: %1$s</string>
+    <string name="forgot_password_email_empty">Please enter your email address first.</string>
+    <string name="signing_in_progress">Signing in...</string>
+    <string name="registering_in_progress">Registering...</string>
+    <string name="signIn_btn_label">Sign In</string>
 </resources>
