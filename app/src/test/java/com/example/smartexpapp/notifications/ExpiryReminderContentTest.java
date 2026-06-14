@@ -69,7 +69,7 @@ public class ExpiryReminderContentTest {
         ExpiryReminderContent.Message message =
                 ExpiryReminderContent.messageFor(Collections.singletonList(product("Milk", 1)));
 
-        assertEquals("Milk expires 1 Day", message.title);
+        assertEquals("Milk expires 1 Ngày", message.title);
         assertEquals("Open SmartExpApp for recipe ideas and actions.", message.text);
     }
 

@@ -314,4 +314,37 @@
     <string name="reminder_filter_toast">Đang hiển thị món từ nhắc hết hạn của bạn.</string>
     <string name="btn_generate_recipes">Tạo công thức</string>
     <string name="recipe_expiring_ingredients_used">NHỮNG SẢN PHẨM SẮP HẾT HẠN ĐƯỢC DÙNG:</string>
+
+    <string name="action_edit">Sửa</string>
+    <string name="action_mark_consumed">Đánh dấu đã tiêu thụ</string>
+    <string name="action_mark_wasted">Đánh dấu lãng phí</string>
+    <string name="action_mark_donated">Đánh dấu đã quyên góp</string>
+    <string name="action_delete">Xóa</string>
+    <string name="toast_mark_consumed_format">Đã đánh dấu tiêu thụ %1$s.</string>
+    <string name="toast_mark_wasted_format">Đã đánh dấu lãng phí %1$s.</string>
+    <string name="toast_mark_donated_format">Đã đánh dấu quyên góp %1$s.</string>
+    <string name="note_marked_from_inventory">Được đánh dấu từ kho</string>
+
+    <!-- Authentication Strings -->
+    <string name="sign_out_label">Đăng xuất</string>
+    <string name="login_error_empty">Vui lòng nhập cả email và mật khẩu.</string>
+    <string name="login_error_invalid_email">Vui lòng nhập địa chỉ email hợp lệ.</string>
+    <string name="login_error_short_password">Mật khẩu phải có ít nhất 6 ký tự.</string>
+    <string name="login_failed_format">Đăng nhập thất bại: %1$s</string>
+    <string name="registration_failed_format">Đăng ký thất bại: %1$s</string>
+    <string name="google_sign_in_failed">Đăng nhập Google thất bại: %1$s</string>
+    <string name="register_title">Tạo tài khoản</string>
+    <string name="register_subtitle">Vui lòng điền thông tin chi tiết để đăng ký.</string>
+    <string name="register_btn_label">Đăng ký</string>
+    <string name="register_toggle_label">Đã có tài khoản? Đăng nhập</string>
+    <string name="display_name_empty_error">Vui lòng nhập tên của bạn.</string>
+    <string name="firebase_config_error">Dịch vụ xác thực Firebase chưa được cấu hình trên thiết bị này.</string>
+    <string name="forgot_password_dialog_title">Đặt lại mật khẩu</string>
+    <string name="forgot_password_dialog_message">Gửi liên kết đặt lại mật khẩu đến %1$s?</string>
+    <string name="forgot_password_email_sent">Đã gửi email đặt lại mật khẩu.</string>
+    <string name="forgot_password_email_failed">Không thể gửi liên kết đặt lại: %1$s</string>
+    <string name="forgot_password_email_empty">Vui lòng nhập địa chỉ email của bạn trước.</string>
+    <string name="signing_in_progress">Đang đăng nhập...</string>
+    <string name="registering_in_progress">Đang đăng ký...</string>
+    <string name="signIn_btn_label">Đăng nhập</string>
 </resources>

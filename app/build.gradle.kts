@@ -2,6 +2,50 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.google.services)
+}
+
+// Generate placeholder google-services.json if it doesn't exist to prevent compile failure
+val googleServicesFile = file("google-services.json")
+if (!googleServicesFile.exists()) {
+    googleServicesFile.writeText(
+        """
+        {
+          "project_info": {
+            "project_number": "123456789012",
+            "project_id": "placeholder-project-id",
+            "storage_bucket": "placeholder-project-id.appspot.com"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "1:123456789012:android:0123456789abcdef",
+                "android_client_info": {
+                  "package_name": "com.example.smartexpapp"
+                }
+              },
+              "oauth_client": [
+                {
+                  "client_id": "1234567890-placeholder.apps.googleusercontent.com",
+                  "client_type": 3
+                }
+              ],
+              "api_key": [
+                {
+                  "current_key": "placeholder_api_key_value"
+                }
+              ],
+              "services": {
+                "appinvite_service": {
+                  "other_platform_oauth_client": []
+                }
+              }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        """.trimIndent()
+    )
 }
 
 val localProperties = Properties().apply {
@@ -82,6 +126,13 @@ dependencies {
     implementation(libs.work.runtime)
     implementation(libs.mlkit.text.recognition)
     annotationProcessor(libs.room.compiler)
+
+    // Firebase & Credential Manager
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials.core)
+    implementation(libs.androidx.credentials.play)
+    implementation(libs.googleid)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.room.testing)
