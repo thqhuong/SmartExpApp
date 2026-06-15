@@ -112,8 +112,8 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
 
             productName.setText(product.getName());
             productMeta.setText(card.getContext().getString(R.string.product_meta_format,
-                    product.getCategory(), product.getAmount()));
-            expiryStatus.setText(product.getExpiryStatus());
+                    CategoryColorHelper.getLocalizedCategory(card.getContext(), product.getCategory()), product.getAmount()));
+            expiryStatus.setText(product.getExpiryStatus(card.getContext()));
             progress.setProgress(product.getExpiryProgress());
 
             float density = card.getResources().getDisplayMetrics().density;

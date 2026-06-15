@@ -182,7 +182,7 @@ public final class AgentRepository {
         SettingsRepository.SettingsSnapshot settings = SettingsRepository.getSettings(database);
         String dietaryPreferences = settings.getDietaryPreferences();
         String languageTag = settings.getLanguageTag();
-        List<Recipe> local = localRecipeSuggestions(products, dietaryPreferences);
+        List<Recipe> local = localRecipeSuggestions(products, dietaryPreferences, languageTag);
         String prompt = userPrompt == null ? "" : userPrompt.trim();
         boolean inventoryEmpty = products.isEmpty();
 
@@ -284,6 +284,10 @@ public final class AgentRepository {
     }
 
     public static List<Recipe> localRecipeSuggestions(List<Product> products, String dietaryPreferences) {
+        return localRecipeSuggestions(products, dietaryPreferences, "en");
+    }
+
+    public static List<Recipe> localRecipeSuggestions(List<Product> products, String dietaryPreferences, String languageTag) {
         List<Product> expiring = new ArrayList<>();
         for (Product product : products) {
             if (!product.isExpired() && product.getDaysUntilExpiry() <= 7) {
@@ -295,7 +299,7 @@ public final class AgentRepository {
             expiring.addAll(products);
         }
 
-        List<String> ingredientLabels = ingredientLabels(expiring);
+        List<String> ingredientLabels = ingredientLabels(expiring, languageTag);
         String primary = expiring.isEmpty() ? "pantry items" : expiring.get(0).getName();
         String secondary = expiring.size() > 1 ? expiring.get(1).getName() : "staples";
         String third = expiring.size() > 2 ? expiring.get(2).getName() : "seasoning";
@@ -412,12 +416,16 @@ public final class AgentRepository {
                 .put("prompt", userPrompt == null ? "" : userPrompt)
                 .put("languageTag", languageTag == null ? "en" : languageTag)
                 .put("dietaryPreferences", dietaryPreferences == null ? "" : dietaryPreferences)
-                .put("products", productsPayload(products));
+                .put("products", productsPayload(products, languageTag));
         JSONObject response = postWorkerJson(workerEndpoint(baseUrl, "/generate-recipes"), payload, "Recipe generation");
-        return recipesFromWorkerResponse(response, products);
+        return recipesFromWorkerResponse(response, products, languageTag);
     }
 
     static List<Recipe> recipesFromWorkerResponse(JSONObject response, List<Product> products) throws Exception {
+        return recipesFromWorkerResponse(response, products, "en");
+    }
+
+    static List<Recipe> recipesFromWorkerResponse(JSONObject response, List<Product> products, String languageTag) throws Exception {
         JSONArray array = response.optJSONArray("recipes");
         List<Recipe> recipes = new ArrayList<>();
         if (array == null) {
@@ -439,7 +447,7 @@ public final class AgentRepository {
             Recipe recipe = new Recipe(
                     item.optString("title", "Smart Inventory Recipe"),
                     item.optString("summary", "A recipe suggestion based on your local inventory."),
-                    ingredients.isEmpty() ? ingredientLabels(products) : ingredients,
+                    ingredients.isEmpty() ? ingredientLabels(products, languageTag) : ingredients,
                     item.optString("actionText", "View Recipe"),
                     android.R.drawable.ic_menu_gallery,
                     recipes.isEmpty(),
@@ -588,12 +596,16 @@ public final class AgentRepository {
         JSONObject payload = new JSONObject()
                 .put("prompt", prompt == null ? "" : prompt)
                 .put("languageTag", languageTag == null ? "en" : languageTag)
-                .put("products", productsPayload(products));
+                .put("products", productsPayload(products, languageTag));
         JSONObject response = postWorkerJson(workerEndpoint(baseUrl, "/answer-inventory"), payload, "Inventory answer");
         return response.optString("answer", "");
     }
 
     private static JSONArray productsPayload(List<Product> products) throws Exception {
+        return productsPayload(products, "en");
+    }
+
+    private static JSONArray productsPayload(List<Product> products, String languageTag) throws Exception {
         JSONArray array = new JSONArray();
         if (products == null) {
             return array;
@@ -608,7 +620,7 @@ public final class AgentRepository {
                     .put("quantity", product.getQuantity())
                     .put("unit", product.getUnit())
                     .put("storage", product.getStorage())
-                    .put("expiryStatus", product.getExpiryStatus())
+                    .put("expiryStatus", product.getExpiryStatus(languageTag))
                     .put("daysUntilExpiry", product.getDaysUntilExpiry()));
             if (array.length() == 40) {
                 break;
@@ -818,7 +830,7 @@ public final class AgentRepository {
                 + "Respect dietary preferences when possible. No markdown. User request: "
                 + safePrompt + "\nApp language: " + languageContext(languageTag)
                 + "\nDietary preferences: " + dietaryPreferenceContext(dietaryPreferences)
-                + "\nInventory context, optional unless no user request is provided:\n" + inventoryContext(products);
+                + "\nInventory context, optional unless no user request is provided:\n" + inventoryContext(products, languageTag);
     }
 
     private static String buildProductDraftPrompt(String input) {
@@ -857,10 +869,14 @@ public final class AgentRepository {
                 + "Answer concisely. Do not claim to save, delete, or change inventory. "
                 + "If the user asks for recipes, cooking ideas, or a specific dish, say that recipe suggestions are being refreshed below and mention any matching inventory items only when useful. "
                 + "Do not reject recipe requests just because the ingredients are not in inventory. User request: "
-                + userPrompt + "\nInventory:\n" + inventoryContext(products);
+                + userPrompt + "\nInventory:\n" + inventoryContext(products, languageTag);
     }
 
     private static String inventoryContext(List<Product> products) {
+        return inventoryContext(products, "en");
+    }
+
+    private static String inventoryContext(List<Product> products, String languageTag) {
         StringBuilder builder = new StringBuilder();
         for (Product product : products) {
             builder.append("- ")
@@ -872,7 +888,7 @@ public final class AgentRepository {
                     .append(", ")
                     .append(product.getStorage())
                     .append(", expires in ")
-                    .append(product.getExpiryStatus())
+                    .append(product.getExpiryStatus(languageTag))
                     .append('\n');
         }
         return builder.toString();
@@ -905,10 +921,10 @@ public final class AgentRepository {
                     + " when it fits. I also refreshed the recipe suggestions from your request.";
         }
         if (vietnamese) {
-            return first.getName() + " cần được chú ý trước vì trạng thái là " + first.getExpiryStatus()
+            return first.getName() + " cần được chú ý trước vì trạng thái là " + first.getExpiryStatus(languageTag)
                     + ". Hãy xem các gợi ý công thức bên dưới.";
         }
-        return first.getName() + " needs attention first because its status is " + first.getExpiryStatus()
+        return first.getName() + " needs attention first because its status is " + first.getExpiryStatus(languageTag)
                 + ". Check the recipe suggestions below for ways to use it.";
     }
 
@@ -1075,13 +1091,17 @@ public final class AgentRepository {
     }
 
     private static List<String> ingredientLabels(List<Product> products) {
+        return ingredientLabels(products, "en");
+    }
+
+    private static List<String> ingredientLabels(List<Product> products, String languageTag) {
         List<String> labels = new ArrayList<>();
         for (Product product : products) {
-            labels.add(product.getName() + " - " + product.getExpiryStatus());
+            labels.add(product.getName() + " - " + product.getExpiryStatus(languageTag));
             if (labels.size() == 4) break;
         }
         if (labels.isEmpty()) {
-            labels.add("No urgent items");
+            labels.add(languageTag != null && languageTag.trim().toLowerCase().startsWith("vi") ? "Không có món cần chú ý" : "No urgent items");
         }
         return labels;
     }

@@ -75,16 +75,16 @@ public class MainActivity extends BaseActivity {
         LinearLayout list = findViewById(R.id.storageSummaryList);
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-        addStorageSummary(inflater, list, products, "Refrigerator", "Refrigerator",
+        addStorageSummary(inflater, list, products, R.string.storage_summary_refrigerator, "Refrigerator",
                 R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge, R.color.storage_fridge_icon, R.drawable.progress_blue);
-        addStorageSummary(inflater, list, products, "Room Temp", "Room Temp",
+        addStorageSummary(inflater, list, products, R.string.storage_summary_room_temp, "Room Temp",
                 R.drawable.ic_storage_room, R.drawable.bg_storage_icon_room, R.color.storage_room_icon, R.drawable.progress_orange);
-        addStorageSummary(inflater, list, products, "Freezer", "Freeze",
+        addStorageSummary(inflater, list, products, R.string.storage_summary_freezer, "Freeze",
                 R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer, R.color.storage_freezer_icon, R.drawable.progress_purple);
     }
 
     private void addStorageSummary(LayoutInflater inflater, LinearLayout list, List<Product> products,
-                                   String label, String storageValue, int iconRes, int bgRes, int iconColorRes, int progressDrawableRes) {
+                                   int labelRes, String storageValue, int iconRes, int bgRes, int iconColorRes, int progressDrawableRes) {
         int count = 0;
         for (Product product : products) {
             if (storageValue.equals(product.getStorage())) {
@@ -103,8 +103,8 @@ public class MainActivity extends BaseActivity {
         ImageView icon = item.findViewById(R.id.storageIcon);
         ViewUtils.setIcon(icon, iconRes, iconColorRes);
 
-        ((TextView) item.findViewById(R.id.storageName)).setText(label);
-        ((TextView) item.findViewById(R.id.storageCount)).setText(count + " items");
+        ((TextView) item.findViewById(R.id.storageName)).setText(labelRes);
+        ((TextView) item.findViewById(R.id.storageCount)).setText(getString(R.string.storage_summary_items_count_format, count));
         
         ProgressBar progressBar = item.findViewById(R.id.storageProgress);
         progressBar.setProgress(progress);
@@ -174,11 +174,10 @@ public class MainActivity extends BaseActivity {
             categoryDot.setVisibility(View.VISIBLE);
 
             ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
-            ((TextView) item.findViewById(R.id.productMeta)).setText(
-                    product.getStorage() + " \u2022 " + product.getAmount());
+            ((TextView) item.findViewById(R.id.productMeta)).setText(getLocalizedStorage(product.getStorage()));
 
             TextView badge = item.findViewById(R.id.expiryBadge);
-            badge.setText(product.getDashboardBadge());
+            badge.setText(product.getDashboardBadge(this));
             if ("Expired".equals(groupName)) {
                 badge.setBackgroundResource(R.drawable.bg_error_soft_badge);
                 badge.setTextColor(getColor(R.color.smart_error));
@@ -190,7 +189,7 @@ public class MainActivity extends BaseActivity {
                 badge.setTextColor(getColor(R.color.smart_on_surface));
             }
 
-            ((TextView) item.findViewById(R.id.expiryStatus)).setText(product.getExpiryStatus());
+            ((TextView) item.findViewById(R.id.expiryStatus)).setText(product.getAmount());
 
             list.addView(item);
             if (i < products.size() - 1) {
@@ -199,5 +198,16 @@ public class MainActivity extends BaseActivity {
                 item.findViewById(R.id.rowDivider).setVisibility(View.GONE);
             }
         }
+    }
+
+    private String getLocalizedStorage(String storage) {
+        if ("Refrigerator".equalsIgnoreCase(storage)) {
+            return getString(R.string.storage_summary_refrigerator);
+        } else if ("Freeze".equalsIgnoreCase(storage) || "Freezer".equalsIgnoreCase(storage)) {
+            return getString(R.string.storage_summary_freezer);
+        } else if ("Room Temp".equalsIgnoreCase(storage)) {
+            return getString(R.string.storage_summary_room_temp);
+        }
+        return storage;
     }
 }
