@@ -144,11 +144,11 @@
                 android:indeterminateTint="@color/smart_primary"
                 android:visibility="gone" />
 
-            <LinearLayout
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/productList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:nestedScrollingEnabled="false" />
 
             <!-- Empty State -->
             <LinearLayout

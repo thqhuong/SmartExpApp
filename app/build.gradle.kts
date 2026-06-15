@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.work.runtime)
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.recyclerview)
     annotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.test.core)
