@@ -6,12 +6,10 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -19,15 +17,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.notifications.ReminderScheduler;
-import com.example.smartexpapp.util.CategoryColorHelper;
-import com.example.smartexpapp.util.ImageLoader;
-import com.example.smartexpapp.util.ViewUtils;
-import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +34,8 @@ public class InventoryActivity extends BaseActivity {
     public static final String EXTRA_RESET_FILTERS = "com.example.smartexpapp.extra.RESET_FILTERS";
     public static final String FILTER_EXPIRING_SOON = "ExpiringSoon";
 
-    private LinearLayout productList;
+    private RecyclerView productList;
+    private InventoryAdapter adapter;
     private LinearLayout emptyState;
     private TextView emptyTitle;
     private TextView emptyDesc;
@@ -81,6 +77,20 @@ public class InventoryActivity extends BaseActivity {
         setupChrome(R.id.nav_inventory);
 
         productList = findViewById(R.id.productList);
+        productList.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new InventoryAdapter(new InventoryAdapter.OnProductClickListener() {
+            @Override
+            public void onProductClick(Product product) {
+                showProductActions(product);
+            }
+
+            @Override
+            public void onDeleteClick(Product product) {
+                confirmDelete(product);
+            }
+        });
+        productList.setAdapter(adapter);
+
         emptyState = findViewById(R.id.emptyState);
         emptyTitle = findViewById(R.id.emptyTitle);
         emptyDesc = findViewById(R.id.emptyDesc);
@@ -269,12 +279,9 @@ public class InventoryActivity extends BaseActivity {
 
     private void hideLoading() {
         loadingIndicator.setVisibility(View.GONE);
-        productList.setVisibility(View.VISIBLE);
     }
 
     private void bindProducts(List<Product> products) {
-        productList.removeAllViews();
-
         if (products.isEmpty()) {
             productList.setVisibility(View.GONE);
             errorState.setVisibility(View.GONE);
@@ -293,84 +300,13 @@ public class InventoryActivity extends BaseActivity {
                 emptyTitle.setText(R.string.empty_inventory);
                 emptyDesc.setText(R.string.empty_inventory_desc);
             }
-            return;
-        }
-
-        productList.setVisibility(View.VISIBLE);
-        emptyState.setVisibility(View.GONE);
-        errorState.setVisibility(View.GONE);
-
-        LayoutInflater inflater = LayoutInflater.from(this);
-        for (Product product : products) {
-            View item = inflater.inflate(R.layout.item_inventory_product, productList, false);
-            bindProductCard(item, product);
-            ViewUtils.setBottomMargin(item, 12);
-            productList.addView(item);
-        }
-    }
-
-    private void bindProductCard(View item, Product product) {
-        MaterialCardView card = item.findViewById(R.id.productCard);
-        TextView urgentBadge = item.findViewById(R.id.urgentBadge);
-        TextView expiryStatus = item.findViewById(R.id.expiryStatus);
-        ProgressBar progress = item.findViewById(R.id.expiryProgress);
-        View deleteBtn = item.findViewById(R.id.btnDelete);
-
-        View categoryDot = item.findViewById(R.id.categoryDot);
-        if (categoryDot.getBackground() != null) {
-            categoryDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(product.getCategory())));
-        }
-        categoryDot.setVisibility(View.VISIBLE);
-
-        ImageView icon = item.findViewById(R.id.productIcon);
-        String imgUrl = product.getImageUrl();
-        if (imgUrl != null && !imgUrl.isEmpty()) {
-            icon.setImageTintList(null);
-            ImageLoader.load(icon, imgUrl);
         } else {
-            int tintColor = CategoryColorHelper.getColor(this, product.getCategory());
-            icon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(tintColor)));
-            ViewUtils.setIcon(icon, product.getIconRes(), tintColor);
-        }
-        ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
-        ((TextView) item.findViewById(R.id.productMeta))
-                .setText(getString(R.string.product_meta_format, product.getCategory(), product.getAmount()));
-        expiryStatus.setText(product.getExpiryStatus());
-        progress.setProgress(product.getExpiryProgress());
-
-        float density = getResources().getDisplayMetrics().density;
-        if (product.isExpired()) {
-            card.setCardBackgroundColor(getColor(R.color.smart_glass_error));
-            card.setStrokeColor(getColor(R.color.smart_glass_error_stroke));
-            card.setStrokeWidth((int) (1.5f * density));
-            urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_error_soft_badge);
-            urgentBadge.setText(R.string.status_expired);
-            urgentBadge.setTextColor(getColor(R.color.smart_error));
-            expiryStatus.setTextColor(getColor(R.color.smart_error));
-            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
-        } else if (product.isExpiringSoon()) {
-            card.setCardBackgroundColor(getColor(R.color.smart_glass_urgent));
-            card.setStrokeColor(getColor(R.color.smart_glass_urgent_stroke));
-            card.setStrokeWidth((int) (1.5f * density));
-            urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_primary_soft_badge);
-            urgentBadge.setText(R.string.status_expiring);
-            urgentBadge.setTextColor(getColor(R.color.smart_primary_container));
-            expiryStatus.setTextColor(getColor(R.color.smart_primary_container));
-            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
-        } else {
-            card.setCardBackgroundColor(getColor(R.color.smart_glass_surface));
-            card.setStrokeColor(getColor(R.color.smart_glass_stroke));
-            card.setStrokeWidth((int) density);
-            urgentBadge.setVisibility(View.GONE);
-            expiryStatus.setTextColor(getColor(R.color.smart_on_surface));
-            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_gray));
+            productList.setVisibility(View.VISIBLE);
+            emptyState.setVisibility(View.GONE);
+            errorState.setVisibility(View.GONE);
         }
 
-        card.setOnClickListener(v -> showProductActions(product));
-
-        deleteBtn.setOnClickListener(v -> confirmDelete(product));
+        adapter.submitList(products);
     }
 
     private void showProductActions(Product product) {
