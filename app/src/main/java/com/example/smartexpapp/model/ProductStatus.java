@@ -6,6 +6,7 @@ public final class ProductStatus {
     public static final String WASTED = "WASTED";
     public static final String DONATED = "DONATED";
     public static final String EXPIRED = "EXPIRED";
+    public static final String DELETED = "DELETED";
 
     private ProductStatus() {
     }
