@@ -18,6 +18,7 @@ import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.GetCredentialException;
 
+import com.example.smartexpapp.data.AuthStateRepository;
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.example.smartexpapp.data.SettingsRepository;
@@ -185,6 +186,7 @@ public class SignInActivity extends BaseActivity {
             auth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
+                            AuthStateRepository.markGuestMode(this, false);
                             FirebaseUser user = auth.getCurrentUser();
                             if (user != null) {
                                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
@@ -216,6 +218,7 @@ public class SignInActivity extends BaseActivity {
             auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
+                            AuthStateRepository.markGuestMode(this, false);
                             FirebaseUser user = auth.getCurrentUser();
                             String name = (user != null && user.getDisplayName() != null) ? user.getDisplayName() : user.getEmail();
                             SettingsRepository.setDisplayNameAsync(this, name,
@@ -324,6 +327,7 @@ public class SignInActivity extends BaseActivity {
         auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
+                        AuthStateRepository.markGuestMode(this, false);
                         FirebaseUser user = auth.getCurrentUser();
                         String name = (user != null && user.getDisplayName() != null) ? user.getDisplayName() : "Google User";
                         SettingsRepository.setDisplayNameAsync(this, name,
@@ -348,12 +352,12 @@ public class SignInActivity extends BaseActivity {
         setLoading(true);
         if (auth != null) {
             auth.signInAnonymously().addOnCompleteListener(this, task -> {
-                getSharedPreferences("auth_prefs", MODE_PRIVATE).edit().putBoolean("guest_mode_enabled", true).apply();
+                AuthStateRepository.markGuestMode(this, true);
                 setLoading(false);
                 navigateHome();
             });
         } else {
-            getSharedPreferences("auth_prefs", MODE_PRIVATE).edit().putBoolean("guest_mode_enabled", true).apply();
+            AuthStateRepository.markGuestMode(this, true);
             setLoading(false);
             navigateHome();
         }

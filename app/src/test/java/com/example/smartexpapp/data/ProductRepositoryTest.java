@@ -44,6 +44,7 @@ public class ProductRepositoryTest {
 
     @After
     public void tearDown() {
+        AuthStateRepository.clearTestAuthStateOverride();
         database.close();
     }
 
@@ -64,6 +65,47 @@ public class ProductRepositoryTest {
         assertTrue(repository.deleteProduct(milk.getId()));
         assertTrue(repository.getProducts().isEmpty());
         assertNull(repository.getProductById(milk.getId()));
+    }
+
+    @Test
+    public void addProductAssociatesSignedInOwnerUserId() {
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("firebase-user-123", "Kitchen Team", "team@example.com")
+        );
+        Product milk = product("milk-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 5);
+
+        repository.addProduct(milk);
+
+        Product saved = repository.getProductById(milk.getId());
+        assertNotNull(saved);
+        assertEquals("firebase-user-123", saved.getOwnerUserId());
+    }
+
+    @Test
+    public void addProductKeepsGuestLocalOwnerUserIdNull() {
+        AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));
+        Product milk = product("milk-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 5);
+
+        repository.addProduct(milk);
+
+        Product saved = repository.getProductById(milk.getId());
+        assertNotNull(saved);
+        assertNull(saved.getOwnerUserId());
+    }
+
+    @Test
+    public void updateProductPreservesExistingOwnerUserId() {
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("firebase-user-123", "Kitchen Team", "team@example.com")
+        );
+        Product owned = product("milk-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 5)
+                .withOwnerUserId("original-owner", System.currentTimeMillis());
+        repository.addProduct(owned);
+
+        Product updated = copyWithName(owned, "Organic Milk");
+        assertTrue(repository.updateProduct(updated));
+
+        assertEquals("original-owner", repository.getProductById(owned.getId()).getOwnerUserId());
     }
 
     @Test
