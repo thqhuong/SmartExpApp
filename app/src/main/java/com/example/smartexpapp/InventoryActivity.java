@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.notifications.ReminderScheduler;
 
@@ -53,19 +54,8 @@ public class InventoryActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Authentication and guest mode check
-        boolean isAuthenticated = false;
-        try {
-            if (!com.google.firebase.FirebaseApp.getApps(this).isEmpty()) {
-                isAuthenticated = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error checking Firebase Auth state", e);
-        }
-
-        boolean guestModeEnabled = getSharedPreferences("auth_prefs", MODE_PRIVATE).getBoolean("guest_mode_enabled",
-                false);
-        if (!isAuthenticated && !guestModeEnabled) {
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (!authState.isSignedIn() && !authState.isGuest()) {
             Intent intent = new Intent(this, SignInActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);

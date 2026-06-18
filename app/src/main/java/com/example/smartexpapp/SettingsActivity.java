@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
 
+import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.data.SampleData;
 import com.example.smartexpapp.data.SettingsRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
@@ -52,68 +53,73 @@ public class SettingsActivity extends BaseActivity {
         com.google.android.material.button.MaterialButton signOutBtn = findViewById(R.id.signOutButton);
         if (signOutBtn == null) return;
 
-        com.google.firebase.auth.FirebaseUser user = null;
-        try {
-            if (!com.google.firebase.FirebaseApp.getApps(this).isEmpty()) {
-                user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-            }
-        } catch (Exception e) {
-            // Firebase not configured
-        }
-
-        if (user != null && !user.isAnonymous()) {
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (authState.isSignedIn()) {
             signOutBtn.setText(R.string.sign_out_label);
             signOutBtn.setIconResource(R.drawable.ic_close);
             signOutBtn.setOnClickListener(v -> {
-                try {
-                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
-                } catch (Exception e) {
-                    // Ignore
-                }
-                try {
-                    androidx.credentials.CredentialManager.create(this).clearCredentialStateAsync(
-                        new androidx.credentials.ClearCredentialStateRequest(),
-                        new android.os.CancellationSignal(),
-                        java.util.concurrent.Executors.newSingleThreadExecutor(),
-                        new androidx.credentials.CredentialManagerCallback<Void, androidx.credentials.exceptions.ClearCredentialException>() {
-                            @Override
-                            public void onResult(Void result) {}
-                            @Override
-                            public void onError(androidx.credentials.exceptions.ClearCredentialException e) {}
-                        }
-                    );
-                } catch (Exception e) {
-                    // Ignore
-                }
-                getSharedPreferences("auth_prefs", MODE_PRIVATE).edit().putBoolean("guest_mode_enabled", false).apply();
-                Intent intent = new Intent(this, SignInActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
+                AuthStateRepository.signOut(this);
+                navigateToSignIn();
             });
         } else {
-            signOutBtn.setText(R.string.settings_local_mode);
+            signOutBtn.setText(R.string.settings_sign_in);
             signOutBtn.setIconResource(R.drawable.ic_info);
-            signOutBtn.setOnClickListener(v -> {
-                Intent intent = new Intent(this, SignInActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
-            });
+            signOutBtn.setOnClickListener(v -> navigateToSignIn());
         }
     }
 
     private void bindLocalProfile() {
         TextView displayName = findViewById(R.id.settingsDisplayNameText);
+        TextView subtitle = findViewById(R.id.settingsProfileSubtitleText);
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (authState.isSignedIn()) {
+            String identity = authState.getBestDisplayName(getString(R.string.profile_local_user));
+            if (displayName != null) {
+                displayName.setText(identity);
+            }
+            if (subtitle != null) {
+                subtitle.setText(getString(R.string.profile_signed_in_format, signedInSubtitleIdentity(authState)));
+            }
+            return;
+        }
+        if (authState.isGuest()) {
+            if (displayName != null) {
+                displayName.setText(R.string.profile_guest_mode);
+            }
+            if (subtitle != null) {
+                subtitle.setText(R.string.profile_guest_device);
+            }
+            return;
+        }
         SettingsRepository.getSettingsAsync(this, settings -> {
             if (displayName != null) {
                 displayName.setText(settings.getDisplayName());
+            }
+            if (subtitle != null) {
+                subtitle.setText(R.string.profile_stored_device);
             }
         }, error -> {
             if (displayName != null) {
                 displayName.setText(R.string.profile_local_user);
             }
+            if (subtitle != null) {
+                subtitle.setText(R.string.profile_stored_device);
+            }
         });
+    }
+
+    private void navigateToSignIn() {
+        Intent intent = new Intent(this, SignInActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    private String signedInSubtitleIdentity(AuthStateRepository.AuthState authState) {
+        if (authState.getEmail() != null && !authState.getEmail().trim().isEmpty()) {
+            return authState.getEmail().trim();
+        }
+        return authState.getBestDisplayName(getString(R.string.profile_local_user));
     }
 
     private void bindSettings() {

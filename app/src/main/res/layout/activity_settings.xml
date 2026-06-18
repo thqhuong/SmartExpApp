@@ -85,6 +85,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/settingsProfileSubtitleText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"

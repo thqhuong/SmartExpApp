@@ -147,6 +147,29 @@ public class Product {
         );
     }
 
+    public Product withOwnerUserId(String newOwnerUserId, long updatedAt) {
+        return new Product(
+                id,
+                name,
+                category,
+                quantity,
+                unit,
+                storage,
+                storageLocationId,
+                expiryDateMillis,
+                barcode,
+                status,
+                iconRes,
+                imageUrl,
+                createdAt,
+                updatedAt,
+                cloudId,
+                newOwnerUserId,
+                syncStatus,
+                lastSyncedAt
+        );
+    }
+
     public String getId() {
         return id;
     }
