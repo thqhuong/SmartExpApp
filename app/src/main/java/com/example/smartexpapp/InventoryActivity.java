@@ -368,38 +368,65 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void showMarkDialog(Product product, String action) {
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_mark_status, null);
-        ((TextView) view.findViewById(R.id.dialogProductName)).setText(product.getName());
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_mark_status)
+                .create();
+        dialog.getWindow().setDimAmount(0.6f);
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                android.graphics.Color.TRANSPARENT));
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogProductName)).setText(product.getName());
 
         int actionLabelRes;
-        String statusKey;
+        int iconRes;
+        int iconTintRes;
+        String upperLabel;
+        boolean showWarning = false;
+
         switch (action) {
             case "wasted":
                 actionLabelRes = R.string.action_mark_wasted;
-                statusKey = "wasted";
-                view.findViewById(R.id.dialogWarning).setVisibility(View.VISIBLE);
-                ((TextView) view.findViewById(R.id.dialogWarning)).setText(R.string.mark_wasted_confirm_text);
+                iconRes = R.drawable.ic_close;
+                iconTintRes = R.color.smart_error;
+                upperLabel = "MARK WASTED";
+                showWarning = true;
                 break;
             case "donated":
                 actionLabelRes = R.string.action_mark_donated;
-                statusKey = "donated";
+                iconRes = R.drawable.ic_favorite_filled;
+                iconTintRes = R.color.smart_notification_red;
+                upperLabel = "MARK DONATED";
                 break;
             default:
                 actionLabelRes = R.string.action_mark_consumed;
-                statusKey = "consumed";
+                iconRes = R.drawable.ic_check_circle;
+                iconTintRes = R.color.smart_primary;
+                upperLabel = "MARK CONSUMED";
                 break;
         }
-        ((TextView) view.findViewById(R.id.dialogActionLabel)).setText(actionLabelRes);
 
-        new AlertDialog.Builder(this)
-                .setView(view)
-                .setPositiveButton(R.string.mark_status_confirm, (dialog, which) -> {
-                    EditText noteInput = view.findViewById(R.id.dialogNoteInput);
-                    String note = noteInput.getText().toString().trim();
-                    executeMarkAction(product, statusKey, note);
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        ((TextView) dialog.findViewById(R.id.dialogActionLabelUpper)).setText(upperLabel);
+        ImageView icon = dialog.findViewById(R.id.dialogActionIcon);
+        icon.setImageResource(iconRes);
+        icon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                getColor(iconTintRes)));
+
+        if (showWarning) {
+            dialog.findViewById(R.id.dialogWarningContainer).setVisibility(View.VISIBLE);
+            ((TextView) dialog.findViewById(R.id.dialogWarning)).setText(R.string.mark_wasted_confirm_text);
+        } else {
+            dialog.findViewById(R.id.dialogWarningContainer).setVisibility(View.GONE);
+        }
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            EditText noteInput = dialog.findViewById(R.id.dialogNoteInput);
+            String note = noteInput.getText().toString().trim();
+            executeMarkAction(product, action, note);
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void executeMarkAction(Product product, String action, String note) {
