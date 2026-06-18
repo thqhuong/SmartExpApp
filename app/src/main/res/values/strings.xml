@@ -28,9 +28,27 @@
     <string name="product_deleted">Product deleted</string>
     <string name="error_load">Failed to load products</string>
 
-    <string name="status_expired">ĐÃ HẾT HẠN</string>
-    <string name="status_expiring">SẮP HẾT HẠN</string>
+    <string name="status_expired">EXPIRED</string>
+    <string name="status_expiring">EXPIRING SOON</string>
     <string name="product_meta_format">%1$s - %2$s</string>
+
+    <!-- Expiry status and dashboard badge localizations -->
+    <string name="expiry_status_expired">Expired</string>
+    <string name="expiry_status_today">Today</string>
+    <string name="expiry_status_day_single">1 Day</string>
+    <string name="expiry_status_days_format">%1$d Days</string>
+    <string name="expiry_status_months_format">%1$d Months</string>
+
+    <string name="dashboard_badge_expired">EXPIRED</string>
+    <string name="dashboard_badge_today">TODAY</string>
+    <string name="dashboard_badge_tomorrow">TOMORROW</string>
+    <string name="dashboard_badge_days_left_format">%1$d DAYS LEFT</string>
+
+    <!-- Storage Summary Localizations -->
+    <string name="storage_summary_refrigerator">Refrigerator</string>
+    <string name="storage_summary_room_temp">Room Temp</string>
+    <string name="storage_summary_freezer">Freezer</string>
+    <string name="storage_summary_items_count_format">%1$d items</string>
 
     <!-- Inventory Strings -->
     <string name="inventory_title">My Inventory</string>

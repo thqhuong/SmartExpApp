@@ -51,7 +51,7 @@ public class CategoryColorHelper {
         return getColor(toCanonical(context, category));
     }
 
-    private static String toCanonical(Context context, String category) {
+    public static String toCanonical(Context context, String category) {
         if (category == null) return null;
         String[] canonicals = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
         int[] resIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
@@ -59,6 +59,51 @@ public class CategoryColorHelper {
         for (int i = 0; i < canonicals.length; i++) {
             if (canonicals[i].equals(category) || context.getString(resIds[i]).equals(category)) {
                 return canonicals[i];
+            }
+        }
+        return category;
+    }
+
+    public static boolean isBuiltInCanonical(String category) {
+        if (category == null) return false;
+        return "Dairy".equals(category) || "General".equals(category)
+                || "Meat".equals(category) || "Pantry".equals(category)
+                || "Produce".equals(category) || "Vegetables".equals(category);
+    }
+
+    public static java.util.Set<String> getCustomizedDefaultCategories(Context context) {
+        android.content.SharedPreferences prefs = context.getSharedPreferences("category_prefs", Context.MODE_PRIVATE);
+        return prefs.getStringSet("customized_default_categories", new java.util.HashSet<>());
+    }
+
+    public static void markDefaultCategoryCustomized(Context context, String canonicalName) {
+        android.content.SharedPreferences prefs = context.getSharedPreferences("category_prefs", Context.MODE_PRIVATE);
+        java.util.Set<String> set = new java.util.HashSet<>(prefs.getStringSet("customized_default_categories", new java.util.HashSet<>()));
+        set.add(canonicalName);
+        prefs.edit().putStringSet("customized_default_categories", set).apply();
+    }
+
+    public static boolean isDefaultCategoryActive(Context context, String category) {
+        if (category == null) return false;
+        String canonical = toCanonical(context, category);
+        if (!isBuiltInCanonical(canonical)) {
+            return false;
+        }
+        java.util.Set<String> customized = getCustomizedDefaultCategories(context);
+        return !customized.contains(canonical);
+    }
+
+    public static String getLocalizedCategory(Context context, String category) {
+        if (category == null) return null;
+        String canonical = toCanonical(context, category);
+        if (isDefaultCategoryActive(context, canonical)) {
+            String[] canonicals = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
+            int[] resIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
+                    R.string.cat_pantry, R.string.cat_produce, R.string.cat_vegetables};
+            for (int i = 0; i < canonicals.length; i++) {
+                if (canonicals[i].equals(canonical)) {
+                    return context.getString(resIds[i]);
+                }
             }
         }
         return category;
