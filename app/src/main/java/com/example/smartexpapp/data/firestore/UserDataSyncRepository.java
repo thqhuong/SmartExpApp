@@ -4,8 +4,10 @@ import android.content.Context;
 
 import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.data.local.AppDatabase;
+import com.example.smartexpapp.data.local.CategoryEntity;
 import com.example.smartexpapp.data.local.InventoryActionEntity;
 import com.example.smartexpapp.data.local.UserSettingsEntity;
+import com.example.smartexpapp.model.Product;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
@@ -30,6 +32,7 @@ public final class UserDataSyncRepository {
         SyncStatusRepository.markSyncing(context);
         EXECUTOR.execute(() -> {
             syncSettingsAsync(target, database);
+            syncCategoriesAsync(target, database);
             syncInventoryActionsAsync(target, database);
         });
         SyncStatusRepository.markSyncEnabled(context);
@@ -51,26 +54,44 @@ public final class UserDataSyncRepository {
         EXECUTOR.execute(() -> syncInventoryActionsAsync(target, database));
     }
 
-    private static void syncSettingsAsync(SyncTarget target, AppDatabase database) {
-        UserSettingsEntity local = database.userSettingsDao().getById(FirestoreContract.DEFAULT_SETTINGS_ID);
-        if (local != null) {
-            target.firestore.document(FirestoreContract.settingsPath(target.userId) + "/" + FirestoreContract.DEFAULT_SETTINGS_ID)
-                    .set(settingsDocument(local, target.userId), SetOptions.merge());
+    public static void syncCategoriesAsync(Context context, AppDatabase database) {
+        SyncTarget target = targetFor(context);
+        if (target == null) {
+            return;
         }
+        EXECUTOR.execute(() -> syncCategoriesAsync(target, database));
+    }
 
+    private static void syncSettingsAsync(SyncTarget target, AppDatabase database) {
         target.firestore.document(FirestoreContract.settingsPath(target.userId) + "/" + FirestoreContract.DEFAULT_SETTINGS_ID)
                 .get()
                 .addOnSuccessListener(document -> EXECUTOR.execute(() -> {
+                    UserSettingsEntity local = database.userSettingsDao().getById(FirestoreContract.DEFAULT_SETTINGS_ID);
                     if (!document.exists()) {
+                        if (local != null) {
+                            uploadSettings(target, local);
+                        }
                         return;
                     }
-                    UserSettingsEntity current = database.userSettingsDao().getById(FirestoreContract.DEFAULT_SETTINGS_ID);
                     long remoteUpdatedAt = longValue(document.get("updatedAt"), 0L);
-                    if (current == null || remoteUpdatedAt > current.updatedAt) {
+                    if (local == null || remoteUpdatedAt > local.updatedAt) {
                         database.userSettingsDao().insert(settingsEntity(document.getData(), remoteUpdatedAt));
+                        SyncStatusRepository.markSynced(target.context);
+                        return;
                     }
-                    SyncStatusRepository.markSynced(target.context);
+                    if (local.updatedAt > remoteUpdatedAt) {
+                        uploadSettings(target, local);
+                    } else {
+                        SyncStatusRepository.markSynced(target.context);
+                    }
                 }))
+                .addOnFailureListener(error -> SyncStatusRepository.markError(target.context));
+    }
+
+    private static void uploadSettings(SyncTarget target, UserSettingsEntity local) {
+        target.firestore.document(FirestoreContract.settingsPath(target.userId) + "/" + FirestoreContract.DEFAULT_SETTINGS_ID)
+                .set(settingsDocument(local, target.userId), SetOptions.merge())
+                .addOnSuccessListener(unused -> SyncStatusRepository.markSynced(target.context))
                 .addOnFailureListener(error -> SyncStatusRepository.markError(target.context));
     }
 
@@ -87,15 +108,61 @@ public final class UserDataSyncRepository {
                 .addOnSuccessListener(snapshot -> EXECUTOR.execute(() -> {
                     for (com.google.firebase.firestore.DocumentSnapshot document : snapshot.getDocuments()) {
                         InventoryActionEntity action = actionEntity(document.getData(), document.getId());
-                        try {
-                            database.inventoryActionDao().insert(action);
-                        } catch (RuntimeException ignored) {
-                            // Product rows sync separately; skip action rows until their product exists locally.
+                        if (database.productDao().getById(action.productId) == null) {
+                            SyncStatusRepository.markError(target.context);
+                            continue;
                         }
+                        database.inventoryActionDao().insert(action);
                     }
                     SyncStatusRepository.markSynced(target.context);
                 }))
                 .addOnFailureListener(error -> SyncStatusRepository.markError(target.context));
+    }
+
+    private static void syncCategoriesAsync(SyncTarget target, AppDatabase database) {
+        target.firestore.collection(FirestoreContract.categoriesPath(target.userId))
+                .get()
+                .addOnSuccessListener(snapshot -> EXECUTOR.execute(() -> {
+                    long syncedAt = System.currentTimeMillis();
+                    for (com.google.firebase.firestore.DocumentSnapshot document : snapshot.getDocuments()) {
+                        CategoryEntity remote = categoryEntity(document.getData(), document.getId(), target.userId, syncedAt);
+                        CategoryEntity local = database.categoryDao().getById(remote.id);
+                        if (remote.deletedAt != null && remote.deletedAt > 0L) {
+                            if (local != null) {
+                                local.active = false;
+                                local.deletedAt = remote.deletedAt;
+                                local.updatedAt = remote.updatedAt;
+                                local.syncStatus = Product.SYNC_STATUS_SYNCED;
+                                local.lastSyncedAt = syncedAt;
+                                database.categoryDao().update(local);
+                            } else {
+                                database.categoryDao().insert(remote);
+                            }
+                            continue;
+                        }
+                        if (local == null || remote.updatedAt >= local.updatedAt || Product.SYNC_STATUS_SYNCED.equals(local.syncStatus)) {
+                            database.categoryDao().insert(remote);
+                        }
+                    }
+                    uploadPendingCategories(target, database);
+                    SyncStatusRepository.markSynced(target.context);
+                }))
+                .addOnFailureListener(error -> SyncStatusRepository.markError(target.context));
+    }
+
+    private static void uploadPendingCategories(SyncTarget target, AppDatabase database) {
+        List<CategoryEntity> pending = database.categoryDao().getByOwnerAndSyncStatus(target.userId, Product.SYNC_STATUS_PENDING_UPLOAD);
+        for (CategoryEntity category : pending) {
+            String cloudId = hasText(category.cloudId) ? category.cloudId : category.id;
+            target.firestore.collection(FirestoreContract.categoriesPath(target.userId))
+                    .document(cloudId)
+                    .set(categoryDocument(category, target.userId), SetOptions.merge())
+                    .addOnSuccessListener(unused -> EXECUTOR.execute(() -> {
+                        database.categoryDao().updateSyncMetadata(category.id, cloudId, Product.SYNC_STATUS_SYNCED, System.currentTimeMillis());
+                        SyncStatusRepository.markSynced(target.context);
+                    }))
+                    .addOnFailureListener(error -> SyncStatusRepository.markError(target.context));
+        }
     }
 
     private static Map<String, Object> settingsDocument(UserSettingsEntity settings, String ownerUserId) {
@@ -153,6 +220,40 @@ public final class UserDataSyncRepository {
         action.createdAt = longValue(data.get("createdAt"), action.actionAt);
         action.updatedAt = longValue(data.get("updatedAt"), action.createdAt);
         return action;
+    }
+
+    private static Map<String, Object> categoryDocument(CategoryEntity category, String ownerUserId) {
+        Map<String, Object> data = new HashMap<>();
+        data.put(FirestoreContract.CategoryFields.OWNER_USER_ID, ownerUserId);
+        data.put(FirestoreContract.CategoryFields.LOCAL_ID, category.id);
+        data.put(FirestoreContract.CategoryFields.NAME, category.name);
+        data.put(FirestoreContract.CategoryFields.SORT_ORDER, category.sortOrder);
+        data.put(FirestoreContract.CategoryFields.IS_BUILT_IN, category.builtIn);
+        data.put(FirestoreContract.CategoryFields.ACTIVE, category.active);
+        data.put(FirestoreContract.CategoryFields.CREATED_AT, category.createdAt);
+        data.put(FirestoreContract.CategoryFields.UPDATED_AT, category.updatedAt);
+        if (category.deletedAt != null) {
+            data.put(FirestoreContract.CategoryFields.DELETED_AT, category.deletedAt);
+        }
+        return data;
+    }
+
+    private static CategoryEntity categoryEntity(Map<String, Object> data, String documentId, String ownerUserId, long syncedAt) {
+        CategoryEntity category = new CategoryEntity();
+        category.id = stringValue(data, FirestoreContract.CategoryFields.LOCAL_ID, documentId);
+        category.cloudId = documentId;
+        category.ownerUserId = ownerUserId;
+        category.name = stringValue(data, FirestoreContract.CategoryFields.NAME, "General");
+        category.sortOrder = (int) longValue(data.get(FirestoreContract.CategoryFields.SORT_ORDER), 0L);
+        category.builtIn = booleanValue(data.get(FirestoreContract.CategoryFields.IS_BUILT_IN), false);
+        category.active = booleanValue(data.get(FirestoreContract.CategoryFields.ACTIVE), true);
+        category.createdAt = longValue(data.get(FirestoreContract.CategoryFields.CREATED_AT), syncedAt);
+        category.updatedAt = longValue(data.get(FirestoreContract.CategoryFields.UPDATED_AT), category.createdAt);
+        long deletedAt = longValue(data.get(FirestoreContract.CategoryFields.DELETED_AT), 0L);
+        category.deletedAt = deletedAt > 0L ? deletedAt : null;
+        category.syncStatus = Product.SYNC_STATUS_SYNCED;
+        category.lastSyncedAt = syncedAt;
+        return category;
     }
 
     private static SyncTarget targetFor(Context context) {

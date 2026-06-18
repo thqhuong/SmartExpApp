@@ -5,9 +5,10 @@ This document is the contract for issues #78, #80, and #81. It sets up Firestore
 ## Status
 
 - Firestore Android SDK is available through the existing Firebase BOM.
-- Firestore is not used by product, settings, or history repositories yet.
-- Local-only and guest mode remain local-only.
+- Product, settings, category, and inventory action sync are wired through repository boundaries for signed-in users.
+- Local-only and guest mode remain local-only unless the user explicitly imports local inventory after sign-in.
 - The app must continue to compile with the checked-in dummy Firebase config.
+- Firestore rules are covered by the root `npm run test:firestore-rules` emulator suite.
 
 ## Android Setup
 
@@ -119,14 +120,17 @@ Stats should be derived from synced action history after #81 lands. Product stat
 
 ## Categories And Storage
 
-`users/{uid}/categories/{categoryId}` is reserved for custom categories once category persistence is repository-backed.
+`users/{uid}/categories/{categoryId}` stores repository-backed built-in/category customization state.
 
 Fields:
 
 ```text
 ownerUserId: string, must equal {uid}
+localId: string
 name: string
 sortOrder: number
+isBuiltIn: boolean
+active: boolean
 createdAt: number
 updatedAt: number
 deletedAt: number
@@ -145,7 +149,7 @@ Issue #80:
 Issue #81:
 
 - User settings.
-- Custom categories after category persistence moves behind a repository.
+- Repository-backed categories.
 - Inventory action history for consumed, wasted, donated, and expired actions.
 
 Deferred:
@@ -202,13 +206,21 @@ Start the local emulator:
 firebase emulators:start --only firestore
 ```
 
-Run a rules-only check in CI or locally:
+Install root Node dependencies once:
 
 ```powershell
-firebase emulators:exec --only firestore "Write-Host Firestore emulator started"
+npm install
 ```
 
-Manual rule verification checklist:
+Run the automated rules suite in CI or locally:
+
+```powershell
+npm run test:firestore-rules
+```
+
+The script uses Firebase Emulator Suite with the checked-in rules tests under `test/firestore.rules.test.cjs`. On Windows it automatically uses Android Studio's bundled Java 21 runtime when present.
+
+Manual smoke checklist:
 
 - Signed-in UID `user-a` can read and write `users/user-a/products/{id}` when `ownerUserId` is `user-a`.
 - Signed-in UID `user-a` cannot read or write `users/user-b/products/{id}`.
@@ -222,6 +234,8 @@ Run:
 
 ```powershell
 .\gradlew.bat :app:assembleDebug
+.\gradlew.bat test
+npm run test:firestore-rules
 ```
 
 The app should build with the generated dummy `app/google-services.json`. Real Firestore sync requires a real Firebase project config and authenticated Firebase user.

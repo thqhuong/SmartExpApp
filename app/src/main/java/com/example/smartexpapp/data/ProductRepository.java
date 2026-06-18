@@ -195,10 +195,17 @@ public final class ProductRepository {
         if (product == null) {
             return false;
         }
+        if (shouldSyncProduct(product)) {
+            long now = System.currentTimeMillis();
+            boolean marked = database.productDao().updateStatus(id, ProductStatus.DELETED, now, Product.SYNC_STATUS_PENDING_DELETE) > 0;
+            if (marked) {
+                ProductSyncRepository.deleteProductAsync(context, database, id);
+            }
+            return marked;
+        }
         boolean deleted = database.productDao().deleteById(id) > 0;
         if (deleted) {
             LocalImageRepository.deleteProductImage(context, product.getImageUrl());
-            ProductSyncRepository.deleteProductAsync(context, product);
         }
         return deleted;
     }

@@ -16,9 +16,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 ExpiryScanEntity.class,
                 RecipeCacheEntity.class,
                 AgentMessageEntity.class,
-                UserSettingsEntity.class
+                UserSettingsEntity.class,
+                CategoryEntity.class
         },
-        version = 5,
+        version = 6,
         exportSchema = true
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -48,6 +49,14 @@ public abstract class AppDatabase extends RoomDatabase {
             database.execSQL("ALTER TABLE user_settings ADD COLUMN language_tag TEXT NOT NULL DEFAULT 'en'");
         }
     };
+    public static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `categories` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `sort_order` INTEGER NOT NULL, `is_built_in` INTEGER NOT NULL, `active` INTEGER NOT NULL, `owner_user_id` TEXT, `cloud_id` TEXT, `sync_status` TEXT NOT NULL, `last_synced_at` INTEGER, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `deleted_at` INTEGER, PRIMARY KEY(`id`))");
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_categories_owner_user_id_name` ON `categories` (`owner_user_id`, `name`)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_categories_sort_order` ON `categories` (`sort_order`)");
+        }
+    };
 
     public abstract ProductDao productDao();
 
@@ -63,6 +72,8 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public abstract UserSettingsDao userSettingsDao();
 
+    public abstract CategoryDao categoryDao();
+
     public static AppDatabase getInstance(Context context) {
         if (instance == null) {
             synchronized (AppDatabase.class) {
@@ -72,7 +83,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     DATABASE_NAME
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                             .fallbackToDestructiveMigrationOnDowngrade(true)
                             .build();
                 }

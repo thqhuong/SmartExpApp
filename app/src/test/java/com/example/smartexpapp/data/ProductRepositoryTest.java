@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.example.smartexpapp.data.local.AppDatabase;
 import com.example.smartexpapp.data.local.LocalDataContract;
+import com.example.smartexpapp.data.firestore.ProductSyncRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.model.ProductStatus;
 
@@ -46,6 +47,7 @@ public class ProductRepositoryTest {
     @After
     public void tearDown() {
         AuthStateRepository.clearTestAuthStateOverride();
+        ProductSyncRepository.setTestSyncAvailableOverride(null);
         database.close();
     }
 
@@ -96,6 +98,40 @@ public class ProductRepositoryTest {
         assertEquals(Product.SYNC_STATUS_LOCAL, saved.getSyncStatus());
         assertNull(saved.getCloudId());
         assertNull(saved.getLastSyncedAt());
+    }
+
+    @Test
+    public void signedInProductIsPendingUploadWhenSyncIsAvailable() {
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("firebase-user-123", "Kitchen Team", "team@example.com")
+        );
+        ProductSyncRepository.setTestSyncAvailableOverride(true);
+        Product milk = product("milk-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 5);
+
+        repository.addProduct(milk);
+
+        Product saved = repository.getProductById(milk.getId());
+        assertNotNull(saved);
+        assertEquals("firebase-user-123", saved.getOwnerUserId());
+        assertEquals(Product.SYNC_STATUS_PENDING_UPLOAD, saved.getSyncStatus());
+    }
+
+    @Test
+    public void signedInDeleteMarksPendingDeleteWhenSyncIsAvailable() {
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("firebase-user-123", "Kitchen Team", "team@example.com")
+        );
+        ProductSyncRepository.setTestSyncAvailableOverride(true);
+        Product milk = product("milk-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 5);
+        repository.addProduct(milk);
+
+        assertTrue(repository.deleteProduct(milk.getId()));
+
+        Product deleted = repository.getProductById(milk.getId());
+        assertNotNull(deleted);
+        assertEquals(ProductStatus.DELETED, deleted.getStatus());
+        assertEquals(Product.SYNC_STATUS_PENDING_DELETE, deleted.getSyncStatus());
+        assertTrue(repository.getProducts().isEmpty());
     }
 
     @Test

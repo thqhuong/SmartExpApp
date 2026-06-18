@@ -29,6 +29,21 @@ public final class FirestoreContract {
         }
     }
 
+    public static final class CategoryFields {
+        public static final String LOCAL_ID = "localId";
+        public static final String OWNER_USER_ID = "ownerUserId";
+        public static final String NAME = "name";
+        public static final String SORT_ORDER = "sortOrder";
+        public static final String IS_BUILT_IN = "isBuiltIn";
+        public static final String ACTIVE = "active";
+        public static final String CREATED_AT = "createdAt";
+        public static final String UPDATED_AT = "updatedAt";
+        public static final String DELETED_AT = "deletedAt";
+
+        private CategoryFields() {
+        }
+    }
+
     public static String userPath(String userId) {
         return USERS + "/" + userId;
     }
@@ -47,6 +62,10 @@ public final class FirestoreContract {
 
     public static String inventoryActionsPath(String userId) {
         return userPath(userId) + "/" + INVENTORY_ACTIONS;
+    }
+
+    public static String categoriesPath(String userId) {
+        return userPath(userId) + "/" + CATEGORIES;
     }
 
     private FirestoreContract() {

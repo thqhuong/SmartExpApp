@@ -16,6 +16,8 @@ import com.google.firebase.firestore.SetOptions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,6 +26,7 @@ public final class ProductSyncRepository {
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
     private static ListenerRegistration productListener;
     private static String productListenerUserId;
+    private static volatile Boolean testSyncAvailableOverride;
 
     public interface Callback<T> {
         void onResult(T value);
@@ -58,12 +61,15 @@ public final class ProductSyncRepository {
                     .addOnSuccessListener(snapshot -> EXECUTOR.execute(() -> {
                         try {
                             applyRemoteProducts(database, snapshot.getDocuments(), target.userId);
-                            uploadPendingProducts(target, database);
-                            MAIN_HANDLER.post(() -> {
-                                startProductListener(target, database);
-                                SyncStatusRepository.markSyncEnabled(context);
-                                postSuccess(callback);
-                            });
+                            uploadPendingChanges(target, database, () -> MAIN_HANDLER.post(() -> {
+                                        startProductListener(target, database);
+                                        SyncStatusRepository.markSynced(context);
+                                        postSuccess(callback);
+                                    }),
+                                    error -> {
+                                        SyncStatusRepository.markError(context);
+                                        postError(errorCallback, error);
+                                    });
                         } catch (RuntimeException error) {
                             SyncStatusRepository.markError(context);
                             postError(errorCallback, error);
@@ -88,7 +94,14 @@ public final class ProductSyncRepository {
     }
 
     public static boolean isSyncAvailable(Context context) {
+        if (testSyncAvailableOverride != null) {
+            return testSyncAvailableOverride;
+        }
         return targetFor(context) != null;
+    }
+
+    public static void setTestSyncAvailableOverride(Boolean available) {
+        testSyncAvailableOverride = available;
     }
 
     public static void uploadProductAsync(Context context, AppDatabase database, String localProductId) {
@@ -103,29 +116,30 @@ public final class ProductSyncRepository {
                     return;
                 }
                 SyncStatusRepository.markSyncing(context);
-                uploadProduct(target, database, entity);
+                uploadProduct(target, database, entity, null, null);
             } catch (RuntimeException error) {
                 SyncStatusRepository.markError(context);
             }
         });
     }
 
-    public static void deleteProductAsync(Context context, Product product) {
+    public static void deleteProductAsync(Context context, AppDatabase database, String localProductId) {
         SyncTarget target = targetFor(context);
-        if (target == null || product == null || !target.userId.equals(product.getOwnerUserId())) {
+        if (target == null) {
             return;
         }
-        SyncStatusRepository.markSyncing(context);
-        String cloudId = hasText(product.getCloudId()) ? product.getCloudId() : product.getId();
-        long now = System.currentTimeMillis();
-        Map<String, Object> data = new HashMap<>();
-        data.put(FirestoreContract.ProductFields.OWNER_USER_ID, target.userId);
-        data.put(FirestoreContract.ProductFields.LOCAL_ID, product.getId());
-        data.put(FirestoreContract.ProductFields.DELETED_AT, now);
-        data.put(FirestoreContract.ProductFields.UPDATED_AT, now);
-        target.products().document(cloudId).set(data, SetOptions.merge())
-                .addOnSuccessListener(unused -> SyncStatusRepository.markSynced(context))
-                .addOnFailureListener(error -> SyncStatusRepository.markError(context));
+        EXECUTOR.execute(() -> {
+            try {
+                ProductEntity entity = database.productDao().getById(localProductId);
+                if (entity == null || !target.userId.equals(entity.ownerUserId)) {
+                    return;
+                }
+                SyncStatusRepository.markSyncing(context);
+                uploadDelete(target, database, entity, null, null);
+            } catch (RuntimeException error) {
+                SyncStatusRepository.markError(context);
+            }
+        });
     }
 
     private static void startProductListener(SyncTarget target, AppDatabase database) {
@@ -165,12 +179,27 @@ public final class ProductSyncRepository {
                     database.productDao().insert(remote);
                     continue;
                 }
+                if (Product.SYNC_STATUS_PENDING_DELETE.equals(local.syncStatus)) {
+                    continue;
+                }
                 if (Product.SYNC_STATUS_PENDING_UPLOAD.equals(local.syncStatus) && local.updatedAt > remote.updatedAt) {
+                    if (local.lastSyncedAt != null && remote.updatedAt > local.lastSyncedAt) {
+                        database.productDao().updateSyncMetadata(
+                                local.id,
+                                hasText(local.cloudId) ? local.cloudId : document.getId(),
+                                Product.SYNC_STATUS_CONFLICT,
+                                local.lastSyncedAt
+                        );
+                        continue;
+                    }
+                    continue;
+                }
+                if (remote.updatedAt == local.updatedAt) {
                     database.productDao().updateSyncMetadata(
                             local.id,
                             hasText(local.cloudId) ? local.cloudId : document.getId(),
-                            Product.SYNC_STATUS_CONFLICT,
-                            local.lastSyncedAt
+                            Product.SYNC_STATUS_SYNCED,
+                            syncedAt
                     );
                     continue;
                 }
@@ -181,14 +210,41 @@ public final class ProductSyncRepository {
         });
     }
 
-    private static void uploadPendingProducts(SyncTarget target, AppDatabase database) {
-        List<ProductEntity> pending = database.productDao().getByOwnerAndSyncStatus(target.userId, Product.SYNC_STATUS_PENDING_UPLOAD);
-        for (ProductEntity entity : pending) {
-            uploadProduct(target, database, entity);
+    private static void uploadPendingChanges(SyncTarget target, AppDatabase database, Runnable successCallback, ErrorCallback errorCallback) {
+        List<ProductEntity> pendingUploads = database.productDao().getByOwnerAndSyncStatus(target.userId, Product.SYNC_STATUS_PENDING_UPLOAD);
+        List<ProductEntity> pendingDeletes = database.productDao().getByOwnerAndSyncStatus(target.userId, Product.SYNC_STATUS_PENDING_DELETE);
+        int total = pendingUploads.size() + pendingDeletes.size();
+        if (total == 0) {
+            successCallback.run();
+            return;
+        }
+        AtomicInteger remaining = new AtomicInteger(total);
+        AtomicBoolean failed = new AtomicBoolean(false);
+        Runnable oneDone = () -> {
+            if (remaining.decrementAndGet() == 0 && !failed.get()) {
+                successCallback.run();
+            }
+        };
+        ErrorCallback oneError = error -> {
+            if (failed.compareAndSet(false, true) && errorCallback != null) {
+                errorCallback.onError(error);
+            }
+        };
+        for (ProductEntity entity : pendingUploads) {
+            uploadProduct(target, database, entity, oneDone, oneError);
+        }
+        for (ProductEntity entity : pendingDeletes) {
+            uploadDelete(target, database, entity, oneDone, oneError);
         }
     }
 
-    private static void uploadProduct(SyncTarget target, AppDatabase database, ProductEntity entity) {
+    private static void uploadProduct(SyncTarget target, AppDatabase database, ProductEntity entity, Runnable successCallback, ErrorCallback errorCallback) {
+        if (target.firestore == null) {
+            if (successCallback != null) {
+                successCallback.run();
+            }
+            return;
+        }
         String cloudId = hasText(entity.cloudId) ? entity.cloudId : entity.id;
         target.products().document(cloudId)
                 .set(FirestoreProductMapper.toDocument(entity, target.userId), SetOptions.merge())
@@ -200,8 +256,40 @@ public final class ProductSyncRepository {
                             System.currentTimeMillis()
                     );
                     SyncStatusRepository.markSynced(target.context);
+                    if (successCallback != null) {
+                        successCallback.run();
+                    }
                 }))
-                .addOnFailureListener(error -> SyncStatusRepository.markError(target.context));
+                .addOnFailureListener(error -> {
+                    SyncStatusRepository.markError(target.context);
+                    if (errorCallback != null) {
+                        errorCallback.onError(error);
+                    }
+                });
+    }
+
+    private static void uploadDelete(SyncTarget target, AppDatabase database, ProductEntity entity, Runnable successCallback, ErrorCallback errorCallback) {
+        String cloudId = hasText(entity.cloudId) ? entity.cloudId : entity.id;
+        long now = System.currentTimeMillis();
+        Map<String, Object> data = new HashMap<>();
+        data.put(FirestoreContract.ProductFields.OWNER_USER_ID, target.userId);
+        data.put(FirestoreContract.ProductFields.LOCAL_ID, entity.id);
+        data.put(FirestoreContract.ProductFields.DELETED_AT, now);
+        data.put(FirestoreContract.ProductFields.UPDATED_AT, Math.max(entity.updatedAt, now));
+        target.products().document(cloudId).set(data, SetOptions.merge())
+                .addOnSuccessListener(unused -> EXECUTOR.execute(() -> {
+                    database.productDao().deleteById(entity.id);
+                    SyncStatusRepository.markSynced(target.context);
+                    if (successCallback != null) {
+                        successCallback.run();
+                    }
+                }))
+                .addOnFailureListener(error -> {
+                    SyncStatusRepository.markError(target.context);
+                    if (errorCallback != null) {
+                        errorCallback.onError(error);
+                    }
+                });
     }
 
     private static SyncTarget targetFor(Context context) {

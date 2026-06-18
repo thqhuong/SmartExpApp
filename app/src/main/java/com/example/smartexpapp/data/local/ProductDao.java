@@ -100,6 +100,9 @@ public interface ProductDao {
     @Query("UPDATE products SET status = :status, updated_at = :updatedAt, sync_status = :syncStatus WHERE id = :id")
     int updateStatus(String id, String status, long updatedAt, String syncStatus);
 
+    @Query("UPDATE products SET category = :newCategory, updated_at = :updatedAt, sync_status = :syncStatus WHERE category = :oldCategory")
+    int renameCategory(String oldCategory, String newCategory, long updatedAt, String syncStatus);
+
     @Query("UPDATE products SET cloud_id = :cloudId, sync_status = :syncStatus, last_synced_at = :lastSyncedAt WHERE id = :id")
     int updateSyncMetadata(String id, String cloudId, String syncStatus, Long lastSyncedAt);
 }
