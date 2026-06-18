@@ -1,52 +1,18 @@
 package com.example.smartexpapp;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
-
-import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DashboardViewModel extends ViewModel {
-    private final ProductRepository productRepository;
-    private final MutableLiveData<DashboardState> uiState = new MutableLiveData<>(DashboardState.loading());
-
-    public DashboardViewModel(ProductRepository productRepository) {
-        this.productRepository = productRepository;
+public final class StatsUiMapper {
+    private StatsUiMapper() {
     }
 
-    public LiveData<DashboardState> getUiState() {
-        return uiState;
-    }
-
-    public void loadDashboard() {
-        uiState.setValue(DashboardState.loading());
-
-        productRepository.getDashboardSnapshotAsync(snapshot -> {
-            List<Product> products = snapshot.getActiveProducts();
-            DashboardState state = new DashboardState(
-                    snapshot.getUrgentCount(),
-                    snapshot.getTotalTracked(),
-                    snapshot.getWastePreventedCount(),
-                    buildStorageSummaries(products),
-                    groupProducts(products),
-                    false,
-                    false
-            );
-            uiState.postValue(state);
-        }, error -> {
-            uiState.postValue(DashboardState.error());
-        });
-    }
-
-    static List<DashboardState.StorageSummaryEntry> buildStorageSummaries(List<Product> products) {
+    public static List<DashboardState.StorageSummaryEntry> buildStorageSummaries(List<Product> products) {
         if (products == null || products.isEmpty()) {
             return Collections.emptyList();
         }
@@ -73,7 +39,7 @@ public class DashboardViewModel extends ViewModel {
         return result;
     }
 
-    static Map<String, List<Product>> groupProducts(List<Product> products) {
+    public static Map<String, List<Product>> groupProducts(List<Product> products) {
         if (products == null || products.isEmpty()) {
             return Collections.emptyMap();
         }

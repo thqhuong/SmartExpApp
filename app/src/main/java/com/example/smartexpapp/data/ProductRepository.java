@@ -34,27 +34,38 @@ public final class ProductRepository {
     private final ExecutorService executor;
     private final Handler mainHandler;
 
-    public static final class DashboardSnapshot {
+    public static final class StatsSnapshot {
         private final List<Product> activeProducts;
-        private final int totalTracked;
+        private final int activeCount;
         private final int urgentCount;
         private final int expiredCount;
-        private final int wastePreventedCount;
 
-        private DashboardSnapshot(List<Product> activeProducts, int urgentCount, int expiredCount, int wastePreventedCount) {
+        private final int consumedActionCount;
+        private final int wastedActionCount;
+        private final int donatedActionCount;
+        private final int expiredActionCount;
+        private final int preventedWasteCount;
+
+        private StatsSnapshot(int activeCount, List<Product> activeProducts, int urgentCount, int expiredCount,
+                              int consumedActionCount, int wastedActionCount, int donatedActionCount,
+                              int expiredActionCount, int preventedWasteCount) {
             this.activeProducts = new ArrayList<>(activeProducts);
-            this.totalTracked = activeProducts.size();
+            this.activeCount = activeCount;
             this.urgentCount = urgentCount;
             this.expiredCount = expiredCount;
-            this.wastePreventedCount = wastePreventedCount;
+            this.consumedActionCount = consumedActionCount;
+            this.wastedActionCount = wastedActionCount;
+            this.donatedActionCount = donatedActionCount;
+            this.expiredActionCount = expiredActionCount;
+            this.preventedWasteCount = preventedWasteCount;
         }
 
         public List<Product> getActiveProducts() {
             return new ArrayList<>(activeProducts);
         }
 
-        public int getTotalTracked() {
-            return totalTracked;
+        public int getActiveCount() {
+            return activeCount;
         }
 
         public int getUrgentCount() {
@@ -65,8 +76,24 @@ public final class ProductRepository {
             return expiredCount;
         }
 
-        public int getWastePreventedCount() {
-            return wastePreventedCount;
+        public int getConsumedActionCount() {
+            return consumedActionCount;
+        }
+
+        public int getWastedActionCount() {
+            return wastedActionCount;
+        }
+
+        public int getDonatedActionCount() {
+            return donatedActionCount;
+        }
+
+        public int getExpiredActionCount() {
+            return expiredActionCount;
+        }
+
+        public int getPreventedWasteCount() {
+            return preventedWasteCount;
         }
     }
 
@@ -107,12 +134,13 @@ public final class ProductRepository {
         execute(this::getProducts, callback, errorCallback);
     }
 
-    public DashboardSnapshot getDashboardSnapshot() {
+    public StatsSnapshot getStatsSnapshot(long sinceMillis) {
         ensureLocalDefaults(database);
-        List<Product> products = getProducts();
+        List<Product> allProducts = getProducts();
         int urgentCount = 0;
         int expiredCount = 0;
-        for (Product product : products) {
+
+        for (Product product : allProducts) {
             if (product.isExpiringSoon()) {
                 urgentCount++;
             }
@@ -120,11 +148,21 @@ public final class ProductRepository {
                 expiredCount++;
             }
         }
-        return new DashboardSnapshot(products, urgentCount, expiredCount, getWastePreventedCount(database));
+
+        AccountInventoryScope scope = activeScope();
+        int consumed = countActionsForScope(new String[]{ProductStatus.CONSUMED}, sinceMillis, scope);
+        int wasted = countActionsForScope(new String[]{ProductStatus.WASTED}, sinceMillis, scope);
+        int donated = countActionsForScope(new String[]{ProductStatus.DONATED}, sinceMillis, scope);
+        int expiredActions = countActionsForScope(new String[]{ProductStatus.EXPIRED}, sinceMillis, scope);
+        int prevented = consumed + donated;
+
+        int activeCount = allProducts.size();
+        return new StatsSnapshot(activeCount, allProducts, urgentCount, expiredCount, consumed, wasted, donated,
+                expiredActions, prevented);
     }
 
-    public void getDashboardSnapshotAsync(Callback<DashboardSnapshot> callback, ErrorCallback errorCallback) {
-        execute(this::getDashboardSnapshot, callback, errorCallback);
+    public void getStatsSnapshotAsync(long sinceMillis, Callback<StatsSnapshot> callback, ErrorCallback errorCallback) {
+        execute(() -> getStatsSnapshot(sinceMillis), callback, errorCallback);
     }
 
     public Product getProductById(String id) {
@@ -418,13 +456,13 @@ public final class ProductRepository {
     }
 
     @Deprecated
-    public static DashboardSnapshot getDashboardSnapshot(Context context) {
-        return getContainerRepository(context).getDashboardSnapshot();
+    public static StatsSnapshot getStatsSnapshot(Context context, long sinceMillis) {
+        return getContainerRepository(context).getStatsSnapshot(sinceMillis);
     }
 
     @Deprecated
-    public static void getDashboardSnapshotAsync(Context context, Callback<DashboardSnapshot> callback, ErrorCallback errorCallback) {
-        getContainerRepository(context).getDashboardSnapshotAsync(callback, errorCallback);
+    public static void getStatsSnapshotAsync(Context context, long sinceMillis, Callback<StatsSnapshot> callback, ErrorCallback errorCallback) {
+        getContainerRepository(context).getStatsSnapshotAsync(sinceMillis, callback, errorCallback);
     }
 
     @Deprecated
@@ -575,7 +613,7 @@ public final class ProductRepository {
     }
 
     @Deprecated
-    public static DashboardSnapshot getDashboardSnapshot(AppDatabase database) {
+    public static StatsSnapshot getStatsSnapshot(AppDatabase database, long sinceMillis) {
         List<Product> products = getProducts(database);
         int urgentCount = 0;
         int expiredCount = 0;
@@ -587,7 +625,13 @@ public final class ProductRepository {
                 expiredCount++;
             }
         }
-        return new DashboardSnapshot(products, urgentCount, expiredCount, getWastePreventedCount(database));
+        int consumed = database.inventoryActionDao().countByActionTypesSince(new String[]{ProductStatus.CONSUMED}, sinceMillis);
+        int wasted = database.inventoryActionDao().countByActionTypesSince(new String[]{ProductStatus.WASTED}, sinceMillis);
+        int donated = database.inventoryActionDao().countByActionTypesSince(new String[]{ProductStatus.DONATED}, sinceMillis);
+        int expiredActions = database.inventoryActionDao().countByActionTypesSince(new String[]{ProductStatus.EXPIRED}, sinceMillis);
+        int prevented = consumed + donated;
+        int activeCount = products.size();
+        return new StatsSnapshot(activeCount, products, urgentCount, expiredCount, consumed, wasted, donated, expiredActions, prevented);
     }
 
     @Deprecated
@@ -695,6 +739,26 @@ public final class ProductRepository {
             return database.inventoryActionDao().countByActionTypesForOwner(scope.ownerUserId, actionTypes);
         }
         if (scope.isLocal()) {
+            return database.inventoryActionDao().countLocalByActionTypes(actionTypes);
+        }
+        return 0;
+    }
+
+    private int countActionsForScope(String[] actionTypes, long sinceMillis, AccountInventoryScope scope) {
+        if (scope.isOwner()) {
+            if (sinceMillis > 0L) {
+                return database.inventoryActionDao().countByActionTypesForOwnerSince(
+                        scope.ownerUserId,
+                        actionTypes,
+                        sinceMillis
+                );
+            }
+            return database.inventoryActionDao().countByActionTypesForOwner(scope.ownerUserId, actionTypes);
+        }
+        if (scope.isLocal()) {
+            if (sinceMillis > 0L) {
+                return database.inventoryActionDao().countLocalByActionTypesSince(actionTypes, sinceMillis);
+            }
             return database.inventoryActionDao().countLocalByActionTypes(actionTypes);
         }
         return 0;

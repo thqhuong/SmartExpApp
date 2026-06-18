@@ -21,11 +21,20 @@ public interface InventoryActionDao {
     @Query("SELECT COUNT(*) FROM inventory_actions WHERE action_type IN (:actionTypes)")
     int countByActionTypes(String[] actionTypes);
 
+    @Query("SELECT COUNT(*) FROM inventory_actions WHERE action_type IN (:actionTypes) AND action_at >= :sinceMillis")
+    int countByActionTypesSince(String[] actionTypes, long sinceMillis);
+
     @Query("SELECT COUNT(*) FROM inventory_actions INNER JOIN products ON products.id = inventory_actions.product_id WHERE products.owner_user_id = :ownerUserId AND inventory_actions.action_type IN (:actionTypes)")
     int countByActionTypesForOwner(String ownerUserId, String[] actionTypes);
 
+    @Query("SELECT COUNT(*) FROM inventory_actions INNER JOIN products ON products.id = inventory_actions.product_id WHERE products.owner_user_id = :ownerUserId AND inventory_actions.action_type IN (:actionTypes) AND inventory_actions.action_at >= :sinceMillis")
+    int countByActionTypesForOwnerSince(String ownerUserId, String[] actionTypes, long sinceMillis);
+
     @Query("SELECT COUNT(*) FROM inventory_actions INNER JOIN products ON products.id = inventory_actions.product_id WHERE products.owner_user_id IS NULL AND inventory_actions.action_type IN (:actionTypes)")
     int countLocalByActionTypes(String[] actionTypes);
+
+    @Query("SELECT COUNT(*) FROM inventory_actions INNER JOIN products ON products.id = inventory_actions.product_id WHERE products.owner_user_id IS NULL AND inventory_actions.action_type IN (:actionTypes) AND inventory_actions.action_at >= :sinceMillis")
+    int countLocalByActionTypesSince(String[] actionTypes, long sinceMillis);
 
     @Query("DELETE FROM inventory_actions")
     int deleteAll();
