@@ -1,6 +1,8 @@
 package com.example.smartexpapp;
 
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
@@ -19,9 +21,13 @@ import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.GetCredentialException;
 
 import com.example.smartexpapp.data.AuthStateRepository;
+import com.example.smartexpapp.data.firestore.ProductSyncRepository;
+import com.example.smartexpapp.data.firestore.UserDataSyncRepository;
+import com.example.smartexpapp.data.local.AppDatabase;
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.example.smartexpapp.data.SettingsRepository;
+import com.example.smartexpapp.model.Product;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
@@ -196,17 +202,14 @@ public class SignInActivity extends BaseActivity {
                                         .addOnCompleteListener(profileTask -> {
                                             SettingsRepository.setDisplayNameAsync(this, name,
                                                     snapshot -> {
-                                                        setLoading(false);
-                                                        navigateHome();
+                                                        continueAfterSignedIn();
                                                     },
                                                     error -> {
-                                                        setLoading(false);
-                                                        navigateHome();
+                                                        continueAfterSignedIn();
                                                     });
                                         });
                             } else {
-                                setLoading(false);
-                                navigateHome();
+                                continueAfterSignedIn();
                             }
                         } else {
                             setLoading(false);
@@ -223,12 +226,10 @@ public class SignInActivity extends BaseActivity {
                             String name = (user != null && user.getDisplayName() != null) ? user.getDisplayName() : user.getEmail();
                             SettingsRepository.setDisplayNameAsync(this, name,
                                     snapshot -> {
-                                        setLoading(false);
-                                        navigateHome();
+                                        continueAfterSignedIn();
                                     },
                                     error -> {
-                                        setLoading(false);
-                                        navigateHome();
+                                        continueAfterSignedIn();
                                     });
                         } else {
                             setLoading(false);
@@ -324,7 +325,7 @@ public class SignInActivity extends BaseActivity {
     }
 
     private void firebaseAuthWithGoogle(FirebaseAuth auth, String idToken) {
-        auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
+        runOnUiThread(() -> auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         AuthStateRepository.markGuestMode(this, false);
@@ -332,19 +333,17 @@ public class SignInActivity extends BaseActivity {
                         String name = (user != null && user.getDisplayName() != null) ? user.getDisplayName() : "Google User";
                         SettingsRepository.setDisplayNameAsync(this, name,
                                 snapshot -> {
-                                    setLoading(false);
-                                    navigateHome();
+                                    continueAfterSignedIn();
                                 },
                                 error -> {
-                                    setLoading(false);
-                                    navigateHome();
+                                    continueAfterSignedIn();
                                 });
                     } else {
                         setLoading(false);
                         String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
                         Toast.makeText(this, getString(R.string.google_sign_in_failed, errorMsg), Toast.LENGTH_LONG).show();
                     }
-                });
+                }));
     }
 
     private void handleGuestSignIn() {
@@ -354,12 +353,12 @@ public class SignInActivity extends BaseActivity {
             auth.signInAnonymously().addOnCompleteListener(this, task -> {
                 AuthStateRepository.markGuestMode(this, true);
                 setLoading(false);
-                navigateHome();
+                navigateToInventory();
             });
         } else {
             AuthStateRepository.markGuestMode(this, true);
             setLoading(false);
-            navigateHome();
+            navigateToInventory();
         }
     }
 
@@ -401,11 +400,81 @@ public class SignInActivity extends BaseActivity {
                 .show();
     }
 
-    private void navigateHome() {
+    private void navigateToInventory() {
         Intent intent = new Intent(this, InventoryActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
         overridePendingTransition(0, 0);
+    }
+
+    private void continueAfterSignedIn() {
+        Context appContext = getApplicationContext();
+        ProductSyncRepository.stopProductListener();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            AppDatabase database = AppDatabase.getInstance(appContext);
+            int ownerlessCount = database.productDao().countOwnerlessProducts();
+            runOnUiThread(() -> {
+                if (ownerlessCount > 0) {
+                    setLoading(false);
+                    promptImportLocalInventory(database);
+                } else {
+                    runInitialProductSync(database);
+                }
+            });
+        });
+    }
+
+    private void promptImportLocalInventory(AppDatabase database) {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.import_local_inventory_title)
+                .setMessage(R.string.import_local_inventory_message)
+                .setPositiveButton(R.string.import_local_inventory_action, (dialog, which) -> importOwnerlessInventory(database))
+                .setNegativeButton(R.string.keep_local_inventory_action, (dialog, which) -> {
+                    setLoading(true);
+                    runInitialProductSync(database);
+                })
+                .setOnCancelListener(dialog -> {
+                    setLoading(true);
+                    runInitialProductSync(database);
+                })
+                .show();
+    }
+
+    private void importOwnerlessInventory(AppDatabase database) {
+        setLoading(true);
+        Context appContext = getApplicationContext();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(appContext);
+            if (authState.isSignedIn() && authState.getUserId() != null && !authState.getUserId().trim().isEmpty()) {
+                database.productDao().assignOwnerToOwnerlessProducts(
+                        authState.getUserId(),
+                        Product.SYNC_STATUS_PENDING_UPLOAD,
+                        System.currentTimeMillis()
+                );
+            }
+            runOnUiThread(() -> runInitialProductSync(database));
+        });
+    }
+
+    private void runInitialProductSync(AppDatabase database) {
+        try {
+            ProductSyncRepository.initialSyncAsync(this, database,
+                    ignored -> {
+                        UserDataSyncRepository.syncUserDataAsync(this, database);
+                        setLoading(false);
+                        navigateToInventory();
+                    },
+                    error -> {
+                        Log.w(TAG, "Initial product sync failed; continuing with scoped cache.", error);
+                        UserDataSyncRepository.syncUserDataAsync(this, database);
+                        setLoading(false);
+                        navigateToInventory();
+                    });
+        } catch (RuntimeException error) {
+            Log.w(TAG, "Initial product sync skipped.", error);
+            setLoading(false);
+            navigateToInventory();
+        }
     }
 }

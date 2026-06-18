@@ -46,6 +46,18 @@ This document provides step-by-step instructions for setting up and configuring 
    - **Google**: Click edit, toggle **Enable**, select the project support email, and click **Save**.
      - *Note: Enabling Google Sign-In will automatically generate a Web SDK configuration Client ID, which is used under-the-hood by the Android Credentials API.*
 
+## Firestore Setup
+
+Firestore setup for sync work is documented in `docs/planning/firestore-sync-foundation.md`.
+
+For Firebase Console setup:
+
+1. Open the Firebase project used by `com.example.smartexpapp`.
+2. Select **Firestore Database**.
+3. Create the database.
+4. Start in production mode and deploy the repository `firestore.rules`.
+5. Use the emulator workflow from the Firestore sync foundation document for local development.
+
 ---
 
 ## 4. Generating SHA Fingerprints

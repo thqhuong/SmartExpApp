@@ -42,11 +42,11 @@ public class AppDatabaseMigrationTest {
     }
 
     @Test
-    public void migrationFrom2To5AddsDisplayNameDarkModeLanguageAndPreservesSettings() {
+    public void migrationFrom2To6AddsDisplayNameDarkModeLanguageCategoriesAndPreservesSettings() {
         createVersion2Database();
 
         AppDatabase database = Room.databaseBuilder(context, AppDatabase.class, DB_NAME)
-                .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5)
+                .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
                 .allowMainThreadQueries()
                 .build();
 
@@ -58,6 +58,7 @@ public class AppDatabaseMigrationTest {
         assertEquals("Local User", settings.displayName);
         assertEquals(false, settings.darkMode);
         assertEquals("en", settings.languageTag);
+        assertEquals(0, database.categoryDao().count());
         database.close();
     }
 

@@ -8,6 +8,7 @@ import androidx.credentials.CredentialManager;
 import androidx.credentials.CredentialManagerCallback;
 import androidx.credentials.exceptions.ClearCredentialException;
 
+import com.example.smartexpapp.data.firestore.ProductSyncRepository;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -141,6 +142,7 @@ public final class AuthStateRepository {
         }
 
         markGuestMode(context, false);
+        ProductSyncRepository.stopProductListener();
         clearCredentialState(context);
     }
 
