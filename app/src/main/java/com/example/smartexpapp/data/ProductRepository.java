@@ -5,6 +5,9 @@ import android.os.Looper;
 import android.content.Context;
 
 import com.example.smartexpapp.SmartExpApplication;
+import com.example.smartexpapp.data.firestore.FirestoreProductMapper;
+import com.example.smartexpapp.data.firestore.ProductSyncRepository;
+import com.example.smartexpapp.data.firestore.UserDataSyncRepository;
 import com.example.smartexpapp.data.local.AppDatabase;
 import com.example.smartexpapp.data.local.ExpiryScanEntity;
 import com.example.smartexpapp.data.local.InventoryActionEntity;
@@ -90,7 +93,14 @@ public final class ProductRepository {
 
     public List<Product> getProducts() {
         ensureLocalDefaults(database);
-        return mapProducts(database.productDao().getActiveProductsSortedByExpiry());
+        AccountInventoryScope scope = activeScope();
+        if (scope.isOwner()) {
+            return mapProducts(database.productDao().getActiveProductsForOwner(scope.ownerUserId));
+        }
+        if (scope.isLocal()) {
+            return mapProducts(database.productDao().getActiveLocalProducts());
+        }
+        return new ArrayList<>();
     }
 
     public void getProductsAsync(Callback<List<Product>> callback, ErrorCallback errorCallback) {
@@ -119,7 +129,7 @@ public final class ProductRepository {
 
     public Product getProductById(String id) {
         ensureLocalDefaults(database);
-        ProductEntity entity = database.productDao().getById(id);
+        ProductEntity entity = getScopedProductEntity(id);
         return entity == null ? null : ProductMapper.toModel(entity);
     }
 
@@ -129,7 +139,12 @@ public final class ProductRepository {
 
     public void addProduct(Product product) {
         ensureStorageLocations(database);
-        database.productDao().insert(ProductMapper.toEntity(withCurrentSignedInOwner(product)));
+        Product productToInsert = prepareForLocalWrite(product);
+        if (productToInsert == null) {
+            return;
+        }
+        database.productDao().insert(ProductMapper.toEntity(productToInsert));
+        ProductSyncRepository.uploadProductAsync(context, database, productToInsert.getId());
     }
 
     public void addProductAsync(Product product, Callback<Void> callback, ErrorCallback errorCallback) {
@@ -140,16 +155,26 @@ public final class ProductRepository {
     }
 
     public boolean updateProduct(Product product) {
+        if (product == null) {
+            return false;
+        }
         Product existing = getProductById(product.getId());
+        if (existing == null) {
+            return false;
+        }
         ensureStorageLocations(database);
-        Product productToUpdate = withCurrentSignedInOwner(product);
+        Product productToUpdate = prepareForLocalWrite(product.withOwnerUserId(existing.getOwnerUserId(), product.getUpdatedAt()));
+        if (productToUpdate == null) {
+            return false;
+        }
         boolean updated = database.productDao().update(ProductMapper.toEntity(productToUpdate)) > 0;
-        if (updated && existing != null) {
+        if (updated) {
             LocalImageRepository.deleteReplacedProductImage(
                     context,
                     existing.getImageUrl(),
                     productToUpdate.getImageUrl()
             );
+            ProductSyncRepository.uploadProductAsync(context, database, productToUpdate.getId());
         }
         return updated;
     }
@@ -167,8 +192,19 @@ public final class ProductRepository {
 
     public boolean deleteProduct(String id) {
         Product product = getProductById(id);
+        if (product == null) {
+            return false;
+        }
+        if (shouldSyncProduct(product)) {
+            long now = System.currentTimeMillis();
+            boolean marked = database.productDao().updateStatus(id, ProductStatus.DELETED, now, Product.SYNC_STATUS_PENDING_DELETE) > 0;
+            if (marked) {
+                ProductSyncRepository.deleteProductAsync(context, database, id);
+            }
+            return marked;
+        }
         boolean deleted = database.productDao().deleteById(id) > 0;
-        if (deleted && product != null) {
+        if (deleted) {
             LocalImageRepository.deleteProductImage(context, product.getImageUrl());
         }
         return deleted;
@@ -180,7 +216,14 @@ public final class ProductRepository {
 
     public List<Product> getExpiringBetween(long startMillis, long endMillis) {
         ensureLocalDefaults(database);
-        return mapProducts(database.productDao().getExpiringBetween(startMillis, endMillis));
+        AccountInventoryScope scope = activeScope();
+        if (scope.isOwner()) {
+            return mapProducts(database.productDao().getExpiringBetweenForOwner(scope.ownerUserId, startMillis, endMillis));
+        }
+        if (scope.isLocal()) {
+            return mapProducts(database.productDao().getLocalExpiringBetween(startMillis, endMillis));
+        }
+        return new ArrayList<>();
     }
 
     public void getExpiringBetweenAsync(long startMillis, long endMillis, Callback<List<Product>> callback, ErrorCallback errorCallback) {
@@ -189,7 +232,14 @@ public final class ProductRepository {
 
     public List<Product> getExpiredProducts() {
         ensureLocalDefaults(database);
-        return mapProducts(database.productDao().getExpiredBefore(startOfToday()));
+        AccountInventoryScope scope = activeScope();
+        if (scope.isOwner()) {
+            return mapProducts(database.productDao().getExpiredBeforeForOwner(scope.ownerUserId, startOfToday()));
+        }
+        if (scope.isLocal()) {
+            return mapProducts(database.productDao().getLocalExpiredBefore(startOfToday()));
+        }
+        return new ArrayList<>();
     }
 
     public List<Product> search(String query) {
@@ -197,7 +247,14 @@ public final class ProductRepository {
         if (query == null || query.trim().isEmpty()) {
             return getProducts();
         }
-        return mapProducts(database.productDao().searchActive(query.trim()));
+        AccountInventoryScope scope = activeScope();
+        if (scope.isOwner()) {
+            return mapProducts(database.productDao().searchActiveForOwner(scope.ownerUserId, query.trim()));
+        }
+        if (scope.isLocal()) {
+            return mapProducts(database.productDao().searchActiveLocal(query.trim()));
+        }
+        return new ArrayList<>();
     }
 
     public void searchAsync(String query, Callback<List<Product>> callback, ErrorCallback errorCallback) {
@@ -206,7 +263,14 @@ public final class ProductRepository {
 
     public List<Product> filter(String status, String storageLocationId) {
         ensureLocalDefaults(database);
-        return mapProducts(database.productDao().filter(status, storageLocationId));
+        AccountInventoryScope scope = activeScope();
+        if (scope.isOwner()) {
+            return mapProducts(database.productDao().filterForOwner(scope.ownerUserId, status, storageLocationId));
+        }
+        if (scope.isLocal()) {
+            return mapProducts(database.productDao().filterLocal(status, storageLocationId));
+        }
+        return new ArrayList<>();
     }
 
     public void getAllProductsAsync(Callback<List<Product>> callback, ErrorCallback errorCallback) {
@@ -258,7 +322,7 @@ public final class ProductRepository {
     }
 
     public int getWastePreventedCount() {
-        return getWastePreventedCount(database);
+        return getWastePreventedCountForScope(database, activeScope());
     }
 
     public void getWastePreventedCountAsync(Callback<Integer> callback, ErrorCallback errorCallback) {
@@ -267,15 +331,24 @@ public final class ProductRepository {
 
     private boolean markStatus(String id, String status, String note) {
         ensureStorageLocations(database);
+        Product product = getProductById(id);
+        if (product == null) {
+            return false;
+        }
+        String syncStatus = shouldSyncProduct(product) ? Product.SYNC_STATUS_PENDING_UPLOAD : Product.SYNC_STATUS_LOCAL;
         final boolean[] updated = {false};
         database.runInTransaction(() -> {
             long now = System.currentTimeMillis();
-            int rows = database.productDao().updateStatus(id, status, now, Product.SYNC_STATUS_LOCAL);
+            int rows = database.productDao().updateStatus(id, status, now, syncStatus);
             updated[0] = rows > 0;
             if (updated[0]) {
                 database.inventoryActionDao().insert(actionFor(id, status, note, now));
             }
         });
+        if (updated[0]) {
+            ProductSyncRepository.uploadProductAsync(context, database, id);
+            UserDataSyncRepository.syncInventoryActionsAsync(context, database);
+        }
         return updated[0];
     }
 
@@ -285,19 +358,53 @@ public final class ProductRepository {
         return ((SmartExpApplication) context.getApplicationContext()).appContainer.getProductRepository();
     }
 
-    private Product withCurrentSignedInOwner(Product product) {
-        if (product == null || hasText(product.getOwnerUserId())) {
-            return product;
+    private Product prepareForLocalWrite(Product product) {
+        if (product == null) {
+            return null;
         }
-        String ownerUserId = AuthStateRepository.getSignedInOwnerUserId(context);
-        if (!hasText(ownerUserId)) {
-            return product;
+        AccountInventoryScope scope = activeScope();
+        if (scope.isBlocked()) {
+            return null;
         }
-        return product.withOwnerUserId(ownerUserId, System.currentTimeMillis());
+        if (scope.isOwner()) {
+            Product owned = scope.ownerUserId.equals(product.getOwnerUserId())
+                    ? product
+                    : product.withOwnerUserId(scope.ownerUserId, System.currentTimeMillis());
+            return shouldSyncProduct(owned)
+                    ? FirestoreProductMapper.pendingUpload(owned, System.currentTimeMillis())
+                    : owned;
+        }
+        if (hasText(product.getOwnerUserId())) {
+            return null;
+        }
+        return product;
+    }
+
+    private boolean shouldSyncProduct(Product product) {
+        if (product == null || !hasText(product.getOwnerUserId())) {
+            return false;
+        }
+        String signedInOwnerUserId = AuthStateRepository.getSignedInOwnerUserId(context);
+        return product.getOwnerUserId().equals(signedInOwnerUserId) && ProductSyncRepository.isSyncAvailable(context);
     }
 
     private static boolean hasText(String value) {
         return value != null && !value.trim().isEmpty();
+    }
+
+    private AccountInventoryScope activeScope() {
+        return AccountInventoryScope.resolve(context);
+    }
+
+    private ProductEntity getScopedProductEntity(String id) {
+        AccountInventoryScope scope = activeScope();
+        if (scope.isOwner()) {
+            return database.productDao().getByIdForOwner(id, scope.ownerUserId);
+        }
+        if (scope.isLocal()) {
+            return database.productDao().getLocalById(id);
+        }
+        return null;
     }
 
     @Deprecated
@@ -577,6 +684,20 @@ public final class ProductRepository {
             }
         });
         return updated[0];
+    }
+
+    private static int getWastePreventedCountForScope(AppDatabase database, AccountInventoryScope scope) {
+        String[] actionTypes = new String[] {
+                ProductStatus.CONSUMED,
+                ProductStatus.DONATED
+        };
+        if (scope.isOwner()) {
+            return database.inventoryActionDao().countByActionTypesForOwner(scope.ownerUserId, actionTypes);
+        }
+        if (scope.isLocal()) {
+            return database.inventoryActionDao().countLocalByActionTypes(actionTypes);
+        }
+        return 0;
     }
 
     // --- Private Static Helpers ---
