@@ -6,6 +6,7 @@
     <color name="smart_surface_container_low">#F8FAFC</color>
     <color name="smart_surface_variant">#E2E8F0</color>
     <color name="smart_on_surface">#1A1C1C</color>
+    <color name="smart_on_surface_variant">#564334</color>
     <color name="smart_secondary">#5F5E5E</color>
     <color name="smart_muted">#8C8C8C</color>
     <color name="smart_primary">#904D00</color>
@@ -70,4 +71,6 @@
     <!-- Urgent Badge Colors (Light Mode) -->
     <color name="urgent_triangle_color">#FBECE5</color>
     <color name="urgent_count_text">#BA1A1A</color>
+
+    <color name="smart_outline_variant">#DDC1AE</color>
 </resources>
