@@ -278,6 +278,38 @@ public class ProductRepositoryTest {
     }
 
     @Test
+    public void statsSnapshotForSignedInUserScopesActionCountsAndDateRange() {
+        ProductSyncRepository.setTestSyncAvailableOverride(false);
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("email-uid", "Chef", "chef@smartexp.com")
+        );
+        Product emailProduct = product("email-spinach", "Spinach", "Vegetables",
+                LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
+        repository.addProduct(emailProduct);
+        repository.markConsumed(emailProduct.getId(), "Used");
+
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("google-uid", "Google User", "google@example.com")
+        );
+        Product googleProduct = product("google-bread", "Bread", "Pantry",
+                LocalDataContract.STORAGE_ROOM_TEMP_NAME, 2);
+        repository.addProduct(googleProduct);
+        repository.markWasted(googleProduct.getId(), "Spoiled");
+
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("email-uid", "Chef", "chef@smartexp.com")
+        );
+        ProductRepository.StatsSnapshot allTime = repository.getStatsSnapshot(0L);
+        ProductRepository.StatsSnapshot future = repository.getStatsSnapshot(System.currentTimeMillis() + 1000L);
+
+        assertEquals(1, allTime.getConsumedActionCount());
+        assertEquals(0, allTime.getWastedActionCount());
+        assertEquals(1, allTime.getPreventedWasteCount());
+        assertEquals(0, future.getConsumedActionCount());
+        assertEquals(0, future.getPreventedWasteCount());
+    }
+
+    @Test
     public void signedInUsersOnlySeeTheirOwnProducts() {
         ProductRepository.ensureLocalDefaults(database);
         AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));
@@ -394,7 +426,7 @@ public class ProductRepositoryTest {
         assertEquals(1, repository.filter(ProductStatus.ACTIVE, LocalDataContract.STORAGE_REFRIGERATOR_ID).size());
         assertEquals(1, repository.getExpiredProducts().size());
         assertEquals(1, repository.getExpiringBetween(startOfToday(), expiryMillisForOffset(3)).size());
-        assertEquals(2, repository.getDashboardSnapshot().getTotalTracked());
+        assertEquals(2, repository.getStatsSnapshot(0L).getActiveCount());
     }
 
     @Test

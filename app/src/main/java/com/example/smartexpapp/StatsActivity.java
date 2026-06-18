@@ -10,8 +10,6 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import androidx.lifecycle.ViewModelProvider;
-
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
@@ -30,7 +28,7 @@ public class StatsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
         setupChrome(R.id.nav_stats);
-        setTopTitle("Dashboard & Stats");
+        setTopTitle(getString(R.string.stats_title));
 
         RadioGroup dateRangeToggle = findViewById(R.id.dateRangeToggle);
         dateRangeToggle.setOnCheckedChangeListener((group, checkedId) -> {
@@ -44,6 +42,8 @@ public class StatsActivity extends BaseActivity {
             }
             bindDashboard();
         });
+        findViewById(R.id.viewAllInventory)
+                .setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
 
         bindDashboard();
     }
@@ -51,7 +51,7 @@ public class StatsActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        viewModel.loadDashboard();
+        bindDashboard();
     }
 
     private void bindDashboard() {
@@ -73,21 +73,26 @@ public class StatsActivity extends BaseActivity {
 
             ProgressBar trendProgress = findViewById(R.id.trendProgress);
             trendProgress.setProgress(percentage);
-            ((TextView) findViewById(R.id.trendLabel)).setText(percentage + "% Prevented");
-
-            findViewById(R.id.viewAllInventory)
-                    .setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
+            ((TextView) findViewById(R.id.trendLabel))
+                    .setText(getString(R.string.stats_prevented_percent_format, percentage));
 
             resetGroup(R.id.expiredList, R.id.sectionExpiredTitle, R.id.sectionExpiredCard);
             resetGroup(R.id.urgentList, R.id.sectionUrgentTitle, R.id.sectionUrgentCard);
             resetGroup(R.id.soonList, R.id.sectionSoonTitle, R.id.sectionSoonCard);
             resetGroup(R.id.safeList, R.id.sectionSafeTitle, R.id.sectionSafeCard);
-            bindStorageSummaries(snapshot.getActiveProducts());
-            bindGroupedProducts(snapshot.getActiveProducts());
+            List<Product> products = snapshot.getActiveProducts();
+            bindStorageSummaries(StatsUiMapper.buildStorageSummaries(products));
+            bindGroupedProducts(StatsUiMapper.groupProducts(products));
         }, error -> {
             ((TextView) findViewById(R.id.urgentCount)).setText("0");
+            ((TextView) findViewById(R.id.consumedCount)).setText("0");
+            ((TextView) findViewById(R.id.wastedCount)).setText("0");
+            ((TextView) findViewById(R.id.donatedCount)).setText("0");
+            ((TextView) findViewById(R.id.expiredActionCount)).setText("0");
             ((TextView) findViewById(R.id.activeCount)).setText("0");
             ((TextView) findViewById(R.id.preventedWasteCount)).setText("0");
+            ((TextView) findViewById(R.id.trendLabel))
+                    .setText(getString(R.string.stats_prevented_percent_format, 0));
         });
     }
 
@@ -111,45 +116,33 @@ public class StatsActivity extends BaseActivity {
         LinearLayout list = findViewById(R.id.storageSummaryList);
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-        addStorageSummary(inflater, list, products, "Refrigerator", "Refrigerator",
-                R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge, R.color.storage_fridge_icon,
-                R.drawable.progress_blue);
-        addStorageSummary(inflater, list, products, "Room Temp", "Room Temp",
-                R.drawable.ic_storage_room, R.drawable.bg_storage_icon_room, R.color.storage_room_icon,
-                R.drawable.progress_orange);
-        addStorageSummary(inflater, list, products, "Freezer", "Freeze",
-                R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer, R.color.storage_freezer_icon,
-                R.drawable.progress_purple);
+        for (DashboardState.StorageSummaryEntry summary : summaries) {
+            addStorageSummary(inflater, list, summary);
+        }
     }
 
-    private void addStorageSummary(LayoutInflater inflater, LinearLayout list, List<Product> products,
-            String label, String storageValue, int iconRes, int bgRes, int iconColorRes, int progressDrawableRes) {
-        int count = 0;
-        for (Product product : products) {
-            if (storageValue.equals(product.getStorage())) {
-                count++;
-            }
-        }
-        int progress = products.isEmpty() ? 0 : Math.round(count / (float) products.size() * 100f);
-
+    private void addStorageSummary(LayoutInflater inflater, LinearLayout list,
+            DashboardState.StorageSummaryEntry summary) {
+        StorageStyle style = storageStyle(summary.getStorageValue());
         View item = inflater.inflate(R.layout.item_storage_summary, list, false);
 
         View container = item.findViewById(R.id.storageIconContainer);
         if (container != null) {
-            container.setBackgroundResource(bgRes);
+            container.setBackgroundResource(style.backgroundRes);
         }
 
         ImageView icon = item.findViewById(R.id.storageIcon);
-        ViewUtils.setIcon(icon, iconRes, iconColorRes);
+        ViewUtils.setIcon(icon, style.iconRes, style.iconColorRes);
 
-        ((TextView) item.findViewById(R.id.storageName)).setText(label);
+        ((TextView) item.findViewById(R.id.storageName))
+                .setText(getLocalizedStorage(summary.getStorageValue()));
         ((TextView) item.findViewById(R.id.storageCount))
-                .setText(count + " items");
+                .setText(getString(R.string.storage_summary_items_count_format, summary.getCount()));
 
         ProgressBar progressBar = item.findViewById(R.id.storageProgress);
         progressBar.setProgress(summary.getProgressPercent());
         progressBar.setProgressDrawable(
-                androidx.appcompat.content.res.AppCompatResources.getDrawable(this, progressDrawableRes));
+                androidx.appcompat.content.res.AppCompatResources.getDrawable(this, style.progressDrawableRes));
 
         list.addView(item);
     }
@@ -242,5 +235,32 @@ public class StatsActivity extends BaseActivity {
             return getString(R.string.storage_summary_room_temp);
         }
         return storage;
+    }
+
+    private StorageStyle storageStyle(String storage) {
+        if ("Refrigerator".equalsIgnoreCase(storage)) {
+            return new StorageStyle(R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge,
+                    R.color.storage_fridge_icon, R.drawable.progress_blue);
+        }
+        if ("Freeze".equalsIgnoreCase(storage) || "Freezer".equalsIgnoreCase(storage)) {
+            return new StorageStyle(R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer,
+                    R.color.storage_freezer_icon, R.drawable.progress_purple);
+        }
+        return new StorageStyle(R.drawable.ic_storage_room, R.drawable.bg_storage_icon_room,
+                R.color.storage_room_icon, R.drawable.progress_orange);
+    }
+
+    private static final class StorageStyle {
+        private final int iconRes;
+        private final int backgroundRes;
+        private final int iconColorRes;
+        private final int progressDrawableRes;
+
+        private StorageStyle(int iconRes, int backgroundRes, int iconColorRes, int progressDrawableRes) {
+            this.iconRes = iconRes;
+            this.backgroundRes = backgroundRes;
+            this.iconColorRes = iconColorRes;
+            this.progressDrawableRes = progressDrawableRes;
+        }
     }
 }

@@ -114,7 +114,7 @@
                     android:layout_weight="1"
                     android:button="@null"
                     android:gravity="center"
-                    android:text="Week"
+                    android:text="@string/stats_range_week"
                     android:textColor="@color/text_color_range_toggle"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -127,7 +127,7 @@
                     android:layout_weight="1"
                     android:button="@null"
                     android:gravity="center"
-                    android:text="Month"
+                    android:text="@string/stats_range_month"
                     android:textColor="@color/text_color_range_toggle"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -141,7 +141,7 @@
                     android:button="@null"
                     android:checked="true"
                     android:gravity="center"
-                    android:text="All Time"
+                    android:text="@string/stats_range_all_time"
                     android:textColor="@color/text_color_range_toggle"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -165,7 +165,7 @@
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:layout_margin="4dp">
-                    <TextView android:text="Consumed" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:text="@string/stats_consumed" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/consumedCount" android:text="0" android:textColor="@color/smart_on_surface" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                 </LinearLayout>
 
@@ -178,7 +178,7 @@
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:layout_margin="4dp">
-                    <TextView android:text="Donated" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:text="@string/stats_donated" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/donatedCount" android:text="0" android:textColor="@color/smart_on_surface" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                 </LinearLayout>
 
@@ -191,7 +191,7 @@
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:layout_margin="4dp">
-                    <TextView android:text="Wasted" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:text="@string/stats_wasted" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/wastedCount" android:text="0" android:textColor="@color/smart_error" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                 </LinearLayout>
 
@@ -204,7 +204,7 @@
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:layout_margin="4dp">
-                    <TextView android:text="Expired" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:text="@string/stats_expired" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/expiredActionCount" android:text="0" android:textColor="@color/smart_error" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                 </LinearLayout>
 
@@ -217,7 +217,7 @@
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:layout_margin="4dp">
-                    <TextView android:text="Active Now" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:text="@string/stats_active_now" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/activeCount" android:text="0" android:textColor="@color/smart_on_surface" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                 </LinearLayout>
 
@@ -230,7 +230,7 @@
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:layout_margin="4dp">
-                    <TextView android:text="Prevented Waste" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:text="@string/stats_prevented_waste" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/preventedWasteCount" android:text="0" android:textColor="@color/storage_room_icon" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                 </LinearLayout>
             </GridLayout>
@@ -248,7 +248,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Waste Prevention Trend"
+                    android:text="@string/stats_waste_prevention_trend"
                     android:textSize="16sp"
                     android:textColor="@color/smart_on_surface"
                     android:textStyle="bold"/>
@@ -264,7 +264,7 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:text="0% Prevented"
+                        android:text="@string/stats_prevented_zero"
                         android:textColor="@color/smart_secondary"
                         android:textSize="12sp"/>
                 </LinearLayout>

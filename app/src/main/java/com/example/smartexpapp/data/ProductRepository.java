@@ -139,11 +139,7 @@ public final class ProductRepository {
         List<Product> allProducts = getProducts();
         int urgentCount = 0;
         int expiredCount = 0;
-        int expiredActions = 0;
-        long now = System.currentTimeMillis();
-        
-        List<Product> filteredProducts = new ArrayList<>();
-        
+
         for (Product product : allProducts) {
             if (product.isExpiringSoon()) {
                 urgentCount++;
@@ -151,24 +147,18 @@ public final class ProductRepository {
             if (product.isExpired()) {
                 expiredCount++;
             }
-            
-            // Calculate expired products within the date range
-            if (product.isExpired() && product.getExpiryDateMillis() >= sinceMillis && product.getExpiryDateMillis() <= now) {
-                expiredActions++;
-            }
-            
-            // The active products list displays all currently active inventory regardless of when they were added,
-            // matching the active count metric definition.
-            filteredProducts.add(product);
         }
-        
-        int consumed = database.inventoryActionDao().countByActionTypesSince(new String[]{ProductStatus.CONSUMED}, sinceMillis);
-        int wasted = database.inventoryActionDao().countByActionTypesSince(new String[]{ProductStatus.WASTED}, sinceMillis);
-        int donated = database.inventoryActionDao().countByActionTypesSince(new String[]{ProductStatus.DONATED}, sinceMillis);
+
+        AccountInventoryScope scope = activeScope();
+        int consumed = countActionsForScope(new String[]{ProductStatus.CONSUMED}, sinceMillis, scope);
+        int wasted = countActionsForScope(new String[]{ProductStatus.WASTED}, sinceMillis, scope);
+        int donated = countActionsForScope(new String[]{ProductStatus.DONATED}, sinceMillis, scope);
+        int expiredActions = countActionsForScope(new String[]{ProductStatus.EXPIRED}, sinceMillis, scope);
         int prevented = consumed + donated;
-        
+
         int activeCount = allProducts.size();
-        return new StatsSnapshot(activeCount, filteredProducts, urgentCount, expiredCount, consumed, wasted, donated, expiredActions, prevented);
+        return new StatsSnapshot(activeCount, allProducts, urgentCount, expiredCount, consumed, wasted, donated,
+                expiredActions, prevented);
     }
 
     public void getStatsSnapshotAsync(long sinceMillis, Callback<StatsSnapshot> callback, ErrorCallback errorCallback) {
@@ -749,6 +739,26 @@ public final class ProductRepository {
             return database.inventoryActionDao().countByActionTypesForOwner(scope.ownerUserId, actionTypes);
         }
         if (scope.isLocal()) {
+            return database.inventoryActionDao().countLocalByActionTypes(actionTypes);
+        }
+        return 0;
+    }
+
+    private int countActionsForScope(String[] actionTypes, long sinceMillis, AccountInventoryScope scope) {
+        if (scope.isOwner()) {
+            if (sinceMillis > 0L) {
+                return database.inventoryActionDao().countByActionTypesForOwnerSince(
+                        scope.ownerUserId,
+                        actionTypes,
+                        sinceMillis
+                );
+            }
+            return database.inventoryActionDao().countByActionTypesForOwner(scope.ownerUserId, actionTypes);
+        }
+        if (scope.isLocal()) {
+            if (sinceMillis > 0L) {
+                return database.inventoryActionDao().countLocalByActionTypesSince(actionTypes, sinceMillis);
+            }
             return database.inventoryActionDao().countLocalByActionTypes(actionTypes);
         }
         return 0;
