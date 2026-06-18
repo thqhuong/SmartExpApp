@@ -10,19 +10,19 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.lifecycle.ViewModelProvider;
+
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class StatsActivity extends BaseActivity {
-    
+
     private long currentSinceMillis = 0L;
 
     @Override
@@ -31,7 +31,7 @@ public class StatsActivity extends BaseActivity {
         setContentView(R.layout.activity_stats);
         setupChrome(R.id.nav_stats);
         setTopTitle("Dashboard & Stats");
-        
+
         RadioGroup dateRangeToggle = findViewById(R.id.dateRangeToggle);
         dateRangeToggle.setOnCheckedChangeListener((group, checkedId) -> {
             long now = System.currentTimeMillis();
@@ -51,29 +51,32 @@ public class StatsActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        bindDashboard();
+        viewModel.loadDashboard();
     }
 
     private void bindDashboard() {
         ProductRepository.getStatsSnapshotAsync(this, currentSinceMillis, snapshot -> {
             ((TextView) findViewById(R.id.urgentCount)).setText(String.valueOf(snapshot.getUrgentCount()));
-            
+
             ((TextView) findViewById(R.id.consumedCount)).setText(String.valueOf(snapshot.getConsumedActionCount()));
             ((TextView) findViewById(R.id.wastedCount)).setText(String.valueOf(snapshot.getWastedActionCount()));
             ((TextView) findViewById(R.id.donatedCount)).setText(String.valueOf(snapshot.getDonatedActionCount()));
-            ((TextView) findViewById(R.id.expiredActionCount)).setText(String.valueOf(snapshot.getExpiredActionCount()));
+            ((TextView) findViewById(R.id.expiredActionCount))
+                    .setText(String.valueOf(snapshot.getExpiredActionCount()));
             ((TextView) findViewById(R.id.activeCount)).setText(String.valueOf(snapshot.getActiveCount()));
-            ((TextView) findViewById(R.id.preventedWasteCount)).setText(String.valueOf(snapshot.getPreventedWasteCount()));
-            
+            ((TextView) findViewById(R.id.preventedWasteCount))
+                    .setText(String.valueOf(snapshot.getPreventedWasteCount()));
+
             int prevented = snapshot.getPreventedWasteCount();
             int totalOutcomes = prevented + snapshot.getWastedActionCount();
             int percentage = totalOutcomes == 0 ? 0 : Math.round(prevented / (float) totalOutcomes * 100f);
-            
+
             ProgressBar trendProgress = findViewById(R.id.trendProgress);
             trendProgress.setProgress(percentage);
             ((TextView) findViewById(R.id.trendLabel)).setText(percentage + "% Prevented");
-            
-            findViewById(R.id.viewAllInventory).setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
+
+            findViewById(R.id.viewAllInventory)
+                    .setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
 
             resetGroup(R.id.expiredList, R.id.sectionExpiredTitle, R.id.sectionExpiredCard);
             resetGroup(R.id.urgentList, R.id.sectionUrgentTitle, R.id.sectionUrgentCard);
@@ -104,7 +107,7 @@ public class StatsActivity extends BaseActivity {
         }
     }
 
-    private void bindStorageSummaries(List<Product> products) {
+    private void bindStorageSummaries(List<DashboardState.StorageSummaryEntry> summaries) {
         LinearLayout list = findViewById(R.id.storageSummaryList);
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -130,7 +133,7 @@ public class StatsActivity extends BaseActivity {
         int progress = products.isEmpty() ? 0 : Math.round(count / (float) products.size() * 100f);
 
         View item = inflater.inflate(R.layout.item_storage_summary, list, false);
-        
+
         View container = item.findViewById(R.id.storageIconContainer);
         if (container != null) {
             container.setBackgroundResource(bgRes);
@@ -142,25 +145,16 @@ public class StatsActivity extends BaseActivity {
         ((TextView) item.findViewById(R.id.storageName)).setText(label);
         ((TextView) item.findViewById(R.id.storageCount))
                 .setText(count + " items");
-        
+
         ProgressBar progressBar = item.findViewById(R.id.storageProgress);
-        progressBar.setProgress(progress);
-        progressBar.setProgressDrawable(androidx.appcompat.content.res.AppCompatResources.getDrawable(this, progressDrawableRes));
-        
+        progressBar.setProgress(summary.getProgressPercent());
+        progressBar.setProgressDrawable(
+                androidx.appcompat.content.res.AppCompatResources.getDrawable(this, progressDrawableRes));
+
         list.addView(item);
     }
 
-    private void bindGroupedProducts(List<Product> products) {
-        Map<String, List<Product>> groups = new HashMap<>();
-        groups.put("Expired", new ArrayList<>());
-        groups.put("Urgent", new ArrayList<>());
-        groups.put("Soon", new ArrayList<>());
-        groups.put("Safe", new ArrayList<>());
-
-        for (Product product : products) {
-            groups.get(product.getGroup()).add(product);
-        }
-
+    private void bindGroupedProducts(Map<String, List<Product>> groups) {
         bindGroup("Expired", R.id.expiredList, R.id.sectionExpiredTitle, R.id.sectionExpiredCard,
                 groups.get("Expired"), R.color.smart_error);
         bindGroup("Urgent", R.id.urgentList, R.id.sectionUrgentTitle, R.id.sectionUrgentCard,
@@ -172,8 +166,9 @@ public class StatsActivity extends BaseActivity {
     }
 
     private void bindGroup(String groupName, int listId, int titleId, int cardId,
-                           List<Product> products, int badgeColorRes) {
-        if (products.isEmpty()) return;
+            List<Product> products, int badgeColorRes) {
+        if (products == null || products.isEmpty())
+            return;
 
         findViewById(titleId).setVisibility(View.VISIBLE);
         View cardView = findViewById(cardId);
@@ -207,14 +202,15 @@ public class StatsActivity extends BaseActivity {
             }
 
             View categoryDot = item.findViewById(R.id.categoryDot);
-            categoryDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, product.getCategory())));
+            categoryDot.getBackground().setTint(
+                    getColor(CategoryColorHelper.getColor(this, product.getCategory())));
             categoryDot.setVisibility(View.VISIBLE);
 
             ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
             ((TextView) item.findViewById(R.id.productMeta)).setText(product.getStorage());
 
             TextView badge = item.findViewById(R.id.expiryBadge);
-            badge.setText(product.getDashboardBadge());
+            badge.setText(product.getDashboardBadge(this));
             if ("Expired".equals(groupName)) {
                 badge.setBackgroundResource(R.drawable.bg_error_soft_badge);
                 badge.setTextColor(getColor(R.color.smart_error));
@@ -235,5 +231,16 @@ public class StatsActivity extends BaseActivity {
                 item.findViewById(R.id.rowDivider).setVisibility(View.GONE);
             }
         }
+    }
+
+    private String getLocalizedStorage(String storage) {
+        if ("Refrigerator".equalsIgnoreCase(storage)) {
+            return getString(R.string.storage_summary_refrigerator);
+        } else if ("Freeze".equalsIgnoreCase(storage) || "Freezer".equalsIgnoreCase(storage)) {
+            return getString(R.string.storage_summary_freezer);
+        } else if ("Room Temp".equalsIgnoreCase(storage)) {
+            return getString(R.string.storage_summary_room_temp);
+        }
+        return storage;
     }
 }

@@ -219,9 +219,20 @@ public abstract class BaseActivity extends AppCompatActivity {
         int top = bottomNavigation.getPaddingTop();
         int end = bottomNavigation.getPaddingEnd();
         int bottom = bottomNavigation.getPaddingBottom();
+        final int originalHeight = bottomNavigation.getLayoutParams() != null
+                ? bottomNavigation.getLayoutParams().height
+                : 0;
 
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (view, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars());
+            android.view.ViewGroup.LayoutParams lp = view.getLayoutParams();
+            if (lp != null && originalHeight > 0) {
+                int targetHeight = originalHeight + systemBars.bottom;
+                if (lp.height != targetHeight) {
+                    lp.height = targetHeight;
+                    view.setLayoutParams(lp);
+                }
+            }
             view.setPaddingRelative(start, top, end, bottom + systemBars.bottom);
             return insets;
         });

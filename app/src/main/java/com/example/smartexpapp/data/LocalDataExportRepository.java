@@ -96,10 +96,16 @@ public final class LocalDataExportRepository {
                     .put("status", product.status)
                     .put("createdAt", product.createdAt)
                     .put("updatedAt", product.updatedAt)
+                    .put("cloudId", jsonNullable(product.cloudId))
+                    .put("ownerUserId", jsonNullable(product.ownerUserId))
                     .put("syncStatus", product.syncStatus)
                     .put("lastSyncedAt", product.lastSyncedAt));
         }
         return array;
+    }
+
+    private static Object jsonNullable(Object value) {
+        return value == null ? JSONObject.NULL : value;
     }
 
     private static JSONArray storageLocations(List<StorageLocationEntity> locations) throws Exception {

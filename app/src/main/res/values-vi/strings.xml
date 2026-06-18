@@ -33,6 +33,24 @@
     <string name="status_expiring">SẮP HẾT HẠN</string>
     <string name="product_meta_format">%1$s - %2$s</string>
 
+    <!-- Expiry status and dashboard badge localizations -->
+    <string name="expiry_status_expired">Đã hết hạn</string>
+    <string name="expiry_status_today">Hôm nay</string>
+    <string name="expiry_status_day_single">1 Ngày</string>
+    <string name="expiry_status_days_format">%1$d Ngày</string>
+    <string name="expiry_status_months_format">%1$d Tháng</string>
+
+    <string name="dashboard_badge_expired">HẾT HẠN</string>
+    <string name="dashboard_badge_today">HÔM NAY</string>
+    <string name="dashboard_badge_tomorrow">NGÀY MAI</string>
+    <string name="dashboard_badge_days_left_format">CÒN %1$d NGÀY</string>
+
+    <!-- Storage Summary Localizations -->
+    <string name="storage_summary_refrigerator">Tủ lạnh</string>
+    <string name="storage_summary_room_temp">Nhiệt độ phòng</string>
+    <string name="storage_summary_freezer">Ngăn đông</string>
+    <string name="storage_summary_items_count_format">%1$d món</string>
+
     <string name="inventory_title">Kho của tôi</string>
     <string name="category_label">DANH MỤC</string>
     <string name="storage_room_temp">Nhiệt độ phòng</string>
@@ -98,8 +116,12 @@
     <string name="nav_settings_label">Cài đặt</string>
     <string name="profile_local_user">Người dùng cục bộ</string>
     <string name="profile_stored_device">Lưu trên thiết bị này</string>
+    <string name="profile_signed_in_format">Đã đăng nhập bằng %1$s</string>
+    <string name="profile_guest_mode">Chế độ khách</string>
+    <string name="profile_guest_device">Dữ liệu khách vẫn lưu trên thiết bị này</string>
     <string name="settings_section_preferences">TÙY CHỌN</string>
     <string name="settings_local_mode">Chế độ chỉ lưu cục bộ</string>
+    <string name="settings_sign_in">Đăng nhập</string>
     <string name="recipe_details_title">Chi tiết công thức</string>
     <string name="difficulty_easy_uppercase">DỄ</string>
     <string name="gemini_smart_tip">Mẹo thông minh AI</string>
@@ -270,12 +292,16 @@
     <string name="clear_label">Xóa</string>
     <string name="account_local_user_desc">Người dùng cục bộ</string>
     <string name="account_stored_only_device">Chỉ lưu trên thiết bị này</string>
+    <string name="account_signed_in_device">Đã đăng nhập. Sản phẩm cục bộ mới sẽ gắn với tài khoản này trên thiết bị.</string>
+    <string name="account_guest_device">Dữ liệu khách chỉ lưu trên thiết bị này và vẫn ở cục bộ sau khi đăng nhập.</string>
     <string name="profile_section">HỒ SƠ</string>
     <string name="display_name_label">Tên hiển thị</string>
     <string name="display_name_hint">Tên của bạn</string>
     <string name="local_mode_label">Chế độ cục bộ</string>
     <string name="device_only_hint">Chỉ thiết bị</string>
     <string name="no_sign_in_required">Không cần đăng nhập</string>
+    <string name="signed_in_mode">Đã đăng nhập</string>
+    <string name="guest_mode_label">Chế độ khách</string>
     <string name="ai_access_label">Truy cập AI</string>
     <string name="optional_api_key_hint">Khóa API tùy chọn</string>
     <string name="optional_local_api_key">Khóa API cục bộ tùy chọn</string>
@@ -283,11 +309,15 @@
     <string name="local_data_desc">Kho, bản quét, công thức và nhắc nhở được lưu trong cơ sở dữ liệu của ứng dụng.</string>
     <string name="authentication_label">Xác thực</string>
     <string name="auth_not_used_local">Không dùng trong chế độ chỉ lưu cục bộ</string>
+    <string name="auth_signed_in_format">Tài khoản Firebase: %1$s</string>
+    <string name="auth_guest_local">Phiên khách. Chưa bật đồng bộ đám mây.</string>
+    <string name="auth_local_only">Chỉ lưu cục bộ. Đăng nhập là tùy chọn.</string>
     <string name="chevron_symbol">&gt;</string>
     <string name="data_privacy_title">Dữ liệu &amp; quyền riêng tư</string>
     <string name="export_data">Xuất dữ liệu</string>
     <string name="delete_local_data">Xóa dữ liệu cục bộ</string>
     <string name="save_local_profile">Lưu hồ sơ cục bộ</string>
+    <string name="signed_in_profile_read_only">Danh tính tài khoản Firebase được quản lý bởi nhà cung cấp đăng nhập.</string>
     <string name="profile_load_error">Không thể tải hồ sơ cục bộ.</string>
     <string name="account_details_title">Chi tiết tài khoản</string>
     <string name="profile_saved">Đã lưu hồ sơ cục bộ.</string>
@@ -327,6 +357,7 @@
 
     <!-- Authentication Strings -->
     <string name="sign_out_label">Đăng xuất</string>
+    <string name="sign_in_label">Đăng nhập</string>
     <string name="login_error_empty">Vui lòng nhập cả email và mật khẩu.</string>
     <string name="login_error_invalid_email">Vui lòng nhập địa chỉ email hợp lệ.</string>
     <string name="login_error_short_password">Mật khẩu phải có ít nhất 6 ký tự.</string>

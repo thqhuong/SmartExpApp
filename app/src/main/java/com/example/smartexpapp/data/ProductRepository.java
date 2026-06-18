@@ -177,7 +177,7 @@ public final class ProductRepository {
 
     public void addProduct(Product product) {
         ensureStorageLocations(database);
-        database.productDao().insert(ProductMapper.toEntity(product));
+        database.productDao().insert(ProductMapper.toEntity(withCurrentSignedInOwner(product)));
     }
 
     public void addProductAsync(Product product, Callback<Void> callback, ErrorCallback errorCallback) {
@@ -190,12 +190,13 @@ public final class ProductRepository {
     public boolean updateProduct(Product product) {
         Product existing = getProductById(product.getId());
         ensureStorageLocations(database);
-        boolean updated = database.productDao().update(ProductMapper.toEntity(product)) > 0;
+        Product productToUpdate = withCurrentSignedInOwner(product);
+        boolean updated = database.productDao().update(ProductMapper.toEntity(productToUpdate)) > 0;
         if (updated && existing != null) {
             LocalImageRepository.deleteReplacedProductImage(
                     context,
                     existing.getImageUrl(),
-                    product.getImageUrl()
+                    productToUpdate.getImageUrl()
             );
         }
         return updated;
@@ -256,6 +257,10 @@ public final class ProductRepository {
         return mapProducts(database.productDao().filter(status, storageLocationId));
     }
 
+    public void getAllProductsAsync(Callback<List<Product>> callback, ErrorCallback errorCallback) {
+        execute(() -> filter(null, null), callback, errorCallback);
+    }
+
     public boolean markConsumed(String id, String note) {
         return markStatus(id, ProductStatus.CONSUMED, note);
     }
@@ -284,6 +289,22 @@ public final class ProductRepository {
         return markStatus(id, ProductStatus.EXPIRED, note);
     }
 
+    public boolean markDeleted(String id, String note) {
+        return markStatus(id, ProductStatus.DELETED, note);
+    }
+
+    public void markDeletedAsync(String id, String note, Callback<Boolean> callback, ErrorCallback errorCallback) {
+        execute(() -> markDeleted(id, note), callback, errorCallback);
+    }
+
+    public boolean markActive(String id, String note) {
+        return markStatus(id, ProductStatus.ACTIVE, note);
+    }
+
+    public void markActiveAsync(String id, String note, Callback<Boolean> callback, ErrorCallback errorCallback) {
+        execute(() -> markActive(id, note), callback, errorCallback);
+    }
+
     public int getWastePreventedCount() {
         return getWastePreventedCount(database);
     }
@@ -310,6 +331,21 @@ public final class ProductRepository {
 
     private static ProductRepository getContainerRepository(Context context) {
         return ((SmartExpApplication) context.getApplicationContext()).appContainer.getProductRepository();
+    }
+
+    private Product withCurrentSignedInOwner(Product product) {
+        if (product == null || hasText(product.getOwnerUserId())) {
+            return product;
+        }
+        String ownerUserId = AuthStateRepository.getSignedInOwnerUserId(context);
+        if (!hasText(ownerUserId)) {
+            return product;
+        }
+        return product.withOwnerUserId(ownerUserId, System.currentTimeMillis());
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     @Deprecated

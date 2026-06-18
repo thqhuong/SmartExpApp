@@ -99,7 +99,9 @@
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="-2dp"
         android:background="@drawable/bg_orange_glow_shadow"
-        android:alpha="0.95" />
+        android:alpha="0.95"
+        android:clickable="false"
+        android:focusable="false" />
 
     <!-- Center Floating Action Button (Add Product, aligned to bottom) -->
     <FrameLayout

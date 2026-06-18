@@ -11,7 +11,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -19,15 +18,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.notifications.ReminderScheduler;
-import com.example.smartexpapp.util.CategoryColorHelper;
-import com.example.smartexpapp.util.ImageLoader;
-import com.example.smartexpapp.util.ViewUtils;
-import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +37,8 @@ public class InventoryActivity extends BaseActivity {
     public static final String EXTRA_RESET_FILTERS = "com.example.smartexpapp.extra.RESET_FILTERS";
     public static final String FILTER_EXPIRING_SOON = "ExpiringSoon";
 
-    private LinearLayout productList;
+    private RecyclerView productList;
+    private InventoryAdapter adapter;
     private LinearLayout emptyState;
     private TextView emptyTitle;
     private TextView emptyDesc;
@@ -57,18 +56,8 @@ public class InventoryActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Authentication and guest mode check
-        boolean isAuthenticated = false;
-        try {
-            if (!com.google.firebase.FirebaseApp.getApps(this).isEmpty()) {
-                isAuthenticated = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error checking Firebase Auth state", e);
-        }
-
-        boolean guestModeEnabled = getSharedPreferences("auth_prefs", MODE_PRIVATE).getBoolean("guest_mode_enabled", false);
-        if (!isAuthenticated && !guestModeEnabled) {
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (!authState.isSignedIn() && !authState.isGuest()) {
             Intent intent = new Intent(this, SignInActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -79,7 +68,30 @@ public class InventoryActivity extends BaseActivity {
         setContentView(R.layout.activity_inventory);
         setupChrome(R.id.nav_inventory);
 
+        View archiveButton = findViewById(R.id.topActionArchive);
+        if (archiveButton != null) {
+            archiveButton.setVisibility(View.VISIBLE);
+            archiveButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ProductHistoryActivity.class);
+                startActivity(intent);
+            });
+        }
+
         productList = findViewById(R.id.productList);
+        productList.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new InventoryAdapter(new InventoryAdapter.OnProductClickListener() {
+            @Override
+            public void onProductClick(Product product) {
+                showProductActions(product);
+            }
+
+            @Override
+            public void onDeleteClick(Product product) {
+                confirmDelete(product);
+            }
+        });
+        productList.setAdapter(adapter);
+
         emptyState = findViewById(R.id.emptyState);
         emptyTitle = findViewById(R.id.emptyTitle);
         emptyDesc = findViewById(R.id.emptyDesc);
@@ -188,7 +200,7 @@ public class InventoryActivity extends BaseActivity {
 
         ArrayAdapter<CharSequence> storageAdapter = ArrayAdapter.createFromResource(this,
                 R.array.storage_filter_options, android.R.layout.simple_spinner_item);
-        storageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        storageAdapter        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         storageSpinner.setAdapter(storageAdapter);
         storageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -205,7 +217,7 @@ public class InventoryActivity extends BaseActivity {
 
         ArrayAdapter<CharSequence> sortAdapter = ArrayAdapter.createFromResource(this,
                 R.array.sort_options, android.R.layout.simple_spinner_item);
-        sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sortAdapter        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sortSpinner.setAdapter(sortAdapter);
         sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -268,12 +280,9 @@ public class InventoryActivity extends BaseActivity {
 
     private void hideLoading() {
         loadingIndicator.setVisibility(View.GONE);
-        productList.setVisibility(View.VISIBLE);
     }
 
     private void bindProducts(List<Product> products) {
-        productList.removeAllViews();
-
         if (products.isEmpty()) {
             productList.setVisibility(View.GONE);
             errorState.setVisibility(View.GONE);
@@ -292,84 +301,13 @@ public class InventoryActivity extends BaseActivity {
                 emptyTitle.setText(R.string.empty_inventory);
                 emptyDesc.setText(R.string.empty_inventory_desc);
             }
-            return;
-        }
-
-        productList.setVisibility(View.VISIBLE);
-        emptyState.setVisibility(View.GONE);
-        errorState.setVisibility(View.GONE);
-
-        LayoutInflater inflater = LayoutInflater.from(this);
-        for (Product product : products) {
-            View item = inflater.inflate(R.layout.item_inventory_product, productList, false);
-            bindProductCard(item, product);
-            ViewUtils.setBottomMargin(item, 12);
-            productList.addView(item);
-        }
-    }
-
-    private void bindProductCard(View item, Product product) {
-        MaterialCardView card = item.findViewById(R.id.productCard);
-        TextView urgentBadge = item.findViewById(R.id.urgentBadge);
-        TextView expiryStatus = item.findViewById(R.id.expiryStatus);
-        ProgressBar progress = item.findViewById(R.id.expiryProgress);
-        View deleteBtn = item.findViewById(R.id.btnDelete);
-
-        View categoryDot = item.findViewById(R.id.categoryDot);
-        if (categoryDot.getBackground() != null) {
-            categoryDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(product.getCategory())));
-        }
-        categoryDot.setVisibility(View.VISIBLE);
-
-        ImageView icon = item.findViewById(R.id.productIcon);
-        String imgUrl = product.getImageUrl();
-        if (imgUrl != null && !imgUrl.isEmpty()) {
-            icon.setImageTintList(null);
-            ImageLoader.load(icon, imgUrl);
         } else {
-            int tintColor = CategoryColorHelper.getColor(this, product.getCategory());
-            icon.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(tintColor)));
-            ViewUtils.setIcon(icon, product.getIconRes(), tintColor);
-        }
-        ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
-        ((TextView) item.findViewById(R.id.productMeta))
-                .setText(getString(R.string.product_meta_format, product.getCategory(), product.getAmount()));
-        expiryStatus.setText(product.getExpiryStatus());
-        progress.setProgress(product.getExpiryProgress());
-
-        float density = getResources().getDisplayMetrics().density;
-        if (product.isExpired()) {
-            card.setCardBackgroundColor(getColor(R.color.smart_glass_error));
-            card.setStrokeColor(getColor(R.color.smart_glass_error_stroke));
-            card.setStrokeWidth((int) (1.5f * density));
-            urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_error_soft_badge);
-            urgentBadge.setText(R.string.status_expired);
-            urgentBadge.setTextColor(getColor(R.color.smart_error));
-            expiryStatus.setTextColor(getColor(R.color.smart_error));
-            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
-        } else if (product.isExpiringSoon()) {
-            card.setCardBackgroundColor(getColor(R.color.smart_glass_urgent));
-            card.setStrokeColor(getColor(R.color.smart_glass_urgent_stroke));
-            card.setStrokeWidth((int) (1.5f * density));
-            urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_primary_soft_badge);
-            urgentBadge.setText(R.string.status_expiring);
-            urgentBadge.setTextColor(getColor(R.color.smart_primary_container));
-            expiryStatus.setTextColor(getColor(R.color.smart_primary_container));
-            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
-        } else {
-            card.setCardBackgroundColor(getColor(R.color.smart_glass_surface));
-            card.setStrokeColor(getColor(R.color.smart_glass_stroke));
-            card.setStrokeWidth((int) density);
-            urgentBadge.setVisibility(View.GONE);
-            expiryStatus.setTextColor(getColor(R.color.smart_on_surface));
-            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_gray));
+            productList.setVisibility(View.VISIBLE);
+            emptyState.setVisibility(View.GONE);
+            errorState.setVisibility(View.GONE);
         }
 
-        card.setOnClickListener(v -> showProductActions(product));
-
-        deleteBtn.setOnClickListener(v -> confirmDelete(product));
+        adapter.submitList(products);
     }
 
     private void showProductActions(Product product) {
@@ -388,13 +326,13 @@ public class InventoryActivity extends BaseActivity {
                             openEditDialog(product);
                             break;
                         case 1:
-                            markConsumed(product);
+                            showMarkDialog(product, "consumed");
                             break;
                         case 2:
-                            markWasted(product);
+                            showMarkDialog(product, "wasted");
                             break;
                         case 3:
-                            markDonated(product);
+                            showMarkDialog(product, "donated");
                             break;
                         case 4:
                             confirmDelete(product);
@@ -406,6 +344,96 @@ public class InventoryActivity extends BaseActivity {
                 .show();
     }
 
+    private void showMarkDialog(Product product, String action) {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_mark_status, null);
+        ((TextView) view.findViewById(R.id.dialogProductName)).setText(product.getName());
+
+        int actionLabelRes;
+        String statusKey;
+        switch (action) {
+            case "wasted":
+                actionLabelRes = R.string.action_mark_wasted;
+                statusKey = "wasted";
+                view.findViewById(R.id.dialogWarning).setVisibility(View.VISIBLE);
+                ((TextView) view.findViewById(R.id.dialogWarning)).setText(R.string.mark_wasted_confirm_text);
+                break;
+            case "donated":
+                actionLabelRes = R.string.action_mark_donated;
+                statusKey = "donated";
+                break;
+            default:
+                actionLabelRes = R.string.action_mark_consumed;
+                statusKey = "consumed";
+                break;
+        }
+        ((TextView) view.findViewById(R.id.dialogActionLabel)).setText(actionLabelRes);
+
+        new AlertDialog.Builder(this)
+                .setView(view)
+                .setPositiveButton(R.string.mark_status_confirm, (dialog, which) -> {
+                    EditText noteInput = view.findViewById(R.id.dialogNoteInput);
+                    String note = noteInput.getText().toString().trim();
+                    executeMarkAction(product, statusKey, note);
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void executeMarkAction(Product product, String action, String note) {
+        switch (action) {
+            case "wasted":
+                viewModel.markWasted(product.getId(), note,
+                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_wasted_format, product.getName())),
+                        this::onStatusUpdateFailed);
+                break;
+            case "donated":
+                viewModel.markDonated(product.getId(), note,
+                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_donated_format, product.getName())),
+                        this::onStatusUpdateFailed);
+                break;
+            default:
+                viewModel.markConsumed(product.getId(), note,
+                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_consumed_format, product.getName())),
+                        this::onStatusUpdateFailed);
+                break;
+        }
+    }
+
+    private void onStatusSuccess(Boolean updated, Product product, String toastMessage) {
+        if (Boolean.TRUE.equals(updated)) {
+            ReminderScheduler.runSoon(this);
+            viewModel.loadProducts();
+
+            String snackAction = actionLabel(product, toastMessage);
+            Snackbar.make(findViewById(android.R.id.content),
+                    getString(R.string.mark_status_snackbar_format, product.getName(), snackAction),
+                    Snackbar.LENGTH_LONG)
+                    .setAction(R.string.mark_undo, v -> undoMark(product))
+                    .show();
+        }
+    }
+
+    private String actionLabel(Product product, String toastMessage) {
+        if (toastMessage.contains(getString(R.string.action_mark_wasted).toLowerCase()))
+            return getString(R.string.action_mark_wasted);
+        if (toastMessage.contains(getString(R.string.action_mark_donated).toLowerCase()))
+            return getString(R.string.action_mark_donated);
+        return getString(R.string.action_mark_consumed);
+    }
+
+    private void undoMark(Product product) {
+        viewModel.revertStatus(product.getId(), "Reverted from snackbar undo",
+                reverted -> {
+                    if (Boolean.TRUE.equals(reverted)) {
+                        Toast.makeText(this,
+                                getString(R.string.mark_undone_format, product.getName()),
+                                Toast.LENGTH_SHORT).show();
+                        ReminderScheduler.runSoon(this);
+                        viewModel.loadProducts();
+                    }
+                }, this::onStatusUpdateFailed);
+    }
+
     private void openEditDialog(Product product) {
         new EditProductDialog(product, viewModel::loadProducts, latestProducts).show(this);
     }
@@ -415,11 +443,15 @@ public class InventoryActivity extends BaseActivity {
                 .setTitle(R.string.delete_title)
                 .setMessage(getString(R.string.delete_message, product.getName()))
                 .setPositiveButton(R.string.delete_confirm,
-                        (dialog, which) -> viewModel.deleteProduct(product.getId(), deleted -> {
+                        (dialog, which) -> viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
                             if (Boolean.TRUE.equals(deleted)) {
-                                Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
                                 ReminderScheduler.runSoon(this);
                                 viewModel.loadProducts();
+                                Snackbar.make(findViewById(android.R.id.content),
+                                        getString(R.string.product_deleted) + ": " + product.getName(),
+                                        Snackbar.LENGTH_LONG)
+                                        .setAction(R.string.mark_undo, v -> undoMark(product))
+                                        .show();
                             }
                         }, error -> {
                             Log.e(TAG, "Failed to delete product", error);
@@ -427,32 +459,6 @@ public class InventoryActivity extends BaseActivity {
                         }))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
-    }
-
-    private void markConsumed(Product product) {
-        viewModel.markConsumed(product.getId(), getString(R.string.note_marked_from_inventory),
-                updated -> onStatusUpdated(updated, getString(R.string.toast_mark_consumed_format, product.getName())),
-                this::onStatusUpdateFailed);
-    }
-
-    private void markWasted(Product product) {
-        viewModel.markWasted(product.getId(), getString(R.string.note_marked_from_inventory),
-                updated -> onStatusUpdated(updated, getString(R.string.toast_mark_wasted_format, product.getName())),
-                this::onStatusUpdateFailed);
-    }
-
-    private void markDonated(Product product) {
-        viewModel.markDonated(product.getId(), getString(R.string.note_marked_from_inventory),
-                updated -> onStatusUpdated(updated, getString(R.string.toast_mark_donated_format, product.getName())),
-                this::onStatusUpdateFailed);
-    }
-
-    private void onStatusUpdated(Boolean updated, String message) {
-        if (Boolean.TRUE.equals(updated)) {
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-            ReminderScheduler.runSoon(this);
-            viewModel.loadProducts();
-        }
     }
 
     private void onStatusUpdateFailed(Exception error) {

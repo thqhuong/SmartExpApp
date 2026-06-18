@@ -39,6 +39,9 @@
             android:name=".RecipesActivity"
             android:exported="false" />
         <activity
+            android:name=".ProductHistoryActivity"
+            android:exported="false" />
+        <activity
             android:name=".AddProductActivity"
             android:exported="false" />
         <activity

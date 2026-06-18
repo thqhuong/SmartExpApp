@@ -54,6 +54,7 @@ public class LocalDataExportRepositoryTest {
         assertEquals("smartexp-local-export-v1", export.getString("schema"));
         assertEquals("Milk", export.getJSONArray("products").getJSONObject(0).getString("name"));
         assertEquals("CONSUMED", export.getJSONArray("products").getJSONObject(0).getString("status"));
+        assertTrue(export.getJSONArray("products").getJSONObject(0).has("ownerUserId"));
         assertEquals("Kitchen Team", export.getJSONObject("settings").getString("displayName"));
         assertEquals("vegetarian", export.getJSONObject("settings").getString("dietaryPreferences"));
         assertEquals("vi", export.getJSONObject("settings").getString("languageTag"));
