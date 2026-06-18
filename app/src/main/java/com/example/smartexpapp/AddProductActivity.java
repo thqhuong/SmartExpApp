@@ -557,8 +557,14 @@ public class AddProductActivity extends BaseActivity {
         }
 
         List<String> items = new ArrayList<>();
-        items.add(getString(R.string.cat_dairy)); items.add(getString(R.string.cat_general)); items.add(getString(R.string.cat_meat));
-        items.add(getString(R.string.cat_pantry)); items.add(getString(R.string.cat_produce)); items.add(getString(R.string.cat_vegetables));
+        String[] builtinCanonical = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
+        int[] builtinResIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
+                R.string.cat_pantry, R.string.cat_produce, R.string.cat_vegetables};
+        for (int i = 0; i < builtinCanonical.length; i++) {
+            if (CategoryColorHelper.isDefaultCategoryActive(this, builtinCanonical[i])) {
+                items.add(getString(builtinResIds[i]));
+            }
+        }
         for (String custom : existingCustom) {
             items.add(custom);
         }
@@ -610,8 +616,14 @@ public class AddProductActivity extends BaseActivity {
         }
 
         List<String> allCats = new ArrayList<>();
-        allCats.add(getString(R.string.cat_dairy)); allCats.add(getString(R.string.cat_general)); allCats.add(getString(R.string.cat_meat));
-        allCats.add(getString(R.string.cat_pantry)); allCats.add(getString(R.string.cat_produce)); allCats.add(getString(R.string.cat_vegetables));
+        String[] builtinCanonical = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
+        int[] builtinResIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
+                R.string.cat_pantry, R.string.cat_produce, R.string.cat_vegetables};
+        for (int i = 0; i < builtinCanonical.length; i++) {
+            if (CategoryColorHelper.isDefaultCategoryActive(this, builtinCanonical[i])) {
+                allCats.add(getString(builtinResIds[i]));
+            }
+        }
         for (String custom : customSet) {
             allCats.add(custom);
         }
@@ -623,7 +635,7 @@ public class AddProductActivity extends BaseActivity {
 
         for (String cat : allCats) {
             String canonicalCat = canonicalCategory(cat);
-            boolean builtin = isBuiltIn(canonicalCat);
+            boolean builtin = CategoryColorHelper.isBuiltInCanonical(canonicalCat);
             View row = getLayoutInflater().inflate(R.layout.item_manage_category, categoryList, false);
 
             View dot = row.findViewById(R.id.categoryDot);
@@ -636,13 +648,14 @@ public class AddProductActivity extends BaseActivity {
             MaterialButton editBtn = row.findViewById(R.id.btnEditCategory);
             MaterialButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
 
-            if (builtin) {
-                editBtn.setVisibility(View.GONE);
+            editBtn.setVisibility(View.VISIBLE);
+            editBtn.setOnClickListener(v -> showRenameCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
+
+            boolean used = isCategoryUsed(canonicalCat, all);
+            if (used) {
                 deleteBtn.setVisibility(View.GONE);
             } else {
-                editBtn.setVisibility(View.VISIBLE);
                 deleteBtn.setVisibility(View.VISIBLE);
-                editBtn.setOnClickListener(v -> showRenameCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
                 deleteBtn.setOnClickListener(v -> showDeleteCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
             }
 
@@ -658,7 +671,12 @@ public class AddProductActivity extends BaseActivity {
                     .setPositiveButton(R.string.add_label, (d, w) -> {
                         String newCat = input.getText().toString().trim();
                         String canonicalNew = canonicalCategory(newCat);
-                        if (!newCat.isEmpty() && !isBuiltIn(canonicalNew)) {
+                        if (!newCat.isEmpty()) {
+                            if (pendingCategories.contains(canonicalNew) || CategoryColorHelper.isDefaultCategoryActive(this, canonicalNew) || categoryExistsInProducts(all, canonicalNew)) {
+                                Toast.makeText(this, getString(R.string.category_already_exists_format, newCat), Toast.LENGTH_SHORT).show();
+                                showManageCategoriesDialog();
+                                return;
+                            }
                             pendingCategories.add(canonicalNew);
                             selectedCategory = canonicalNew;
                             refreshCategorySpinner();
@@ -682,18 +700,22 @@ public class AddProductActivity extends BaseActivity {
     private void showRenameCategoryDialog(String oldName, Runnable onDone) {
         View inputLayout = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
         EditText input = inputLayout.findViewById(android.R.id.edit);
-        input.setText(oldName);
-        input.setSelection(oldName.length());
+        String displayOld = CategoryColorHelper.getLocalizedCategory(this, oldName);
+        input.setText(displayOld);
+        input.setSelection(displayOld.length());
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.rename_category_title)
                 .setView(inputLayout)
                 .setPositiveButton(R.string.rename_label, (d, w) -> {
                     String newName = input.getText().toString().trim();
                     String canonicalNew = canonicalCategory(newName);
-                    if (newName.isEmpty() || isBuiltIn(canonicalNew) || canonicalNew.equals(oldName)) {
+                    if (newName.isEmpty() || canonicalNew.equals(oldName)) {
                         return;
                     }
                     ProductRepository.getProductsAsync(this, all -> {
+                        if (CategoryColorHelper.isBuiltInCanonical(oldName)) {
+                            CategoryColorHelper.markDefaultCategoryCustomized(this, oldName);
+                        }
                         for (Product p : all) {
                             if (oldName.equals(canonicalCategory(p.getCategory()))) {
                                 ProductRepository.updateProductAsync(this, copyWithCategory(p, canonicalNew), null,
@@ -715,25 +737,28 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void showDeleteCategoryDialog(String catToDelete, Runnable onDone) {
+        String displayDelete = CategoryColorHelper.getLocalizedCategory(this, catToDelete);
         new MaterialAlertDialogBuilder(this)
-                .setTitle(getString(R.string.delete_category_title_format, catToDelete))
-                .setMessage(R.string.category_delete_message)
+                .setTitle(getString(R.string.delete_category_title_format, displayDelete))
+                .setMessage(R.string.category_delete_message_empty)
                 .setPositiveButton(R.string.delete_confirm, (d, w) -> {
+                    if (CategoryColorHelper.isBuiltInCanonical(catToDelete)) {
+                        CategoryColorHelper.markDefaultCategoryCustomized(this, catToDelete);
+                    }
                     pendingCategories.remove(catToDelete);
-                    ProductRepository.getProductsAsync(this, all -> {
-                        for (Product p : all) {
-                            if (catToDelete.equals(canonicalCategory(p.getCategory())) && !p.getId().equals(editingProductId)) {
-                                ProductRepository.updateProductAsync(this, copyWithCategory(p, "General"), null,
-                                        error -> Toast.makeText(this, R.string.category_product_update_error, Toast.LENGTH_SHORT).show());
+                    if (canonicalCategory(selectedCategory).equals(catToDelete)) {
+                        String fallback = "General";
+                        String[] builtinCanonical = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
+                        for (String b : builtinCanonical) {
+                            if (CategoryColorHelper.isDefaultCategoryActive(this, b)) {
+                                fallback = b;
+                                break;
                             }
                         }
-                        selectedCategory = "General";
-                        refreshCategorySpinner();
-                        onDone.run();
-                    }, error -> {
-                        Toast.makeText(this, R.string.category_delete_error, Toast.LENGTH_SHORT).show();
-                        onDone.run();
-                    });
+                        selectedCategory = fallback;
+                    }
+                    refreshCategorySpinner();
+                    onDone.run();
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
@@ -756,22 +781,30 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private boolean isBuiltIn(String category) {
-        return "Dairy".equals(category) || "General".equals(category)
-                || "Meat".equals(category) || "Pantry".equals(category)
-                || "Produce".equals(category) || "Vegetables".equals(category);
+        return CategoryColorHelper.isDefaultCategoryActive(this, category);
     }
 
     private String canonicalCategory(String category) {
-        if (category == null) return null;
-        String[] builtinCanonical = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
-        int[] builtinResIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
-                R.string.cat_pantry, R.string.cat_produce, R.string.cat_vegetables};
-        for (int i = 0; i < builtinCanonical.length; i++) {
-            if (builtinCanonical[i].equals(category) || getString(builtinResIds[i]).equals(category)) {
-                return builtinCanonical[i];
+        return CategoryColorHelper.toCanonical(this, category);
+    }
+
+    private boolean isCategoryUsed(String canonicalCat, List<Product> allProducts) {
+        for (Product p : allProducts) {
+            if (canonicalCat.equals(canonicalCategory(p.getCategory()))) {
+                return true;
             }
         }
-        return category;
+        return false;
+    }
+
+    private boolean categoryExistsInProducts(List<Product> allProducts, String cat) {
+        String canonicalCat = canonicalCategory(cat);
+        for (Product p : allProducts) {
+            if (canonicalCat.equals(canonicalCategory(p.getCategory()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setupStorageOptions() {

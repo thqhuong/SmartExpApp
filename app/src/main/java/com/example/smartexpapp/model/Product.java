@@ -5,6 +5,9 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import android.content.Context;
+import com.example.smartexpapp.R;
+
 public class Product {
     public static final String SYNC_STATUS_LOCAL = "LOCAL";
 
@@ -262,34 +265,83 @@ public class Product {
     }
 
     public String getExpiryStatus() {
+        return getExpiryStatus("vi");
+    }
+
+    public String getExpiryStatus(String languageTag) {
+        boolean isVi = languageTag != null && languageTag.trim().toLowerCase().startsWith("vi");
         int daysUntilExpiry = getDaysUntilExpiry();
         if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
-            return "Đã hết hạn";
+            return isVi ? "Đã hết hạn" : "Expired";
         }
         if (daysUntilExpiry == 0) {
-            return "Hôm nay";
+            return isVi ? "Hôm nay" : "Today";
         }
         if (daysUntilExpiry == 1) {
-            return "1 Ngày";
+            return isVi ? "1 Ngày" : "1 Day";
         }
         if (daysUntilExpiry >= 60) {
-            return Math.max(1, daysUntilExpiry / 30) + " Tháng";
+            int months = Math.max(1, daysUntilExpiry / 30);
+            return months + (isVi ? " Tháng" : " Months");
         }
-        return daysUntilExpiry + " Ngày";
+        return daysUntilExpiry + (isVi ? " Ngày" : " Days");
+    }
+
+    public String getExpiryStatus(Context context) {
+        if (context == null) {
+            return getExpiryStatus();
+        }
+        int daysUntilExpiry = getDaysUntilExpiry();
+        if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
+            return context.getString(R.string.expiry_status_expired);
+        }
+        if (daysUntilExpiry == 0) {
+            return context.getString(R.string.expiry_status_today);
+        }
+        if (daysUntilExpiry == 1) {
+            return context.getString(R.string.expiry_status_day_single);
+        }
+        if (daysUntilExpiry >= 60) {
+            int months = Math.max(1, daysUntilExpiry / 30);
+            return context.getString(R.string.expiry_status_months_format, months);
+        }
+        return context.getString(R.string.expiry_status_days_format, daysUntilExpiry);
     }
 
     public String getDashboardBadge() {
+        return getDashboardBadge("vi");
+    }
+
+    public String getDashboardBadge(String languageTag) {
+        boolean isVi = languageTag != null && languageTag.trim().toLowerCase().startsWith("vi");
         int daysUntilExpiry = getDaysUntilExpiry();
         if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
-            return "HẾT HẠN";
+            return isVi ? "HẾT HẠN" : "EXPIRED";
         }
         if (daysUntilExpiry == 0) {
-            return "HÔM NAY";
+            return isVi ? "HÔM NAY" : "TODAY";
         }
         if (daysUntilExpiry == 1) {
-            return "NGÀY MAI";
+            return isVi ? "NGÀY MAI" : "TOMORROW";
         }
-        return "CÒN " + daysUntilExpiry + " NGÀY";
+        return isVi ? ("CÒN " + daysUntilExpiry + " NGÀY") : (daysUntilExpiry + " DAYS LEFT");
+    }
+
+    public String getDashboardBadge(Context context) {
+        if (context == null) {
+            return getDashboardBadge();
+        }
+        int daysUntilExpiry = getDaysUntilExpiry();
+        if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
+            return context.getString(R.string.dashboard_badge_expired);
+        }
+        if (daysUntilExpiry == 0) {
+            return context.getString(R.string.dashboard_badge_today);
+        }
+        if (daysUntilExpiry == 1) {
+            return context.getString(R.string.dashboard_badge_tomorrow);
+        }
+        return context.getString(R.string.dashboard_badge_days_left_format, daysUntilExpiry);
     }
 
     public String getGroup() {

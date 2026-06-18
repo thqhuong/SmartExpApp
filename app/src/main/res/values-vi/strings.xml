@@ -33,6 +33,24 @@
     <string name="status_expiring">SẮP HẾT HẠN</string>
     <string name="product_meta_format">%1$s - %2$s</string>
 
+    <!-- Expiry status and dashboard badge localizations -->
+    <string name="expiry_status_expired">Đã hết hạn</string>
+    <string name="expiry_status_today">Hôm nay</string>
+    <string name="expiry_status_day_single">1 Ngày</string>
+    <string name="expiry_status_days_format">%1$d Ngày</string>
+    <string name="expiry_status_months_format">%1$d Tháng</string>
+
+    <string name="dashboard_badge_expired">HẾT HẠN</string>
+    <string name="dashboard_badge_today">HÔM NAY</string>
+    <string name="dashboard_badge_tomorrow">NGÀY MAI</string>
+    <string name="dashboard_badge_days_left_format">CÒN %1$d NGÀY</string>
+
+    <!-- Storage Summary Localizations -->
+    <string name="storage_summary_refrigerator">Tủ lạnh</string>
+    <string name="storage_summary_room_temp">Nhiệt độ phòng</string>
+    <string name="storage_summary_freezer">Ngăn đông</string>
+    <string name="storage_summary_items_count_format">%1$d món</string>
+
     <string name="inventory_title">Kho của tôi</string>
     <string name="category_label">DANH MỤC</string>
     <string name="storage_room_temp">Nhiệt độ phòng</string>
