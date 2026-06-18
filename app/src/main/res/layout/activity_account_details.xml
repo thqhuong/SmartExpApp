@@ -222,6 +222,57 @@
                         android:textSize="24sp"
                         android:textStyle="bold" />
                 </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_glass_input"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cloud_sync_label"
+                            android:textColor="@color/smart_on_surface"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/accountSyncStateText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/sync_status_local_only"
+                            android:textColor="@color/smart_secondary"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/retrySyncButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/retry_sync_label"
+                    android:textAllCaps="false"
+                    android:textColor="@color/smart_on_primary"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    app:backgroundTint="@color/smart_primary_container"
+                    app:cornerRadius="14dp"
+                    app:icon="@drawable/ic_check_circle"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/smart_on_primary" />
             </LinearLayout>
 
             <LinearLayout

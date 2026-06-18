@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -25,6 +26,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.notifications.ReminderScheduler;
+import com.example.smartexpapp.util.CategoryColorHelper;
+import com.example.smartexpapp.util.ImageLoader;
+import com.example.smartexpapp.util.ViewUtils;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -311,72 +316,117 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void showProductActions(Product product) {
-        String[] actions = {
-                getString(R.string.action_edit),
-                getString(R.string.action_mark_consumed),
-                getString(R.string.action_mark_wasted),
-                getString(R.string.action_mark_donated),
-                getString(R.string.action_delete)
-        };
-        new AlertDialog.Builder(this)
-                .setTitle(product.getName())
-                .setItems(actions, (dialog, which) -> {
-                    switch (which) {
-                        case 0:
-                            openEditDialog(product);
-                            break;
-                        case 1:
-                            showMarkDialog(product, "consumed");
-                            break;
-                        case 2:
-                            showMarkDialog(product, "wasted");
-                            break;
-                        case 3:
-                            showMarkDialog(product, "donated");
-                            break;
-                        case 4:
-                            confirmDelete(product);
-                            break;
-                        default:
-                            break;
-                    }
-                })
-                .show();
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_product_actions, null);
+        dialog.setContentView(view);
+
+        TextView name = view.findViewById(R.id.bsProductName);
+        name.setText(product.getName());
+
+        TextView meta = view.findViewById(R.id.bsProductMeta);
+        meta.setText(product.getStorage() + " \u2022 " + product.getAmount());
+
+        ImageView icon = view.findViewById(R.id.bsProductImage);
+        ImageView placeholder = view.findViewById(R.id.bsProductPlaceholder);
+        String imgUrl = product.getImageUrl();
+        if (imgUrl != null && !imgUrl.isEmpty()) {
+            placeholder.setVisibility(View.GONE);
+            icon.setVisibility(View.VISIBLE);
+            icon.setImageTintList(null);
+            ImageLoader.load(icon, imgUrl);
+        } else {
+            icon.setVisibility(View.GONE);
+            placeholder.setVisibility(View.VISIBLE);
+            int tintColor = CategoryColorHelper.getColor(this, product.getCategory());
+            placeholder.setImageTintList(android.content.res.ColorStateList.valueOf(
+                    getColor(tintColor)));
+            ViewUtils.setIcon(placeholder, product.getIconRes(), tintColor);
+        }
+
+        view.findViewById(R.id.bsActionEdit).setOnClickListener(v -> {
+            dialog.dismiss();
+            openEditDialog(product);
+        });
+        view.findViewById(R.id.bsActionConsumed).setOnClickListener(v -> {
+            dialog.dismiss();
+            showMarkDialog(product, "consumed");
+        });
+        view.findViewById(R.id.bsActionWasted).setOnClickListener(v -> {
+            dialog.dismiss();
+            showMarkDialog(product, "wasted");
+        });
+        view.findViewById(R.id.bsActionDonated).setOnClickListener(v -> {
+            dialog.dismiss();
+            showMarkDialog(product, "donated");
+        });
+        view.findViewById(R.id.bsActionDelete).setOnClickListener(v -> {
+            dialog.dismiss();
+            confirmDelete(product);
+        });
+
+        dialog.show();
     }
 
     private void showMarkDialog(Product product, String action) {
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_mark_status, null);
-        ((TextView) view.findViewById(R.id.dialogProductName)).setText(product.getName());
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_mark_status)
+                .create();
+        dialog.getWindow().setDimAmount(0.6f);
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                android.graphics.Color.TRANSPARENT));
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogProductName)).setText(product.getName());
 
         int actionLabelRes;
-        String statusKey;
+        int iconRes;
+        int iconTintRes;
+        String upperLabel;
+        boolean showWarning = false;
+
         switch (action) {
             case "wasted":
                 actionLabelRes = R.string.action_mark_wasted;
-                statusKey = "wasted";
-                view.findViewById(R.id.dialogWarning).setVisibility(View.VISIBLE);
-                ((TextView) view.findViewById(R.id.dialogWarning)).setText(R.string.mark_wasted_confirm_text);
+                iconRes = R.drawable.ic_close;
+                iconTintRes = R.color.smart_error;
+                upperLabel = "MARK WASTED";
+                showWarning = true;
                 break;
             case "donated":
                 actionLabelRes = R.string.action_mark_donated;
-                statusKey = "donated";
+                iconRes = R.drawable.ic_favorite_filled;
+                iconTintRes = R.color.smart_notification_red;
+                upperLabel = "MARK DONATED";
                 break;
             default:
                 actionLabelRes = R.string.action_mark_consumed;
-                statusKey = "consumed";
+                iconRes = R.drawable.ic_check_circle;
+                iconTintRes = R.color.smart_primary;
+                upperLabel = "MARK CONSUMED";
                 break;
         }
-        ((TextView) view.findViewById(R.id.dialogActionLabel)).setText(actionLabelRes);
 
-        new AlertDialog.Builder(this)
-                .setView(view)
-                .setPositiveButton(R.string.mark_status_confirm, (dialog, which) -> {
-                    EditText noteInput = view.findViewById(R.id.dialogNoteInput);
-                    String note = noteInput.getText().toString().trim();
-                    executeMarkAction(product, statusKey, note);
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        ((TextView) dialog.findViewById(R.id.dialogActionLabelUpper)).setText(upperLabel);
+        ImageView icon = dialog.findViewById(R.id.dialogActionIcon);
+        icon.setImageResource(iconRes);
+        icon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                getColor(iconTintRes)));
+
+        if (showWarning) {
+            dialog.findViewById(R.id.dialogWarningContainer).setVisibility(View.VISIBLE);
+            ((TextView) dialog.findViewById(R.id.dialogWarning)).setText(R.string.mark_wasted_confirm_text);
+        } else {
+            dialog.findViewById(R.id.dialogWarningContainer).setVisibility(View.GONE);
+        }
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            EditText noteInput = dialog.findViewById(R.id.dialogNoteInput);
+            String note = noteInput.getText().toString().trim();
+            executeMarkAction(product, action, note);
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void executeMarkAction(Product product, String action, String note) {
@@ -439,26 +489,37 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void confirmDelete(Product product) {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.delete_title)
-                .setMessage(getString(R.string.delete_message, product.getName()))
-                .setPositiveButton(R.string.delete_confirm,
-                        (dialog, which) -> viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
-                            if (Boolean.TRUE.equals(deleted)) {
-                                ReminderScheduler.runSoon(this);
-                                viewModel.loadProducts();
-                                Snackbar.make(findViewById(android.R.id.content),
-                                        getString(R.string.product_deleted) + ": " + product.getName(),
-                                        Snackbar.LENGTH_LONG)
-                                        .setAction(R.string.mark_undo, v -> undoMark(product))
-                                        .show();
-                            }
-                        }, error -> {
-                            Log.e(TAG, "Failed to delete product", error);
-                            Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
-                        }))
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_delete_confirm)
+                .create();
+        dialog.getWindow().setDimAmount(0.6f);
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                android.graphics.Color.TRANSPARENT));
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogTitle)).setText(R.string.delete_title);
+        ((TextView) dialog.findViewById(R.id.dialogMessage)).setText(
+                getString(R.string.delete_message, product.getName()));
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
+                if (Boolean.TRUE.equals(deleted)) {
+                    ReminderScheduler.runSoon(this);
+                    viewModel.loadProducts();
+                    Snackbar.make(findViewById(android.R.id.content),
+                            getString(R.string.product_deleted) + ": " + product.getName(),
+                            Snackbar.LENGTH_LONG)
+                            .setAction(R.string.mark_undo, v2 -> undoMark(product))
+                            .show();
+                }
+            }, error -> {
+                Log.e(TAG, "Failed to delete product", error);
+                Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+            });
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void onStatusUpdateFailed(Exception error) {

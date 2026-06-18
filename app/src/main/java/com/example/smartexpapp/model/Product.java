@@ -10,6 +10,11 @@ import com.example.smartexpapp.R;
 
 public class Product {
     public static final String SYNC_STATUS_LOCAL = "LOCAL";
+    public static final String SYNC_STATUS_LOCAL_ONLY = "LOCAL_ONLY";
+    public static final String SYNC_STATUS_PENDING_UPLOAD = "PENDING_UPLOAD";
+    public static final String SYNC_STATUS_PENDING_DELETE = "PENDING_DELETE";
+    public static final String SYNC_STATUS_SYNCED = "SYNCED";
+    public static final String SYNC_STATUS_CONFLICT = "CONFLICT";
 
     private final String id;
     private final String name;
@@ -167,6 +172,29 @@ public class Product {
                 newOwnerUserId,
                 syncStatus,
                 lastSyncedAt
+        );
+    }
+
+    public Product withSyncMetadata(String newCloudId, String newSyncStatus, Long newLastSyncedAt, long updatedAt) {
+        return new Product(
+                id,
+                name,
+                category,
+                quantity,
+                unit,
+                storage,
+                storageLocationId,
+                expiryDateMillis,
+                barcode,
+                status,
+                iconRes,
+                imageUrl,
+                createdAt,
+                updatedAt,
+                newCloudId,
+                ownerUserId,
+                newSyncStatus,
+                newLastSyncedAt
         );
     }
 
