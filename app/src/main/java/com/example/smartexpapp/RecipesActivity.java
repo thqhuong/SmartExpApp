@@ -189,7 +189,7 @@ public class RecipesActivity extends BaseActivity {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Ask about recipes or expiring items");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.ask_agent_hint));
         if (intent.resolveActivity(getPackageManager()) == null) {
             showTypedPromptDialog();
             return;

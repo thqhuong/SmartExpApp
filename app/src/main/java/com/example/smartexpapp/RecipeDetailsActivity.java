@@ -40,7 +40,7 @@ public class RecipeDetailsActivity extends BaseActivity {
         ArrayList<String> instructions = getIntent().getStringArrayListExtra("extra_recipe_instructions");
 
         if (title == null) {
-            title = "Recipe Details";
+            title = getString(R.string.recipe_details_title);
         }
 
         // Bind views
@@ -113,7 +113,7 @@ public class RecipeDetailsActivity extends BaseActivity {
             }
         } else {
             // Default step if none provided
-            String fallbackStep = summary != null ? summary : "Cook according to the recipe description.";
+            String fallbackStep = summary != null ? summary : getString(R.string.recipe_fallback_step);
             addInstructionStep(instructionsContainer, fallbackStep, 0);
         }
     }

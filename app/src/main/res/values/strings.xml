@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">SmartExpApp</string>
     <string name="search_hint">Search products...</string>
     <string name="toggle_theme">Toggle Light/Dark Theme</string>
@@ -347,5 +347,81 @@
     <string name="forgot_password_email_empty">Please enter your email address first.</string>
     <string name="signing_in_progress">Signing in...</string>
     <string name="registering_in_progress">Registering...</string>
+    <!-- Help & Support Strings -->
+    <string name="help_search_hint">Search for FAQs...</string>
+    <string name="help_categories_title">Categories</string>
+    <string name="help_icon_getting_started">!</string>
+    <string name="help_getting_started">Getting Started</string>
+    <string name="help_icon_inventory">#</string>
+    <string name="help_managing_inventory">Managing Inventory</string>
+    <string name="help_icon_ai">AI</string>
+    <string name="help_cloudflare_ai">Cloudflare AI</string>
+    <string name="help_icon_issues">?</string>
+    <string name="help_technical_issues">Technical Issues</string>
+    <string name="help_contact_support">Contact Support</string>
+    <string name="help_chat_title">Chat with Support</string>
+    <string name="help_chat_desc">Instant help 24/7</string>
+    <string name="help_start_chat">Start Chat</string>
+    <string name="help_email_title">Email Us</string>
+    <string name="help_email_desc">Response within 24h</string>
+    <string name="help_send_email">Send Email</string>
+    <string name="help_forum_title">Community Forum</string>
+    <string name="help_forum_desc">Ask the experts</string>
+    <string name="help_visit_forum">Visit Forum</string>
+    <string name="help_footer_title">We\'re here to help you reduce waste.</string>
+    <string name="help_footer_desc">Explore documentation to master inventory tracking with Cloudflare AI.</string>
+    <string name="help_bug_prompt">Found something not working correctly?</string>
+    <string name="help_report_bug">Report a Bug</string>
+
+    <string name="welcome_back">Welcome back!</string>
+    <string name="sign_in_subtitle">Please enter your details to sign in.</string>
+    <string name="email_address_label">Email Address</string>
+    <string name="email_address_hint">chef@smartexp.com</string>
+    <string name="password_label">Password</string>
+    <string name="password_hint">********</string>
+    <string name="forgot_password_link">Forgot?</string>
+    <string name="or_label">OR</string>
+    <string name="google_sign_in_btn">G  Sign in with Google</string>
+    <string name="guest_sign_in_btn">Sign in as Guest</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="google_sign_in_failed_unexpected_credential">Google sign in failed: Unexpected credential type</string>
+    <string name="default_google_user">Google User</string>
+    <string name="default_counter">0</string>
+    <string name="prompt_suggest_using">Suggest recipes using %1$s</string>
+    <string name="prompt_use_with">Use %1$s with %2$s</string>
+    <string name="prompt_quick_meal">Quick meal for expiring items</string>
+    <string name="prompt_no_waste">No-waste dinner ideas</string>
+
+    <string name="local_recipe1_ingredient_salt">Salt and Pepper to taste</string>
+    <string name="local_recipe1_step1">Heat olive oil in a large skillet over medium-high heat.</string>
+    <string name="local_recipe1_step2">Add minced garlic and sauté for 1 minute until fragrant.</string>
+    <string name="local_recipe1_step3">Add %1$s (chopped) and cook for 5-7 minutes, stirring occasionally.</string>
+    <string name="local_recipe1_step4">Season with salt, pepper, and your favorite pantry spices. Serve warm!</string>
+    <string name="local_recipe1_title">Use-First Skillet with %1$s</string>
+    <string name="local_recipe1_action">Cook This</string>
+    <string name="local_recipe1_tip">Sauté the %1$s over medium heat first to unlock its flavor before adding other ingredients!</string>
+
+    <string name="local_recipe2_step1">Prepare your cooked rice or grain base in a bowl.</string>
+    <string name="local_recipe2_step2">Lightly steam or sauté %1$s and %2$s until tender.</string>
+    <string name="local_recipe2_step3">Arrange the prepared ingredients over the grain base.</string>
+    <string name="local_recipe2_step4">Drizzle with soy sauce or your favorite dressing, garnish with sesame seeds and enjoy!</string>
+    <string name="local_recipe2_title">Quick Bowl with %1$s and %2$s</string>
+    <string name="local_recipe2_desc">Combine the earliest-expiring ingredients with grains, noodles, or toast for a fast meal.%1$s</string>
+    <string name="local_recipe2_action">View Steps</string>
+    <string name="local_recipe2_tip">Adding a splash of lemon juice or vinegar right at the end will brighten up the entire bowl!</string>
+
+    <string name="local_recipe3_step1">In a pot, sauté chopped onion with a bit of oil until translucent.</string>
+    <string name="local_recipe3_step2">Add chopped %1$s, %2$s, and %3$s.</string>
+    <string name="local_recipe3_step3">Pour in the broth and add the Italian seasoning herbs.</string>
+    <string name="local_recipe3_step4">Bring to a boil, then reduce heat and simmer for 20 minutes until ingredients are soft. Blend if desired.</string>
+    <string name="local_recipe3_title">No-Waste Soup or Sauce</string>
+    <string name="local_recipe3_desc">Simmer %1$s, %2$s, and %3$s into a soup, sauce, or freezer base.%4$s</string>
+    <string name="local_recipe3_action">Save Idea</string>
+    <string name="local_recipe3_tip">If you have extra vegetables, chop them up and throw them in too. Soup is the ultimate waste-reducer!</string>
+
+    <string name="local_recipe_default_title">Smart Inventory Recipe</string>
+    <string name="local_recipe_default_action">View Recipe</string>
+    <string name="recipe_fallback_step">Cook according to the recipe description.</string>
+    <string name="format_items_count">%1$d items</string>
     <string name="signIn_btn_label">Sign In</string>
 </resources>

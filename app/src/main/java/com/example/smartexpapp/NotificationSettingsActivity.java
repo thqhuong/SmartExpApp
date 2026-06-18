@@ -41,7 +41,7 @@ public class NotificationSettingsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_settings);
         setupChrome(R.id.nav_settings);
-        setTopTitle("Notifications");
+        setTopTitle(getString(R.string.settings_notification_title));
         useBackButton();
         bindReminderWindowButtons();
         bindMasterSwitch();

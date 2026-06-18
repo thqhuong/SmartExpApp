@@ -141,7 +141,7 @@ Steps:
 
 1. Fix lint blocking errors by replacing `android:tint` with `app:tint` in affected XML files.
 2. Fix mojibake in `strings.xml` and prototype files that may be reused.
-3. Move obvious hardcoded strings to resources, prioritizing top bar, bottom nav, inventory, add product, settings, and dialogs.
+3. Completed: Move obvious hardcoded strings to resources, prioritizing top bar, bottom nav, inventory, add product, settings, and dialogs.
 4. Add content descriptions to bottom navigation, top search, theme toggle, add button, photo actions, delete actions, and avatar edit actions.
 5. Remove or document dead code listed in section 4.
 6. Decide whether `googleaistudio/` is reference-only. If yes, update its README and avoid treating it as a backend.
@@ -368,7 +368,7 @@ Goal: make the app feel like one mature Android product.
 
 Steps:
 
-1. Replace hardcoded strings with resources and fix all mojibake.
+1. Completed: Replace hardcoded strings with resources and fix all mojibake.
 2. Add content descriptions and accessibility labels for all interactive controls.
 3. Verify touch targets are at least 48dp.
 4. Review color contrast in light and dark themes.

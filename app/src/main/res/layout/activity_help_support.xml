@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
@@ -29,7 +29,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:background="@drawable/bg_glass_input"
-                android:hint="Search for FAQs..."
+                android:hint="@string/help_search_hint"
                 android:inputType="text"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
@@ -42,7 +42,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="Categories"
+                android:text="@string/help_categories_title"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -68,7 +68,7 @@
                         android:layout_height="48dp"
                         android:background="@drawable/bg_primary_soft_badge"
                         android:gravity="center"
-                        android:text="!"
+                        android:text="@string/help_icon_getting_started"
                         android:textColor="@color/smart_primary_container"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -78,7 +78,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="Getting Started"
+                        android:text="@string/help_getting_started"
                         android:textColor="@color/smart_on_surface"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -99,7 +99,7 @@
                         android:layout_height="48dp"
                         android:background="@drawable/bg_primary_soft_badge"
                         android:gravity="center"
-                        android:text="#"
+                        android:text="@string/help_icon_inventory"
                         android:textColor="@color/smart_primary_container"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -109,7 +109,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="Managing Inventory"
+                        android:text="@string/help_managing_inventory"
                         android:textColor="@color/smart_on_surface"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -137,7 +137,7 @@
                         android:layout_height="48dp"
                         android:background="@drawable/bg_primary_soft_badge"
                         android:gravity="center"
-                        android:text="AI"
+                        android:text="@string/help_icon_ai"
                         android:textColor="@color/smart_primary_container"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -147,7 +147,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="Cloudflare AI"
+                        android:text="@string/help_cloudflare_ai"
                         android:textColor="@color/smart_on_surface"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -168,7 +168,7 @@
                         android:layout_height="48dp"
                         android:background="@drawable/bg_primary_soft_badge"
                         android:gravity="center"
-                        android:text="?"
+                        android:text="@string/help_icon_issues"
                         android:textColor="@color/smart_primary_container"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -178,7 +178,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="Technical Issues"
+                        android:text="@string/help_technical_issues"
                         android:textColor="@color/smart_on_surface"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -189,7 +189,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"
-                android:text="Contact Support"
+                android:text="@string/help_contact_support"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -205,7 +205,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Chat with Support"
+                    android:text="@string/help_chat_title"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -214,7 +214,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Instant help 24/7"
+                    android:text="@string/help_chat_desc"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
 
@@ -222,7 +222,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_marginTop="14dp"
-                    android:text="Start Chat"
+                    android:text="@string/help_start_chat"
                     android:textAllCaps="false"
                     android:textColor="@color/smart_on_primary"
                     android:textStyle="bold"
@@ -241,7 +241,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Email Us"
+                    android:text="@string/help_email_title"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -250,7 +250,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Response within 24h"
+                    android:text="@string/help_email_desc"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
 
@@ -260,7 +260,7 @@
                     android:layout_marginTop="14dp"
                     android:background="@drawable/bg_glass_input"
                     android:gravity="center"
-                    android:text="Send Email"
+                    android:text="@string/help_send_email"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -277,7 +277,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Community Forum"
+                    android:text="@string/help_forum_title"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -286,7 +286,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Ask the experts"
+                    android:text="@string/help_forum_desc"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
 
@@ -296,7 +296,7 @@
                     android:layout_marginTop="14dp"
                     android:background="@drawable/bg_glass_input"
                     android:gravity="center"
-                    android:text="Visit Forum"
+                    android:text="@string/help_visit_forum"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -320,7 +320,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="We're here to help you reduce waste."
+                    android:text="@string/help_footer_title"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -329,7 +329,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Explore documentation to master inventory tracking with Cloudflare AI."
+                    android:text="@string/help_footer_desc"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -339,7 +339,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:gravity="center"
-                android:text="Found something not working correctly?"
+                android:text="@string/help_bug_prompt"
                 android:textColor="@color/smart_secondary"
                 android:textSize="14sp" />
 
@@ -349,7 +349,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_error_soft_badge"
                 android:gravity="center"
-                android:text="Report a Bug"
+                android:text="@string/help_report_bug"
                 android:textColor="@color/smart_error"
                 android:textSize="16sp"
                 android:textStyle="bold" />

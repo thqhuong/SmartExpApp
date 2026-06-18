@@ -75,11 +75,11 @@ public class MainActivity extends BaseActivity {
         LinearLayout list = findViewById(R.id.storageSummaryList);
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-        addStorageSummary(inflater, list, products, "Refrigerator", "Refrigerator",
+        addStorageSummary(inflater, list, products, getString(R.string.filter_storage_fridge), "Refrigerator",
                 R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge, R.color.storage_fridge_icon, R.drawable.progress_blue);
-        addStorageSummary(inflater, list, products, "Room Temp", "Room Temp",
+        addStorageSummary(inflater, list, products, getString(R.string.filter_storage_room), "Room Temp",
                 R.drawable.ic_storage_room, R.drawable.bg_storage_icon_room, R.color.storage_room_icon, R.drawable.progress_orange);
-        addStorageSummary(inflater, list, products, "Freezer", "Freeze",
+        addStorageSummary(inflater, list, products, getString(R.string.filter_storage_freeze), "Freeze",
                 R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer, R.color.storage_freezer_icon, R.drawable.progress_purple);
     }
 
@@ -104,7 +104,7 @@ public class MainActivity extends BaseActivity {
         ViewUtils.setIcon(icon, iconRes, iconColorRes);
 
         ((TextView) item.findViewById(R.id.storageName)).setText(label);
-        ((TextView) item.findViewById(R.id.storageCount)).setText(count + " items");
+        ((TextView) item.findViewById(R.id.storageCount)).setText(getString(R.string.format_items_count, count));
         
         ProgressBar progressBar = item.findViewById(R.id.storageProgress);
         progressBar.setProgress(progress);
