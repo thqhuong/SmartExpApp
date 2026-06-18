@@ -6,6 +6,7 @@ import android.os.Looper;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.data.local.AppDatabase;
 import com.example.smartexpapp.data.local.LocalDataContract;
@@ -70,6 +71,7 @@ public class DashboardViewModelTest {
     @Before
     public void setUp() {
         Context context = ApplicationProvider.getApplicationContext();
+        AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase.class)
                 .allowMainThreadQueries()
                 .build();
@@ -79,6 +81,7 @@ public class DashboardViewModelTest {
 
     @After
     public void tearDown() {
+        AuthStateRepository.clearTestAuthStateOverride();
         database.close();
     }
 
