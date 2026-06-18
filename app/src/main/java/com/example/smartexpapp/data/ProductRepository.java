@@ -209,6 +209,10 @@ public final class ProductRepository {
         return mapProducts(database.productDao().filter(status, storageLocationId));
     }
 
+    public void getAllProductsAsync(Callback<List<Product>> callback, ErrorCallback errorCallback) {
+        execute(() -> filter(null, null), callback, errorCallback);
+    }
+
     public boolean markConsumed(String id, String note) {
         return markStatus(id, ProductStatus.CONSUMED, note);
     }
@@ -235,6 +239,22 @@ public final class ProductRepository {
 
     public boolean markExpired(String id, String note) {
         return markStatus(id, ProductStatus.EXPIRED, note);
+    }
+
+    public boolean markDeleted(String id, String note) {
+        return markStatus(id, ProductStatus.DELETED, note);
+    }
+
+    public void markDeletedAsync(String id, String note, Callback<Boolean> callback, ErrorCallback errorCallback) {
+        execute(() -> markDeleted(id, note), callback, errorCallback);
+    }
+
+    public boolean markActive(String id, String note) {
+        return markStatus(id, ProductStatus.ACTIVE, note);
+    }
+
+    public void markActiveAsync(String id, String note, Callback<Boolean> callback, ErrorCallback errorCallback) {
+        execute(() -> markActive(id, note), callback, errorCallback);
     }
 
     public int getWastePreventedCount() {

@@ -130,6 +130,10 @@ public class InventoryViewModel extends ViewModel {
         productRepository.deleteProductAsync(id, callback, errorCallback);
     }
 
+    public void softDeleteProduct(String id, String note, ProductRepository.Callback<Boolean> callback, ProductRepository.ErrorCallback errorCallback) {
+        productRepository.markDeletedAsync(id, note, callback, errorCallback);
+    }
+
     public void markConsumed(String id, String note, ProductRepository.Callback<Boolean> callback, ProductRepository.ErrorCallback errorCallback) {
         productRepository.markConsumedAsync(id, note, callback, errorCallback);
     }
@@ -140,6 +144,10 @@ public class InventoryViewModel extends ViewModel {
 
     public void markDonated(String id, String note, ProductRepository.Callback<Boolean> callback, ProductRepository.ErrorCallback errorCallback) {
         productRepository.markDonatedAsync(id, note, callback, errorCallback);
+    }
+
+    public void revertStatus(String id, String note, ProductRepository.Callback<Boolean> callback, ProductRepository.ErrorCallback errorCallback) {
+        productRepository.markActiveAsync(id, note, callback, errorCallback);
     }
 
     private void applyFiltersAndSort() {

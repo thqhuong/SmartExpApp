@@ -9,50 +9,65 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.lifecycle.ViewModelProvider;
+
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends BaseActivity {
+    private DashboardViewModel viewModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setupChrome(R.id.nav_stats);
-        bindDashboard();
+
+        AppContainer appContainer = ((SmartExpApplication) getApplicationContext()).appContainer;
+        DashboardViewModelFactory factory = new DashboardViewModelFactory(appContainer.getProductRepository());
+        viewModel = new ViewModelProvider(this, factory).get(DashboardViewModel.class);
+
+        viewModel.getUiState().observe(this, this::bindDashboard);
+
+        findViewById(R.id.viewAllInventory).setOnClickListener(
+                v -> startActivity(new Intent(this, InventoryActivity.class)));
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        bindDashboard();
+        viewModel.loadDashboard();
     }
 
-    private void bindDashboard() {
-        ProductRepository.getDashboardSnapshotAsync(this, snapshot -> {
-            ((TextView) findViewById(R.id.urgentCount)).setText(String.valueOf(snapshot.getUrgentCount()));
-            ((TextView) findViewById(R.id.totalTracked)).setText(String.valueOf(snapshot.getTotalTracked()));
-            ((TextView) findViewById(R.id.wastePrevented)).setText(String.valueOf(snapshot.getWastePreventedCount()));
-            findViewById(R.id.viewAllInventory).setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
+    private void bindDashboard(DashboardState state) {
+        if (state.isLoading()) {
+            return;
+        }
 
-            resetGroup(R.id.expiredList, R.id.sectionExpiredTitle, R.id.sectionExpiredCard);
-            resetGroup(R.id.urgentList, R.id.sectionUrgentTitle, R.id.sectionUrgentCard);
-            resetGroup(R.id.soonList, R.id.sectionSoonTitle, R.id.sectionSoonCard);
-            resetGroup(R.id.safeList, R.id.sectionSafeTitle, R.id.sectionSafeCard);
-            bindStorageSummaries(snapshot.getActiveProducts());
-            bindGroupedProducts(snapshot.getActiveProducts());
-        }, error -> {
+        if (state.isError()) {
             ((TextView) findViewById(R.id.urgentCount)).setText("0");
             ((TextView) findViewById(R.id.totalTracked)).setText("0");
             ((TextView) findViewById(R.id.wastePrevented)).setText("0");
-        });
+            return;
+        }
+
+        ((TextView) findViewById(R.id.urgentCount)).setText(String.valueOf(state.getUrgentCount()));
+        ((TextView) findViewById(R.id.totalTracked)).setText(String.valueOf(state.getTotalTracked()));
+        ((TextView) findViewById(R.id.wastePrevented)).setText(String.valueOf(state.getWastePreventedCount()));
+
+        resetGroup(R.id.expiredList, R.id.sectionExpiredTitle, R.id.sectionExpiredCard);
+        resetGroup(R.id.urgentList, R.id.sectionUrgentTitle, R.id.sectionUrgentCard);
+        resetGroup(R.id.soonList, R.id.sectionSoonTitle, R.id.sectionSoonCard);
+        resetGroup(R.id.safeList, R.id.sectionSafeTitle, R.id.sectionSafeCard);
+
+        bindStorageSummaries(state.getStorageSummaries());
+        bindGroupedProducts(state.getProductGroups());
     }
 
     private void resetGroup(int listId, int titleId, int cardId) {
@@ -71,30 +86,51 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-    private void bindStorageSummaries(List<Product> products) {
+    private void bindStorageSummaries(List<DashboardState.StorageSummaryEntry> summaries) {
         LinearLayout list = findViewById(R.id.storageSummaryList);
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-        addStorageSummary(inflater, list, products, R.string.storage_summary_refrigerator, "Refrigerator",
-                R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge, R.color.storage_fridge_icon, R.drawable.progress_blue);
-        addStorageSummary(inflater, list, products, R.string.storage_summary_room_temp, "Room Temp",
-                R.drawable.ic_storage_room, R.drawable.bg_storage_icon_room, R.color.storage_room_icon, R.drawable.progress_orange);
-        addStorageSummary(inflater, list, products, R.string.storage_summary_freezer, "Freeze",
-                R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer, R.color.storage_freezer_icon, R.drawable.progress_purple);
+
+        for (DashboardState.StorageSummaryEntry summary : summaries) {
+            addStorageSummary(inflater, list, summary);
+        }
     }
 
-    private void addStorageSummary(LayoutInflater inflater, LinearLayout list, List<Product> products,
-                                   int labelRes, String storageValue, int iconRes, int bgRes, int iconColorRes, int progressDrawableRes) {
-        int count = 0;
-        for (Product product : products) {
-            if (storageValue.equals(product.getStorage())) {
-                count++;
-            }
+    private void addStorageSummary(LayoutInflater inflater, LinearLayout list,
+                                   DashboardState.StorageSummaryEntry summary) {
+        String storageValue = summary.getStorageValue();
+        int iconRes;
+        int bgRes;
+        int iconColorRes;
+        int progressDrawableRes;
+        String label;
+
+        switch (storageValue) {
+            case "Refrigerator":
+                iconRes = R.drawable.ic_storage_fridge;
+                bgRes = R.drawable.bg_storage_icon_fridge;
+                iconColorRes = R.color.storage_fridge_icon;
+                progressDrawableRes = R.drawable.progress_blue;
+                label = "Refrigerator";
+                break;
+            case "Freeze":
+                iconRes = R.drawable.ic_storage_freeze;
+                bgRes = R.drawable.bg_storage_icon_freezer;
+                iconColorRes = R.color.storage_freezer_icon;
+                progressDrawableRes = R.drawable.progress_purple;
+                label = "Freezer";
+                break;
+            default:
+                iconRes = R.drawable.ic_storage_room;
+                bgRes = R.drawable.bg_storage_icon_room;
+                iconColorRes = R.color.storage_room_icon;
+                progressDrawableRes = R.drawable.progress_orange;
+                label = "Room Temp";
+                break;
         }
-        int progress = products.isEmpty() ? 0 : Math.round(count / (float) products.size() * 100f);
 
         View item = inflater.inflate(R.layout.item_storage_summary, list, false);
-        
+
         View container = item.findViewById(R.id.storageIconContainer);
         if (container != null) {
             container.setBackgroundResource(bgRes);
@@ -103,27 +139,18 @@ public class MainActivity extends BaseActivity {
         ImageView icon = item.findViewById(R.id.storageIcon);
         ViewUtils.setIcon(icon, iconRes, iconColorRes);
 
-        ((TextView) item.findViewById(R.id.storageName)).setText(labelRes);
-        ((TextView) item.findViewById(R.id.storageCount)).setText(getString(R.string.storage_summary_items_count_format, count));
-        
+        ((TextView) item.findViewById(R.id.storageName)).setText(label);
+        ((TextView) item.findViewById(R.id.storageCount)).setText(summary.getCount() + " items");
+
         ProgressBar progressBar = item.findViewById(R.id.storageProgress);
-        progressBar.setProgress(progress);
-        progressBar.setProgressDrawable(androidx.appcompat.content.res.AppCompatResources.getDrawable(this, progressDrawableRes));
-        
+        progressBar.setProgress(summary.getProgressPercent());
+        progressBar.setProgressDrawable(
+                androidx.appcompat.content.res.AppCompatResources.getDrawable(this, progressDrawableRes));
+
         list.addView(item);
     }
 
-    private void bindGroupedProducts(List<Product> products) {
-        Map<String, List<Product>> groups = new HashMap<>();
-        groups.put("Expired", new ArrayList<>());
-        groups.put("Urgent", new ArrayList<>());
-        groups.put("Soon", new ArrayList<>());
-        groups.put("Safe", new ArrayList<>());
-
-        for (Product product : products) {
-            groups.get(product.getGroup()).add(product);
-        }
-
+    private void bindGroupedProducts(Map<String, List<Product>> groups) {
         bindGroup("Expired", R.id.expiredList, R.id.sectionExpiredTitle, R.id.sectionExpiredCard,
                 groups.get("Expired"), R.color.smart_error);
         bindGroup("Urgent", R.id.urgentList, R.id.sectionUrgentTitle, R.id.sectionUrgentCard,
@@ -136,7 +163,7 @@ public class MainActivity extends BaseActivity {
 
     private void bindGroup(String groupName, int listId, int titleId, int cardId,
                            List<Product> products, int badgeColorRes) {
-        if (products.isEmpty()) return;
+        if (products == null || products.isEmpty()) return;
 
         findViewById(titleId).setVisibility(View.VISIBLE);
         View cardView = findViewById(cardId);
@@ -170,7 +197,8 @@ public class MainActivity extends BaseActivity {
             }
 
             View categoryDot = item.findViewById(R.id.categoryDot);
-            categoryDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, product.getCategory())));
+            categoryDot.getBackground().setTint(
+                    getColor(CategoryColorHelper.getColor(this, product.getCategory())));
             categoryDot.setVisibility(View.VISIBLE);
 
             ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
