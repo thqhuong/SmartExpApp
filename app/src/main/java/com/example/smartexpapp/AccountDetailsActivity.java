@@ -9,9 +9,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.smartexpapp.data.AuthStateRepository;
+import com.example.smartexpapp.data.firestore.FirestoreProvider;
+import com.example.smartexpapp.data.firestore.ProductSyncRepository;
+import com.example.smartexpapp.data.firestore.SyncStatusRepository;
+import com.example.smartexpapp.data.firestore.UserDataSyncRepository;
 import com.example.smartexpapp.data.LocalDataExportRepository;
 import com.example.smartexpapp.data.LocalDataResetRepository;
 import com.example.smartexpapp.data.SettingsRepository;
+import com.example.smartexpapp.data.local.AppDatabase;
 import com.google.android.material.button.MaterialButton;
 
 public class AccountDetailsActivity extends BaseActivity {
@@ -19,9 +24,11 @@ public class AccountDetailsActivity extends BaseActivity {
     private TextView displayNameHeader;
     private TextView accountStatusText;
     private TextView accountAuthStateText;
+    private TextView accountSyncStateText;
     private EditText accountModeValue;
     private MaterialButton accountAuthButton;
     private MaterialButton accountSaveButton;
+    private MaterialButton retrySyncButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,9 +41,11 @@ public class AccountDetailsActivity extends BaseActivity {
         displayNameHeader = findViewById(R.id.accountDisplayNameText);
         accountStatusText = findViewById(R.id.accountStatusText);
         accountAuthStateText = findViewById(R.id.accountAuthStateText);
+        accountSyncStateText = findViewById(R.id.accountSyncStateText);
         accountModeValue = findViewById(R.id.accountModeValue);
         accountAuthButton = findViewById(R.id.accountAuthButton);
         accountSaveButton = findViewById(R.id.accountSaveButton);
+        retrySyncButton = findViewById(R.id.retrySyncButton);
         bindAccountState();
         findViewById(R.id.exportDataButton).setOnClickListener(v -> exportLocalData());
         findViewById(R.id.deleteLocalDataButton).setOnClickListener(v -> confirmDeleteLocalData());
@@ -55,6 +64,7 @@ public class AccountDetailsActivity extends BaseActivity {
         } else {
             bindLocalAccount(authState);
         }
+        bindSyncState(authState);
     }
 
     private void bindSignedInAccount(AuthStateRepository.AuthState authState) {
@@ -141,6 +151,64 @@ public class AccountDetailsActivity extends BaseActivity {
                     Toast.makeText(this, R.string.profile_saved, Toast.LENGTH_SHORT).show();
                 },
                 error -> Toast.makeText(this, R.string.profile_save_error, Toast.LENGTH_SHORT).show());
+    }
+
+    private void bindSyncState(AuthStateRepository.AuthState authState) {
+        if (accountSyncStateText == null || retrySyncButton == null) {
+            return;
+        }
+        if (!authState.isSignedIn()) {
+            accountSyncStateText.setText(authState.isGuest()
+                    ? R.string.sync_status_guest_local
+                    : R.string.sync_status_local_only);
+            retrySyncButton.setVisibility(android.view.View.GONE);
+            SyncStatusRepository.markLocalOnly(this);
+            return;
+        }
+        if (!FirestoreProvider.isConfigured(this)) {
+            accountSyncStateText.setText(R.string.sync_status_not_configured);
+            retrySyncButton.setVisibility(android.view.View.GONE);
+            return;
+        }
+        accountSyncStateText.setText(syncStatusLabel(SyncStatusRepository.getStatus(this)));
+        retrySyncButton.setVisibility(android.view.View.VISIBLE);
+        retrySyncButton.setText(R.string.retry_sync_label);
+        retrySyncButton.setIconResource(R.drawable.ic_check_circle);
+        retrySyncButton.setOnClickListener(v -> retryCloudSync());
+    }
+
+    private int syncStatusLabel(String status) {
+        if (SyncStatusRepository.STATUS_SYNCING.equals(status)) {
+            return R.string.sync_status_syncing;
+        }
+        if (SyncStatusRepository.STATUS_SYNCED.equals(status)) {
+            return R.string.sync_status_synced;
+        }
+        if (SyncStatusRepository.STATUS_ERROR.equals(status)) {
+            return R.string.sync_status_error;
+        }
+        if (SyncStatusRepository.STATUS_SYNC_ENABLED.equals(status)) {
+            return R.string.sync_status_enabled;
+        }
+        return R.string.sync_status_local_only;
+    }
+
+    private void retryCloudSync() {
+        AppDatabase database = AppDatabase.getInstance(this);
+        SyncStatusRepository.markSyncing(this);
+        if (accountSyncStateText != null) {
+            accountSyncStateText.setText(R.string.sync_status_syncing);
+        }
+        ProductSyncRepository.initialSyncAsync(this, database,
+                ignored -> {
+                    UserDataSyncRepository.syncUserDataAsync(this, database);
+                    bindAccountState();
+                },
+                error -> {
+                    UserDataSyncRepository.syncUserDataAsync(this, database);
+                    bindAccountState();
+                });
+        Toast.makeText(this, R.string.retry_sync_started, Toast.LENGTH_SHORT).show();
     }
 
     private void exportLocalData() {

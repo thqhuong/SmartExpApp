@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.example.smartexpapp.data.local.AppDatabase;
+import com.example.smartexpapp.data.firestore.UserDataSyncRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.data.local.StorageLocationEntity;
 import com.example.smartexpapp.data.local.UserSettingsEntity;
@@ -149,6 +150,7 @@ public final class SettingsRepository {
         settings.notificationEnabled = enabled;
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
     }
 
     public static void setNotificationsEnabledAsync(Context context, boolean enabled, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
@@ -175,6 +177,7 @@ public final class SettingsRepository {
         settings.reminderDaysBefore = Math.max(0, days);
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
     }
 
     public static void setReminderDaysBeforeAsync(Context context, int days, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
@@ -197,6 +200,7 @@ public final class SettingsRepository {
         settings.displayName = normalizeDisplayName(displayName);
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
     }
 
     public static void setDisplayNameAsync(Context context, String displayName, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
@@ -220,6 +224,7 @@ public final class SettingsRepository {
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
         cacheDarkMode(context, darkMode);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
     }
 
     public static void setDarkModeAsync(Context context, boolean darkMode, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
@@ -244,6 +249,7 @@ public final class SettingsRepository {
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
         cacheLanguageTag(context, normalizedLanguageTag);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
     }
 
     public static void setLanguageTagAsync(Context context, String languageTag, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
@@ -266,6 +272,7 @@ public final class SettingsRepository {
         settings.defaultStorageLocationId = normalizeStorageLocationId(storageLocationId);
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
     }
 
     public static void setDefaultStorageLocationAsync(Context context, String storageLocationId, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
@@ -289,6 +296,7 @@ public final class SettingsRepository {
         settings.dietaryPreferences = normalizeOptionalText(dietaryPreferences);
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
     }
 
     public static void setDietaryPreferencesAsync(Context context, String dietaryPreferences, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {

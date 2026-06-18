@@ -36,6 +36,7 @@ public class ProductRepositoryTest {
     @Before
     public void setUp() {
         Context context = ApplicationProvider.getApplicationContext();
+        AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase.class)
                 .allowMainThreadQueries()
                 .build();
@@ -82,6 +83,22 @@ public class ProductRepositoryTest {
     }
 
     @Test
+    public void signedInProductStaysLocalWhenFirestoreUsesDummyConfig() {
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("firebase-user-123", "Kitchen Team", "team@example.com")
+        );
+        Product milk = product("milk-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 5);
+
+        repository.addProduct(milk);
+
+        Product saved = repository.getProductById(milk.getId());
+        assertNotNull(saved);
+        assertEquals(Product.SYNC_STATUS_LOCAL, saved.getSyncStatus());
+        assertNull(saved.getCloudId());
+        assertNull(saved.getLastSyncedAt());
+    }
+
+    @Test
     public void addProductKeepsGuestLocalOwnerUserIdNull() {
         AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));
         Product milk = product("milk-id", "Milk", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 5);
@@ -94,7 +111,7 @@ public class ProductRepositoryTest {
     }
 
     @Test
-    public void updateProductPreservesExistingOwnerUserId() {
+    public void signedInAddOverridesIncomingOwnerUserId() {
         AuthStateRepository.setTestAuthStateOverride(
                 AuthStateRepository.AuthState.signedIn("firebase-user-123", "Kitchen Team", "team@example.com")
         );
@@ -102,10 +119,7 @@ public class ProductRepositoryTest {
                 .withOwnerUserId("original-owner", System.currentTimeMillis());
         repository.addProduct(owned);
 
-        Product updated = copyWithName(owned, "Organic Milk");
-        assertTrue(repository.updateProduct(updated));
-
-        assertEquals("original-owner", repository.getProductById(owned.getId()).getOwnerUserId());
+        assertEquals("firebase-user-123", repository.getProductById(owned.getId()).getOwnerUserId());
     }
 
     @Test
@@ -174,6 +188,23 @@ public class ProductRepositoryTest {
     }
 
     @Test
+    public void inventoryActionsCanBeQueriedByProductOwner() {
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("firebase-user-123", "Kitchen Team", "team@example.com")
+        );
+        Product owned = product("owned-id", "Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
+        repository.addProduct(owned);
+        repository.markConsumed(owned.getId(), "Used");
+
+        AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));
+        Product localOnly = product("local-id", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 2);
+        repository.addProduct(localOnly);
+        repository.markWasted(localOnly.getId(), "Spoiled");
+
+        assertEquals(1, database.inventoryActionDao().getAllForOwner("firebase-user-123").size());
+    }
+
+    @Test
     public void wastePreventedCountIncludesConsumedAndDonatedOnly() {
         Product consumed = product("consumed-id", "Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2);
         Product donated = product("donated-id", "Beans", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 10);
@@ -208,6 +239,126 @@ public class ProductRepositoryTest {
         assertEquals(1, snapshot.getExpiredCount());
         assertEquals(1, snapshot.getWastePreventedCount());
         assertEquals(3, snapshot.getActiveProducts().size());
+    }
+
+    @Test
+    public void signedInUsersOnlySeeTheirOwnProducts() {
+        ProductRepository.ensureLocalDefaults(database);
+        AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(
+                product("google-id", "Crab", "Seafood", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 4)
+                        .withOwnerUserId("google-uid", System.currentTimeMillis())
+        ));
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(
+                product("email-id", "Rice", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 30)
+                        .withOwnerUserId("email-uid", System.currentTimeMillis())
+        ));
+
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("email-uid", "Chef", "chef@smartexp.com")
+        );
+        List<Product> emailProducts = repository.getProducts();
+        assertEquals(1, emailProducts.size());
+        assertEquals("Rice", emailProducts.get(0).getName());
+        assertNull(repository.getProductById("google-id"));
+
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("google-uid", "Google User", "google@example.com")
+        );
+        List<Product> googleProducts = repository.getProducts();
+        assertEquals(1, googleProducts.size());
+        assertEquals("Crab", googleProducts.get(0).getName());
+        assertNull(repository.getProductById("email-id"));
+    }
+
+    @Test
+    public void guestSeesOnlyOwnerlessProducts() {
+        ProductRepository.ensureLocalDefaults(database);
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(
+                product("local-id", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 2)
+        ));
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(
+                product("owned-id", "Crab", "Seafood", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 4)
+                        .withOwnerUserId("google-uid", System.currentTimeMillis())
+        ));
+
+        List<Product> products = repository.getProducts();
+
+        assertEquals(1, products.size());
+        assertEquals("Bread", products.get(0).getName());
+        assertNull(repository.getProductById("owned-id"));
+    }
+
+    @Test
+    public void signedInEditDeleteAndStatusDoNotMutateOtherOwnerProduct() {
+        ProductRepository.ensureLocalDefaults(database);
+        Product otherOwner = product("other-id", "Crab", "Seafood", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 4)
+                .withOwnerUserId("google-uid", System.currentTimeMillis());
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(otherOwner));
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("email-uid", "Chef", "chef@smartexp.com")
+        );
+
+        assertFalse(repository.updateProduct(copyWithName(otherOwner, "King Crab")));
+        assertFalse(repository.markConsumed(otherOwner.getId(), "Used"));
+        assertFalse(repository.deleteProduct(otherOwner.getId()));
+
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("google-uid", "Google User", "google@example.com")
+        );
+        Product stillVisibleToOwner = repository.getProductById(otherOwner.getId());
+        assertNotNull(stillVisibleToOwner);
+        assertEquals("Crab", stillVisibleToOwner.getName());
+        assertEquals(ProductStatus.ACTIVE, stillVisibleToOwner.getStatus());
+    }
+
+    @Test
+    public void importOwnerlessProductsAssignsCurrentUidAndMarksPendingUpload() {
+        ProductRepository.ensureLocalDefaults(database);
+        Product local = product("local-id", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, 2);
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(local));
+        long updatedAt = System.currentTimeMillis();
+
+        int rows = database.productDao().assignOwnerToOwnerlessProducts(
+                "email-uid",
+                Product.SYNC_STATUS_PENDING_UPLOAD,
+                updatedAt
+        );
+
+        assertEquals(1, rows);
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("email-uid", "Chef", "chef@smartexp.com")
+        );
+        Product imported = repository.getProductById(local.getId());
+        assertNotNull(imported);
+        assertEquals("email-uid", imported.getOwnerUserId());
+        assertEquals(Product.SYNC_STATUS_PENDING_UPLOAD, imported.getSyncStatus());
+    }
+
+    @Test
+    public void dashboardSearchFilterAndExpiryQueriesAreScoped() {
+        ProductRepository.ensureLocalDefaults(database);
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(
+                product("email-yogurt", "Greek Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2)
+                        .withOwnerUserId("email-uid", System.currentTimeMillis())
+        ));
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(
+                product("email-bread", "Bread", "Pantry", LocalDataContract.STORAGE_ROOM_TEMP_NAME, -1)
+                        .withOwnerUserId("email-uid", System.currentTimeMillis())
+        ));
+        database.productDao().insert(com.example.smartexpapp.data.local.ProductMapper.toEntity(
+                product("google-yogurt", "Greek Yogurt", "Dairy", LocalDataContract.STORAGE_REFRIGERATOR_NAME, 2)
+                        .withOwnerUserId("google-uid", System.currentTimeMillis())
+        ));
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("email-uid", "Chef", "chef@smartexp.com")
+        );
+
+        assertEquals(1, repository.search("yogurt").size());
+        assertEquals(1, repository.filter(ProductStatus.ACTIVE, LocalDataContract.STORAGE_REFRIGERATOR_ID).size());
+        assertEquals(1, repository.getExpiredProducts().size());
+        assertEquals(1, repository.getExpiringBetween(startOfToday(), expiryMillisForOffset(3)).size());
+        assertEquals(2, repository.getDashboardSnapshot().getTotalTracked());
     }
 
     @Test
