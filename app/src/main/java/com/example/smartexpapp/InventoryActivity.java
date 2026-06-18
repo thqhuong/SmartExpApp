@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -23,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.notifications.ReminderScheduler;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +77,15 @@ public class InventoryActivity extends BaseActivity {
 
         setContentView(R.layout.activity_inventory);
         setupChrome(R.id.nav_inventory);
+
+        View archiveButton = findViewById(R.id.topActionArchive);
+        if (archiveButton != null) {
+            archiveButton.setVisibility(View.VISIBLE);
+            archiveButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ProductHistoryActivity.class);
+                startActivity(intent);
+            });
+        }
 
         productList = findViewById(R.id.productList);
         productList.setLayoutManager(new LinearLayoutManager(this));
@@ -199,7 +210,7 @@ public class InventoryActivity extends BaseActivity {
 
         ArrayAdapter<CharSequence> storageAdapter = ArrayAdapter.createFromResource(this,
                 R.array.storage_filter_options, android.R.layout.simple_spinner_item);
-        storageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        storageAdapter        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         storageSpinner.setAdapter(storageAdapter);
         storageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -216,7 +227,7 @@ public class InventoryActivity extends BaseActivity {
 
         ArrayAdapter<CharSequence> sortAdapter = ArrayAdapter.createFromResource(this,
                 R.array.sort_options, android.R.layout.simple_spinner_item);
-        sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sortAdapter        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sortSpinner.setAdapter(sortAdapter);
         sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -325,13 +336,13 @@ public class InventoryActivity extends BaseActivity {
                             openEditDialog(product);
                             break;
                         case 1:
-                            markConsumed(product);
+                            showMarkDialog(product, "consumed");
                             break;
                         case 2:
-                            markWasted(product);
+                            showMarkDialog(product, "wasted");
                             break;
                         case 3:
-                            markDonated(product);
+                            showMarkDialog(product, "donated");
                             break;
                         case 4:
                             confirmDelete(product);
@@ -343,6 +354,96 @@ public class InventoryActivity extends BaseActivity {
                 .show();
     }
 
+    private void showMarkDialog(Product product, String action) {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_mark_status, null);
+        ((TextView) view.findViewById(R.id.dialogProductName)).setText(product.getName());
+
+        int actionLabelRes;
+        String statusKey;
+        switch (action) {
+            case "wasted":
+                actionLabelRes = R.string.action_mark_wasted;
+                statusKey = "wasted";
+                view.findViewById(R.id.dialogWarning).setVisibility(View.VISIBLE);
+                ((TextView) view.findViewById(R.id.dialogWarning)).setText(R.string.mark_wasted_confirm_text);
+                break;
+            case "donated":
+                actionLabelRes = R.string.action_mark_donated;
+                statusKey = "donated";
+                break;
+            default:
+                actionLabelRes = R.string.action_mark_consumed;
+                statusKey = "consumed";
+                break;
+        }
+        ((TextView) view.findViewById(R.id.dialogActionLabel)).setText(actionLabelRes);
+
+        new AlertDialog.Builder(this)
+                .setView(view)
+                .setPositiveButton(R.string.mark_status_confirm, (dialog, which) -> {
+                    EditText noteInput = view.findViewById(R.id.dialogNoteInput);
+                    String note = noteInput.getText().toString().trim();
+                    executeMarkAction(product, statusKey, note);
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void executeMarkAction(Product product, String action, String note) {
+        switch (action) {
+            case "wasted":
+                viewModel.markWasted(product.getId(), note,
+                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_wasted_format, product.getName())),
+                        this::onStatusUpdateFailed);
+                break;
+            case "donated":
+                viewModel.markDonated(product.getId(), note,
+                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_donated_format, product.getName())),
+                        this::onStatusUpdateFailed);
+                break;
+            default:
+                viewModel.markConsumed(product.getId(), note,
+                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_consumed_format, product.getName())),
+                        this::onStatusUpdateFailed);
+                break;
+        }
+    }
+
+    private void onStatusSuccess(Boolean updated, Product product, String toastMessage) {
+        if (Boolean.TRUE.equals(updated)) {
+            ReminderScheduler.runSoon(this);
+            viewModel.loadProducts();
+
+            String snackAction = actionLabel(product, toastMessage);
+            Snackbar.make(findViewById(android.R.id.content),
+                    getString(R.string.mark_status_snackbar_format, product.getName(), snackAction),
+                    Snackbar.LENGTH_LONG)
+                    .setAction(R.string.mark_undo, v -> undoMark(product))
+                    .show();
+        }
+    }
+
+    private String actionLabel(Product product, String toastMessage) {
+        if (toastMessage.contains(getString(R.string.action_mark_wasted).toLowerCase()))
+            return getString(R.string.action_mark_wasted);
+        if (toastMessage.contains(getString(R.string.action_mark_donated).toLowerCase()))
+            return getString(R.string.action_mark_donated);
+        return getString(R.string.action_mark_consumed);
+    }
+
+    private void undoMark(Product product) {
+        viewModel.revertStatus(product.getId(), "Reverted from snackbar undo",
+                reverted -> {
+                    if (Boolean.TRUE.equals(reverted)) {
+                        Toast.makeText(this,
+                                getString(R.string.mark_undone_format, product.getName()),
+                                Toast.LENGTH_SHORT).show();
+                        ReminderScheduler.runSoon(this);
+                        viewModel.loadProducts();
+                    }
+                }, this::onStatusUpdateFailed);
+    }
+
     private void openEditDialog(Product product) {
         new EditProductDialog(product, viewModel::loadProducts, latestProducts).show(this);
     }
@@ -352,11 +453,15 @@ public class InventoryActivity extends BaseActivity {
                 .setTitle(R.string.delete_title)
                 .setMessage(getString(R.string.delete_message, product.getName()))
                 .setPositiveButton(R.string.delete_confirm,
-                        (dialog, which) -> viewModel.deleteProduct(product.getId(), deleted -> {
+                        (dialog, which) -> viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
                             if (Boolean.TRUE.equals(deleted)) {
-                                Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
                                 ReminderScheduler.runSoon(this);
                                 viewModel.loadProducts();
+                                Snackbar.make(findViewById(android.R.id.content),
+                                        getString(R.string.product_deleted) + ": " + product.getName(),
+                                        Snackbar.LENGTH_LONG)
+                                        .setAction(R.string.mark_undo, v -> undoMark(product))
+                                        .show();
                             }
                         }, error -> {
                             Log.e(TAG, "Failed to delete product", error);
@@ -364,32 +469,6 @@ public class InventoryActivity extends BaseActivity {
                         }))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
-    }
-
-    private void markConsumed(Product product) {
-        viewModel.markConsumed(product.getId(), getString(R.string.note_marked_from_inventory),
-                updated -> onStatusUpdated(updated, getString(R.string.toast_mark_consumed_format, product.getName())),
-                this::onStatusUpdateFailed);
-    }
-
-    private void markWasted(Product product) {
-        viewModel.markWasted(product.getId(), getString(R.string.note_marked_from_inventory),
-                updated -> onStatusUpdated(updated, getString(R.string.toast_mark_wasted_format, product.getName())),
-                this::onStatusUpdateFailed);
-    }
-
-    private void markDonated(Product product) {
-        viewModel.markDonated(product.getId(), getString(R.string.note_marked_from_inventory),
-                updated -> onStatusUpdated(updated, getString(R.string.toast_mark_donated_format, product.getName())),
-                this::onStatusUpdateFailed);
-    }
-
-    private void onStatusUpdated(Boolean updated, String message) {
-        if (Boolean.TRUE.equals(updated)) {
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-            ReminderScheduler.runSoon(this);
-            viewModel.loadProducts();
-        }
     }
 
     private void onStatusUpdateFailed(Exception error) {

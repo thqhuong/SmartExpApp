@@ -1,31 +1,44 @@
 {
   "project_info": {
-    "project_number": "123456789012",
-    "project_id": "placeholder-project-id",
-    "storage_bucket": "placeholder-project-id.appspot.com"
+    "project_number": "314090682738",
+    "project_id": "smartexpapp-uit",
+    "storage_bucket": "smartexpapp-uit.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789012:android:0123456789abcdef",
+        "mobilesdk_app_id": "1:314090682738:android:5056dc059124f03df285eb",
         "android_client_info": {
           "package_name": "com.example.smartexpapp"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1234567890-placeholder.apps.googleusercontent.com",
+          "client_id": "314090682738-rpfvu8rr7vtbf2se73vriq07hqalap72.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartexpapp",
+            "certificate_hash": "0c84a9362e6d8a1778d1ae9def781a7368060f65"
+          }
+        },
+        {
+          "client_id": "314090682738-9k6da0q3so93i2ajb4lad66vf5tf2lpg.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "placeholder_api_key_value"
+          "current_key": "AIzaSyBUjVBIqVSurYyEkWewN6hGNnSdsUX9G-Q"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314090682738-9k6da0q3so93i2ajb4lad66vf5tf2lpg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

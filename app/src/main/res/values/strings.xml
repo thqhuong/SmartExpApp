@@ -325,6 +325,30 @@
     <string name="toast_mark_wasted_format">%1$s marked wasted.</string>
     <string name="toast_mark_donated_format">%1$s marked donated.</string>
     <string name="note_marked_from_inventory">Marked from inventory</string>
+    <string name="history_title">History</string>
+    <string name="filter_all">All</string>
+    <string name="filter_consumed">Consumed</string>
+    <string name="filter_wasted">Wasted</string>
+    <string name="filter_donated">Donated</string>
+    <string name="restore_label">Khôi phục</string>
+    <string name="restore_title">Restore product?</string>
+    <string name="restore_message_format">Restore %1$s to active inventory?</string>
+    <string name="restore_confirm">Restore</string>
+    <string name="restored_format">%1$s restored to inventory</string>
+    <string name="history_empty">No history yet</string>
+    <string name="history_empty_desc">Products you mark as consumed, wasted, or donated will appear here.</string>
+    <string name="badge_consumed">Consumed</string>
+    <string name="badge_wasted">Wasted</string>
+    <string name="badge_donated">Donated</string>
+    <string name="back">Back</string>
+    <string name="stats_format">Consumed: %1$d  ·  Wasted: %2$d  ·  Donated: %3$d</string>
+    <string name="restore_error">Could not restore product. Please try again.</string>
+    <string name="mark_status_confirm">Confirm</string>
+    <string name="mark_status_note_hint">Add a note (optional)</string>
+    <string name="mark_status_snackbar_format">Marked \"%1$s\" as %2$s</string>
+    <string name="mark_undo">Undo</string>
+    <string name="mark_undone_format">Reverted \"%1$s\" back to active</string>
+    <string name="mark_wasted_confirm_text">This will mark this product as wasted.</string>
 
     <!-- Authentication Strings -->
     <string name="sign_out_label">Sign Out</string>
