@@ -18,6 +18,9 @@ public interface InventoryActionDao {
     @Query("SELECT COUNT(*) FROM inventory_actions WHERE action_type IN (:actionTypes)")
     int countByActionTypes(String[] actionTypes);
 
+    @Query("SELECT COUNT(*) FROM inventory_actions WHERE action_type IN (:actionTypes) AND action_at >= :sinceMillis")
+    int countByActionTypesSince(String[] actionTypes, long sinceMillis);
+
     @Query("DELETE FROM inventory_actions")
     int deleteAll();
 

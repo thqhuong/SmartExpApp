@@ -96,85 +96,193 @@
                 </FrameLayout>
             </LinearLayout>
 
-            <!-- Grid for Total Tracked and Waste Prevented -->
+            <!-- Date Range Toggle -->
+            <RadioGroup
+                android:id="@+id/dateRangeToggle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:checkedButton="@+id/btnRangeAllTime"
+                android:background="@drawable/bg_glass_card"
+                android:padding="4dp"
+                android:layout_marginBottom="16dp">
+                
+                <RadioButton
+                    android:id="@+id/btnRangeWeek"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="Week"
+                    android:textColor="@color/text_color_range_toggle"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/selector_range_toggle"/>
+
+                <RadioButton
+                    android:id="@+id/btnRangeMonth"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="Month"
+                    android:textColor="@color/text_color_range_toggle"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/selector_range_toggle"/>
+
+                <RadioButton
+                    android:id="@+id/btnRangeAllTime"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:button="@null"
+                    android:checked="true"
+                    android:gravity="center"
+                    android:text="All Time"
+                    android:textColor="@color/text_color_range_toggle"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/selector_range_toggle"/>
+            </RadioGroup>
+
+            <!-- Action Stats Grid -->
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:rowCount="3"
+                android:useDefaultMargins="true">
+                
+                <!-- Consumed -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:layout_margin="4dp">
+                    <TextView android:text="Consumed" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/consumedCount" android:text="0" android:textColor="@color/smart_on_surface" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <!-- Donated -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:layout_margin="4dp">
+                    <TextView android:text="Donated" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/donatedCount" android:text="0" android:textColor="@color/smart_on_surface" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <!-- Wasted -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:layout_margin="4dp">
+                    <TextView android:text="Wasted" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/wastedCount" android:text="0" android:textColor="@color/smart_error" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <!-- Expired Actions -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:layout_margin="4dp">
+                    <TextView android:text="Expired" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/expiredActionCount" android:text="0" android:textColor="@color/smart_error" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <!-- Active -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:layout_margin="4dp">
+                    <TextView android:text="Active Now" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/activeCount" android:text="0" android:textColor="@color/smart_on_surface" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <!-- Prevented Waste -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_glass_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:layout_margin="4dp">
+                    <TextView android:text="Prevented Waste" android:textColor="@color/smart_secondary" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/preventedWasteCount" android:text="0" android:textColor="@color/storage_room_icon" android:textSize="20sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </GridLayout>
+
+            <!-- Trend Visual -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_glass_card"
+                android:padding="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_glass_card"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@drawable/ic_check_circle"
-                        android:contentDescription="@string/total_tracked"
-                        app:tint="@color/storage_fridge_icon" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="@string/total_tracked"
-                        android:textColor="@color/smart_secondary"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/totalTracked"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/smart_on_surface"
-                        android:textSize="24sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
+                    android:text="Waste Prevention Trend"
+                    android:textSize="16sp"
+                    android:textColor="@color/smart_on_surface"
+                    android:textStyle="bold"/>
+                
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_glass_card"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@drawable/ic_leaf"
-                        android:contentDescription="@string/waste_prevented"
-                        app:tint="@color/storage_room_icon" />
-
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="4dp">
                     <TextView
-                        android:layout_width="match_parent"
+                        android:id="@+id/trendLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="@string/waste_prevented"
+                        android:text="0% Prevented"
                         android:textColor="@color/smart_secondary"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/wastePrevented"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/smart_on_surface"
-                        android:textSize="24sp"
-                        android:textStyle="bold" />
+                        android:textSize="12sp"/>
                 </LinearLayout>
+                
+                <ProgressBar
+                    android:id="@+id/trendProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:progressDrawable="@drawable/progress_orange"
+                    android:max="100"
+                    android:progress="0" />
             </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="12dp"
                 android:text="@string/storage_overview"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="20sp"

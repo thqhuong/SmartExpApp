@@ -233,7 +233,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             return InventoryActivity.class;
         }
         if (itemId == R.id.nav_stats) {
-            return MainActivity.class;
+            return StatsActivity.class;
         }
         if (itemId == R.id.nav_add) {
             return AddProductActivity.class;

@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.example.smartexpapp.data.ProductRepository;
@@ -20,12 +21,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends BaseActivity {
+public class StatsActivity extends BaseActivity {
+    
+    private long currentSinceMillis = 0L;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_stats);
         setupChrome(R.id.nav_stats);
+        setTopTitle("Dashboard & Stats");
+        
+        RadioGroup dateRangeToggle = findViewById(R.id.dateRangeToggle);
+        dateRangeToggle.setOnCheckedChangeListener((group, checkedId) -> {
+            long now = System.currentTimeMillis();
+            if (checkedId == R.id.btnRangeWeek) {
+                currentSinceMillis = now - (7L * 24L * 60L * 60L * 1000L);
+            } else if (checkedId == R.id.btnRangeMonth) {
+                currentSinceMillis = now - (30L * 24L * 60L * 60L * 1000L);
+            } else {
+                currentSinceMillis = 0L;
+            }
+            bindDashboard();
+        });
+
         bindDashboard();
     }
 
@@ -36,10 +55,24 @@ public class MainActivity extends BaseActivity {
     }
 
     private void bindDashboard() {
-        ProductRepository.getDashboardSnapshotAsync(this, snapshot -> {
+        ProductRepository.getStatsSnapshotAsync(this, currentSinceMillis, snapshot -> {
             ((TextView) findViewById(R.id.urgentCount)).setText(String.valueOf(snapshot.getUrgentCount()));
-            ((TextView) findViewById(R.id.totalTracked)).setText(String.valueOf(snapshot.getTotalTracked()));
-            ((TextView) findViewById(R.id.wastePrevented)).setText(String.valueOf(snapshot.getWastePreventedCount()));
+            
+            ((TextView) findViewById(R.id.consumedCount)).setText(String.valueOf(snapshot.getConsumedActionCount()));
+            ((TextView) findViewById(R.id.wastedCount)).setText(String.valueOf(snapshot.getWastedActionCount()));
+            ((TextView) findViewById(R.id.donatedCount)).setText(String.valueOf(snapshot.getDonatedActionCount()));
+            ((TextView) findViewById(R.id.expiredActionCount)).setText(String.valueOf(snapshot.getExpiredActionCount()));
+            ((TextView) findViewById(R.id.activeCount)).setText(String.valueOf(snapshot.getActiveCount()));
+            ((TextView) findViewById(R.id.preventedWasteCount)).setText(String.valueOf(snapshot.getPreventedWasteCount()));
+            
+            int prevented = snapshot.getPreventedWasteCount();
+            int totalOutcomes = prevented + snapshot.getWastedActionCount();
+            int percentage = totalOutcomes == 0 ? 0 : Math.round(prevented / (float) totalOutcomes * 100f);
+            
+            ProgressBar trendProgress = findViewById(R.id.trendProgress);
+            trendProgress.setProgress(percentage);
+            ((TextView) findViewById(R.id.trendLabel)).setText(percentage + "% Prevented");
+            
             findViewById(R.id.viewAllInventory).setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
 
             resetGroup(R.id.expiredList, R.id.sectionExpiredTitle, R.id.sectionExpiredCard);
@@ -50,8 +83,8 @@ public class MainActivity extends BaseActivity {
             bindGroupedProducts(snapshot.getActiveProducts());
         }, error -> {
             ((TextView) findViewById(R.id.urgentCount)).setText("0");
-            ((TextView) findViewById(R.id.totalTracked)).setText("0");
-            ((TextView) findViewById(R.id.wastePrevented)).setText("0");
+            ((TextView) findViewById(R.id.activeCount)).setText("0");
+            ((TextView) findViewById(R.id.preventedWasteCount)).setText("0");
         });
     }
 
@@ -76,15 +109,18 @@ public class MainActivity extends BaseActivity {
         list.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
         addStorageSummary(inflater, list, products, "Refrigerator", "Refrigerator",
-                R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge, R.color.storage_fridge_icon, R.drawable.progress_blue);
+                R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge, R.color.storage_fridge_icon,
+                R.drawable.progress_blue);
         addStorageSummary(inflater, list, products, "Room Temp", "Room Temp",
-                R.drawable.ic_storage_room, R.drawable.bg_storage_icon_room, R.color.storage_room_icon, R.drawable.progress_orange);
+                R.drawable.ic_storage_room, R.drawable.bg_storage_icon_room, R.color.storage_room_icon,
+                R.drawable.progress_orange);
         addStorageSummary(inflater, list, products, "Freezer", "Freeze",
-                R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer, R.color.storage_freezer_icon, R.drawable.progress_purple);
+                R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer, R.color.storage_freezer_icon,
+                R.drawable.progress_purple);
     }
 
     private void addStorageSummary(LayoutInflater inflater, LinearLayout list, List<Product> products,
-                                   String label, String storageValue, int iconRes, int bgRes, int iconColorRes, int progressDrawableRes) {
+            String label, String storageValue, int iconRes, int bgRes, int iconColorRes, int progressDrawableRes) {
         int count = 0;
         for (Product product : products) {
             if (storageValue.equals(product.getStorage())) {
@@ -104,7 +140,8 @@ public class MainActivity extends BaseActivity {
         ViewUtils.setIcon(icon, iconRes, iconColorRes);
 
         ((TextView) item.findViewById(R.id.storageName)).setText(label);
-        ((TextView) item.findViewById(R.id.storageCount)).setText(count + " items");
+        ((TextView) item.findViewById(R.id.storageCount))
+                .setText(count + " items");
         
         ProgressBar progressBar = item.findViewById(R.id.storageProgress);
         progressBar.setProgress(progress);
@@ -174,8 +211,7 @@ public class MainActivity extends BaseActivity {
             categoryDot.setVisibility(View.VISIBLE);
 
             ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
-            ((TextView) item.findViewById(R.id.productMeta)).setText(
-                    product.getStorage() + " \u2022 " + product.getAmount());
+            ((TextView) item.findViewById(R.id.productMeta)).setText(product.getStorage());
 
             TextView badge = item.findViewById(R.id.expiryBadge);
             badge.setText(product.getDashboardBadge());
@@ -190,7 +226,7 @@ public class MainActivity extends BaseActivity {
                 badge.setTextColor(getColor(R.color.smart_on_surface));
             }
 
-            ((TextView) item.findViewById(R.id.expiryStatus)).setText(product.getExpiryStatus());
+            ((TextView) item.findViewById(R.id.expiryStatus)).setText(product.getAmount());
 
             list.addView(item);
             if (i < products.size() - 1) {
