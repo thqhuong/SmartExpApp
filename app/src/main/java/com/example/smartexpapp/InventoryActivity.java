@@ -462,26 +462,37 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void confirmDelete(Product product) {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.delete_title)
-                .setMessage(getString(R.string.delete_message, product.getName()))
-                .setPositiveButton(R.string.delete_confirm,
-                        (dialog, which) -> viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
-                            if (Boolean.TRUE.equals(deleted)) {
-                                ReminderScheduler.runSoon(this);
-                                viewModel.loadProducts();
-                                Snackbar.make(findViewById(android.R.id.content),
-                                        getString(R.string.product_deleted) + ": " + product.getName(),
-                                        Snackbar.LENGTH_LONG)
-                                        .setAction(R.string.mark_undo, v -> undoMark(product))
-                                        .show();
-                            }
-                        }, error -> {
-                            Log.e(TAG, "Failed to delete product", error);
-                            Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
-                        }))
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_delete_confirm)
+                .create();
+        dialog.getWindow().setDimAmount(0.6f);
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                android.graphics.Color.TRANSPARENT));
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogTitle)).setText(R.string.delete_title);
+        ((TextView) dialog.findViewById(R.id.dialogMessage)).setText(
+                getString(R.string.delete_message, product.getName()));
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
+                if (Boolean.TRUE.equals(deleted)) {
+                    ReminderScheduler.runSoon(this);
+                    viewModel.loadProducts();
+                    Snackbar.make(findViewById(android.R.id.content),
+                            getString(R.string.product_deleted) + ": " + product.getName(),
+                            Snackbar.LENGTH_LONG)
+                            .setAction(R.string.mark_undo, v2 -> undoMark(product))
+                            .show();
+                }
+            }, error -> {
+                Log.e(TAG, "Failed to delete product", error);
+                Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+            });
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void onStatusUpdateFailed(Exception error) {
