@@ -56,7 +56,7 @@ public class StatsUiMapperTest {
                 product("1", "Milk", "Dairy", "Refrigerator", 10),
                 product("2", "Cheese", "Dairy", "Refrigerator", 20),
                 product("3", "Apple", "Fruits", "Room Temp", 15),
-                product("4", "Meat", "Meat", "Freeze", 30)
+                product("4", "Meat", "Meat", LocalDataContract.STORAGE_FREEZE_NAME, 30)
         );
 
         List<DashboardState.StorageSummaryEntry> summaries =
@@ -69,7 +69,7 @@ public class StatsUiMapperTest {
         assertEquals("Room Temp", summaries.get(1).getStorageValue());
         assertEquals(1, summaries.get(1).getCount());
         assertEquals(25, summaries.get(1).getProgressPercent());
-        assertEquals("Freeze", summaries.get(2).getStorageValue());
+        assertEquals(LocalDataContract.STORAGE_FREEZE_NAME, summaries.get(2).getStorageValue());
         assertEquals(1, summaries.get(2).getCount());
         assertEquals(25, summaries.get(2).getProgressPercent());
     }

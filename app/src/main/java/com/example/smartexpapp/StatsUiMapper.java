@@ -1,11 +1,13 @@
 package com.example.smartexpapp;
 
+import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public final class StatsUiMapper {
@@ -18,12 +20,12 @@ public final class StatsUiMapper {
         }
 
         Map<String, Integer> counts = new LinkedHashMap<>();
-        counts.put("Refrigerator", 0);
-        counts.put("Room Temp", 0);
-        counts.put("Freeze", 0);
+        counts.put(LocalDataContract.STORAGE_REFRIGERATOR_NAME, 0);
+        counts.put(LocalDataContract.STORAGE_ROOM_TEMP_NAME, 0);
+        counts.put(LocalDataContract.STORAGE_FREEZE_NAME, 0);
 
         for (Product product : products) {
-            String storage = product.getStorage();
+            String storage = knownStorageName(product.getStorage());
             if (counts.containsKey(storage)) {
                 counts.put(storage, counts.get(storage) + 1);
             }
@@ -58,5 +60,22 @@ public final class StatsUiMapper {
             }
         }
         return groups;
+    }
+
+    private static String knownStorageName(String rawStorage) {
+        if (rawStorage == null) {
+            return null;
+        }
+        String normalized = rawStorage.trim().toLowerCase(Locale.US);
+        if ("room temp".equals(normalized) || "room".equals(normalized)) {
+            return LocalDataContract.STORAGE_ROOM_TEMP_NAME;
+        }
+        if ("refrigerator".equals(normalized) || "fridge".equals(normalized) || "cool".equals(normalized)) {
+            return LocalDataContract.STORAGE_REFRIGERATOR_NAME;
+        }
+        if ("freezer".equals(normalized) || "freeze".equals(normalized) || "frozen".equals(normalized)) {
+            return LocalDataContract.STORAGE_FREEZE_NAME;
+        }
+        return null;
     }
 }

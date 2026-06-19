@@ -179,7 +179,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Gemini Smart Tip Card -->
+            <!-- Smart AI Tip Card -->
             <LinearLayout
                 android:id="@+id/recipeSmartTipCard"
                 android:layout_width="match_parent"
@@ -219,7 +219,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="@string/gemini_smart_tip"
+                            android:text="@string/smart_ai_tip"
                             android:textColor="@color/smart_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />

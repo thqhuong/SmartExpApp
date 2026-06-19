@@ -72,14 +72,14 @@
                     <FrameLayout
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:background="@drawable/bg_gemini_icon_gradient">
+                        android:background="@drawable/bg_ai_icon_gradient">
 
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_gravity="center"
                             android:importantForAccessibility="no"
-                            android:src="@drawable/ic_gemini_sparkles"
+                            android:src="@drawable/ic_ai_sparkles"
                             app:tint="#FFFFFF" />
                     </FrameLayout>
 
@@ -109,11 +109,11 @@
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLaunchGeminiLive"
+                    android:id="@+id/btnLaunchSmartVoice"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_gemini_launch_button"
+                    android:background="@drawable/bg_ai_launch_button"
                     app:backgroundTint="@null"
                     android:text="@string/start_voice_add"
                     android:textAllCaps="false"

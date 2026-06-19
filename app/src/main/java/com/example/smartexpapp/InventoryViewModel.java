@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.smartexpapp.data.ProductRepository;
+import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
 
 import java.util.ArrayList;
@@ -188,7 +189,12 @@ public class InventoryViewModel extends ViewModel {
     }
 
     private boolean matchesStorage(Product product) {
-        return "All".equals(currentStorage) || currentStorage.equals(product.getStorage());
+        if ("All".equals(currentStorage)) {
+            return true;
+        }
+        String selectedId = LocalDataContract.storageIdForName(currentStorage);
+        String productId = LocalDataContract.storageIdForName(product.getStorage());
+        return selectedId.equals(productId);
     }
 
     private boolean matchesFilter(Product product) {

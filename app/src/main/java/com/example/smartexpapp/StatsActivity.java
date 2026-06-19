@@ -10,6 +10,7 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
@@ -227,22 +228,24 @@ public class StatsActivity extends BaseActivity {
     }
 
     private String getLocalizedStorage(String storage) {
-        if ("Refrigerator".equalsIgnoreCase(storage)) {
+        String storageId = LocalDataContract.storageIdForName(storage);
+        if (LocalDataContract.STORAGE_REFRIGERATOR_ID.equals(storageId)) {
             return getString(R.string.storage_summary_refrigerator);
-        } else if ("Freeze".equalsIgnoreCase(storage) || "Freezer".equalsIgnoreCase(storage)) {
+        } else if (LocalDataContract.STORAGE_FREEZE_ID.equals(storageId)) {
             return getString(R.string.storage_summary_freezer);
-        } else if ("Room Temp".equalsIgnoreCase(storage)) {
+        } else if (LocalDataContract.STORAGE_ROOM_TEMP_ID.equals(storageId)) {
             return getString(R.string.storage_summary_room_temp);
         }
         return storage;
     }
 
     private StorageStyle storageStyle(String storage) {
-        if ("Refrigerator".equalsIgnoreCase(storage)) {
+        String storageId = LocalDataContract.storageIdForName(storage);
+        if (LocalDataContract.STORAGE_REFRIGERATOR_ID.equals(storageId)) {
             return new StorageStyle(R.drawable.ic_storage_fridge, R.drawable.bg_storage_icon_fridge,
                     R.color.storage_fridge_icon, R.drawable.progress_blue);
         }
-        if ("Freeze".equalsIgnoreCase(storage) || "Freezer".equalsIgnoreCase(storage)) {
+        if (LocalDataContract.STORAGE_FREEZE_ID.equals(storageId)) {
             return new StorageStyle(R.drawable.ic_storage_freeze, R.drawable.bg_storage_icon_freezer,
                     R.color.storage_freezer_icon, R.drawable.progress_purple);
         }
