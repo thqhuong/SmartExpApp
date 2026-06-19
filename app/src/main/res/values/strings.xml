@@ -54,8 +54,8 @@
     <string name="inventory_title">My Inventory</string>
     <string name="category_label">CATEGORY</string>
     <string name="storage_room_temp">Room Temp</string>
-    <string name="storage_cool">Cool</string>
-    <string name="storage_frozen">Frozen</string>
+    <string name="storage_cool">Refrigerator</string>
+    <string name="storage_frozen">Freezer</string>
     <string name="cat_dairy">Dairy</string>
     <string name="cat_meat">Meat</string>
     <string name="cat_produce">Produce</string>
@@ -72,7 +72,7 @@
     <string name="expiry_label">Expiry</string>
     <string name="filter_storage_room">Room Temp</string>
     <string name="filter_storage_fridge">Refrigerator</string>
-    <string name="filter_storage_freeze">Freeze</string>
+    <string name="filter_storage_freeze">Freezer</string>
 
     <string-array name="expiry_filter_options">
         <item>All</item>
@@ -84,7 +84,7 @@
         <item>All</item>
         <item>Room Temp</item>
         <item>Refrigerator</item>
-        <item>Freeze</item>
+        <item>Freezer</item>
     </string-array>
 
     <string-array name="sort_options">
@@ -125,7 +125,7 @@
     <string name="settings_sign_in">Sign in</string>
     <string name="recipe_details_title">Recipe Details</string>
     <string name="difficulty_easy_uppercase">EASY</string>
-    <string name="gemini_smart_tip">Smart AI Tip</string>
+    <string name="smart_ai_tip">Smart AI Tip</string>
     <string name="no_recommendations">No waste recommendations available.</string>
     <string name="label_ingredients">Ingredients</string>
     <string name="label_instructions">Instructions</string>
@@ -194,11 +194,12 @@
     <string name="product_name_hint">e.g., Organic Milk</string>
     <string name="quantity_label">QUANTITY</string>
     <string name="quantity_default">1</string>
+    <string name="quantity_invalid">Enter a quantity greater than 0.</string>
     <string name="manage_label">Manage</string>
     <string name="storage_method_label">STORAGE METHOD</string>
     <string name="storage_room_temp_upper">ROOM\nTEMP</string>
     <string name="storage_refrigerator_upper">REFRIGERATOR</string>
-    <string name="storage_freeze_upper">FREEZE</string>
+    <string name="storage_freeze_upper">FREEZER</string>
     <string name="expiry_date_label">EXPIRY DATE</string>
     <string name="photo_optional_label">PHOTO (optional)</string>
     <string name="tap_add_photo">Tap to add photo</string>
@@ -318,8 +319,8 @@
     <string name="signed_in_mode">Signed in</string>
     <string name="guest_mode_label">Guest mode</string>
     <string name="ai_access_label">AI Access</string>
-    <string name="optional_api_key_hint">Optional API key</string>
-    <string name="optional_local_api_key">Optional local API key</string>
+    <string name="optional_api_key_hint">Configured at build time</string>
+    <string name="optional_local_api_key">Cloudflare optional; local fallback enabled</string>
     <string name="local_data_title">Local Data</string>
     <string name="local_data_desc">Inventory, scans, recipes, and reminders are stored in the app database.</string>
     <string name="authentication_label">Authentication</string>

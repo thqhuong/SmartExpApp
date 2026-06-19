@@ -99,7 +99,7 @@ public class AgentRepositoryTest {
         assertEquals("loaf", drafts.get(1).getUnit());
         assertTrue(drafts.get(1).hasExpiryDate());
         assertEquals("Chicken", drafts.get(2).getName());
-        assertEquals("Freeze", drafts.get(2).getStorage());
+        assertEquals("Freezer", drafts.get(2).getStorage());
         assertFalse(drafts.get(2).hasExpiryDate());
     }
 
@@ -388,7 +388,7 @@ public class AgentRepositoryTest {
     public void parserWorkerResponseMatchesFallbacksByNameAndKeepsLocalExpiryScope() throws Exception {
         JSONObject response = new JSONObject("{\"items\":["
                 + "{\"name\":\"eggs\",\"category\":\"Dairy\",\"quantity\":\"12\",\"unit\":\"pcs\",\"storage\":\"Refrigerator\",\"expiryText\":\"\",\"expiryDaysFromNow\":5},"
-                + "{\"name\":\"chicken\",\"category\":\"Meat\",\"quantity\":\"2\",\"unit\":\"lb\",\"storage\":\"Freeze\",\"expiryText\":\"\",\"expiryDaysFromNow\":5},"
+                + "{\"name\":\"chicken\",\"category\":\"Meat\",\"quantity\":\"2\",\"unit\":\"lb\",\"storage\":\"Freezer\",\"expiryText\":\"\",\"expiryDaysFromNow\":5},"
                 + "{\"name\":\"bread\",\"category\":\"Pantry\",\"quantity\":\"1\",\"unit\":\"loaf\",\"storage\":\"Room Temp\",\"expiryText\":\"\",\"expiryDaysFromNow\":-1}"
                 + "]}");
         String input = "Add eggs 12 pcs fridge, bread 1 loaf expires in 5 days, frozen chicken 2 lb";

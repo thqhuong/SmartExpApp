@@ -40,8 +40,8 @@
     <color name="smart_glass_inner_glow">#1AFFFFFF</color>
     <color name="smart_glass_input_bg">#66000000</color>
     <color name="smart_glass_input_stroke">#26FFFFFF</color>
-    <color name="smart_gemini_purple">#B6C4FF</color>
-    <color name="smart_gemini_pink">#FFB7D5</color>
+    <color name="smart_ai_purple">#B6C4FF</color>
+    <color name="smart_ai_pink">#FFB7D5</color>
     <color name="smart_glass_wash_start">#14FF8C00</color>
     <color name="smart_glass_wash_mid">#0A0A0C</color>
     <color name="smart_glass_wash_end">#1493000A</color>

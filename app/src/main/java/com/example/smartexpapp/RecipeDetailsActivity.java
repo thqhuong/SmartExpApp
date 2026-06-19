@@ -77,7 +77,7 @@ public class RecipeDetailsActivity extends BaseActivity {
             caloriesText.setText(calories.toUpperCase());
         }
 
-        // Gemini Smart Tip
+        // Smart AI tip
         View smartTipCard = findViewById(R.id.recipeSmartTipCard);
         TextView smartTipTextView = findViewById(R.id.recipeSmartTipText);
         if (smartTip != null && !smartTip.trim().isEmpty()) {

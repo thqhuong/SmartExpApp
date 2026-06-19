@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartexpapp.data.AuthStateRepository;
+import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.notifications.ReminderScheduler;
 import com.example.smartexpapp.util.CategoryColorHelper;
@@ -36,7 +37,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InventoryActivity extends BaseActivity {
-    private static final String[] STORAGE_KEYS = { "All", "Room Temp", "Refrigerator", "Freeze" };
+    private static final String[] STORAGE_KEYS = {
+            "All",
+            LocalDataContract.STORAGE_ROOM_TEMP_NAME,
+            LocalDataContract.STORAGE_REFRIGERATOR_NAME,
+            LocalDataContract.STORAGE_FREEZE_NAME
+    };
     private static final String TAG = "InventoryActivity";
     public static final String EXTRA_FILTER = "com.example.smartexpapp.extra.FILTER";
     public static final String EXTRA_RESET_FILTERS = "com.example.smartexpapp.extra.RESET_FILTERS";
