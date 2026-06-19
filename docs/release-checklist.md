@@ -12,11 +12,11 @@ For a new developer joining the project:
 
 2. **Configure Local Properties (Dev Key Setup):**
    - In the root directory, create or open `local.properties`.
-   - Add your Gemini API key for local development:
+   - Add your Cloudflare AI Worker URL for local development:
      ```properties
-     GEMINI_API_KEY="your-gemini-api-key-here"
+     RECIPE_IMAGE_WORKER_URL="your-cloudflare-worker-url-here"
      ```
-   - *Note: This key is injected via `BuildConfig` during the build process. Do not commit `local.properties`.*
+   - *Note: This URL is injected via `BuildConfig` during the build process. Do not commit `local.properties`.*
 
 3. **Verify Build & Test:**
    - Run unit tests:
@@ -37,20 +37,21 @@ Although the current app operates local-first, the following cloud integrations 
   - Download the `google-services.json` file and place it in the `app/` directory.
   - *Current Status:* Firebase is not yet required for local-first operations.
 
-- **Gemini Proxy / Production Key:**
-  - **Development:** Direct Gemini API calls use the key from `local.properties`.
-  - **Production:** Never ship a raw Gemini API key in the release APK. Before the final Play Store release, transition API calls to a backend proxy server to secure the key, or use a secure remote config.
+- **Cloudflare AI Backend & Firestore Sync:**
+  - **Development:** AI calls target the Cloudflare Worker URL from `local.properties`.
+  - **Production AI:** Ensure the Worker endpoint has appropriate rate limits and CORS policies configured for production domains before release.
+  - **Firestore Sync:** Run `npm run test:firestore-rules` in the functions directory before release to ensure security rules are intact for synced inventory. Test sign-in and sync flows to ensure local-to-cloud sync behaves as expected for authenticated users.
 
 ## 3. Security, Permissions & Privacy
 
 - **Declared Permissions:**
-  - `INTERNET`: Required for communicating with Gemini.
+  - `INTERNET`: Required for communicating with Cloudflare AI endpoints and Firestore.
   - `POST_NOTIFICATIONS`: Required for Android 13+ to send local expiry reminders.
   - *Note: The camera intent is used via `MediaStore.ACTION_IMAGE_CAPTURE`, so no explicit `CAMERA` permission is required in the manifest.*
 
 - **Privacy Policy:**
   - You **must** host a Privacy Policy URL.
-  - The policy must explicitly disclose the use of on-device images (OCR) and text generation via AI (Gemini).
+  - The policy must explicitly disclose the use of on-device images (OCR) and text generation via AI endpoints (Cloudflare).
   - Clarify that inventory data is stored locally on the device.
 
 - **Backup Rules:**
