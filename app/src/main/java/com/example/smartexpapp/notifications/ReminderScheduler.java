@@ -10,7 +10,7 @@ import androidx.work.WorkManager;
 import java.util.concurrent.TimeUnit;
 
 public final class ReminderScheduler {
-    private static final String UNIQUE_DAILY_WORK = "smart_expiry_daily_reminders";
+    public static final String UNIQUE_DAILY_WORK = "smart_expiry_daily_reminders";
 
     private ReminderScheduler() {
     }
