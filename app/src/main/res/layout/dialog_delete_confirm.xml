@@ -19,6 +19,7 @@
             android:background="@drawable/bg_error_circle">
 
             <ImageView
+                android:importantForAccessibility="no"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:layout_gravity="center"

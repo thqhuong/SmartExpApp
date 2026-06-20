@@ -14,8 +14,8 @@
     <!-- Menu Button (Vibrant Orange) -->
     <ImageButton
         android:id="@+id/topActionMenu"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/app_name"
         android:padding="10dp"
@@ -52,6 +52,7 @@
         <!-- Light Mode Button (Sun) -->
         <FrameLayout
             android:id="@+id/btnToggleLightMode"
+            android:importantForAccessibility="no"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:clickable="true"
@@ -68,6 +69,7 @@
 
             <ImageView
                 android:id="@+id/themeToggleSunIcon"
+                android:importantForAccessibility="no"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
@@ -78,6 +80,7 @@
         <!-- Dark Mode Button (Moon) -->
         <FrameLayout
             android:id="@+id/btnToggleDarkMode"
+            android:importantForAccessibility="no"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:clickable="true"
@@ -94,6 +97,7 @@
 
             <ImageView
                 android:id="@+id/themeToggleMoonIcon"
+                android:importantForAccessibility="no"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
@@ -105,8 +109,8 @@
     <!-- Archive Button (History) -->
     <FrameLayout
         android:id="@+id/topActionArchive"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_marginEnd="8dp"
         android:background="@drawable/bg_search_circle"
         android:clickable="true"
@@ -126,8 +130,8 @@
     <!-- Search Button (Far Right Circle) -->
     <FrameLayout
         android:id="@+id/topActionSearch"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="@drawable/bg_search_circle"
         android:clickable="true"
         android:focusable="true"
