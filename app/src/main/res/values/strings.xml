@@ -267,7 +267,6 @@
     <string name="category_already_exists_format">Category \"%1$s\" already exists</string>
     <string name="category_delete_message_with_products">Products in this category will be moved to \"General\".</string>
     <string name="category_delete_message_empty">Are you sure you want to delete this category?</string>
-    <string name="edit_photo_in_add_screen">Edit photo in add product screen</string>
     <string name="product_not_found">Product not found</string>
     <string name="product_save_error">Could not save product.</string>
     <string name="product_added_format">%1$s added.</string>
