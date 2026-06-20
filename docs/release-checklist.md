@@ -13,6 +13,7 @@ This checklist is for the final school APK/demo package. It is not a Play Store 
    PRODUCT_PARSER_WORKER_URL=https://your-worker.example.workers.dev
    ```
 
+   *Note: These URLs are injected via `BuildConfig` during the build process. Do not commit `local.properties`.*
 3. Do not commit real Firebase files or secrets. `app/google-services.json` is ignored, and the Gradle build creates a placeholder file when it is missing.
 
 ## Verification Gates
@@ -39,11 +40,16 @@ With an emulator or device attached, also run:
 - Worker URLs are public endpoint configuration, not private API keys. Any Cloudflare secrets must stay in Worker environment bindings or Cloudflare dashboard settings, not in the APK.
 - Firestore sync is optional and only applies to signed-in user data when Firebase is configured. Guest/local-only data remains local.
 - The checked-in Worker under `cloudflare-recipe-images/` supports recipe images, product parsing, and AI recipe/chat endpoints.
+- **Declared Permissions:**
+  - `INTERNET`: Required for communicating with Cloudflare AI endpoints and Firestore.
+  - `POST_NOTIFICATIONS`: Required for Android 13+ to send local expiry reminders.
+  - *Note: The camera intent is used via `MediaStore.ACTION_IMAGE_CAPTURE`, so no explicit `CAMERA` permission is required in the manifest.*
 
 ## Privacy And Security Notes
 
-- OCR uses images selected or captured by the user to extract expiry text and product drafts.
+- OCR uses images selected or captured by the user to extract expiry text and product drafts. These are processed completely on-device (via ML Kit) and not sent to the cloud.
 - Voice input uses Android speech recognition, then the parsed text may be handled locally or by the configured Worker.
+- The Privacy Policy (if hosted) must explicitly disclose the use of on-device images (OCR) and text generation via AI endpoints (Cloudflare), and clarify that inventory data is stored locally on the device by default.
 - Local export/delete controls are available in account/settings flows.
 - Backup remains enabled. Review `app/src/main/res/xml/backup_rules.xml` and `app/src/main/res/xml/data_extraction_rules.xml` if the school requires a stricter privacy posture.
 - Before the final APK demo, verify that no real secrets are embedded in `BuildConfig`, `local.properties`, `.env*`, `google-services.json`, or documentation screenshots.
