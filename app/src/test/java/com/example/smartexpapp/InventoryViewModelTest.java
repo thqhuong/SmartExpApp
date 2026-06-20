@@ -118,7 +118,7 @@ public class InventoryViewModelTest {
         viewModel.setExpiryFilter("All");
 
         // Test Storage Filter
-        viewModel.setStorageFilter("Freeze");
+        viewModel.setStorageFilter(LocalDataContract.STORAGE_FREEZE_NAME);
         assertEquals(1, viewModel.getProducts().getValue().size());
         assertEquals("Meat", viewModel.getProducts().getValue().get(0).getName());
 

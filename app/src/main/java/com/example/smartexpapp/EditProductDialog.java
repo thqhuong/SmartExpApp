@@ -14,9 +14,11 @@ import android.widget.Toast;
 
 import com.example.smartexpapp.data.CategoryRepository;
 import com.example.smartexpapp.data.ProductRepository;
+import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
+import com.example.smartexpapp.util.ProductQuantityValidator;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -91,12 +93,12 @@ public class EditProductDialog {
             showPhoto();
         }
 
-        String storage = product.getStorage();
-        if ("Room Temp".equals(storage)) {
+        String storageId = LocalDataContract.storageIdForName(product.getStorage());
+        if (LocalDataContract.STORAGE_ROOM_TEMP_ID.equals(storageId)) {
             selectStorage(R.id.editStorageRoom);
-        } else if ("Refrigerator".equals(storage)) {
+        } else if (LocalDataContract.STORAGE_REFRIGERATOR_ID.equals(storageId)) {
             selectStorage(R.id.editStorageFridge);
-        } else if ("Freeze".equals(storage)) {
+        } else if (LocalDataContract.STORAGE_FREEZE_ID.equals(storageId)) {
             selectStorage(R.id.editStorageFreezer);
         }
 
@@ -393,26 +395,24 @@ public class EditProductDialog {
             return;
         }
 
-        String storage;
-        if (selectedStorageId == R.id.editStorageFridge) {
-            storage = "Refrigerator";
-        } else if (selectedStorageId == R.id.editStorageFreezer) {
-            storage = "Freeze";
-        } else {
-            storage = "Room Temp";
-        }
-
+        String storage = selectedStorage();
         int icon;
-        if ("Freeze".equals(storage)) {
+        String storageId = LocalDataContract.storageIdForName(storage);
+        if (LocalDataContract.STORAGE_FREEZE_ID.equals(storageId)) {
             icon = R.drawable.ic_storage_freeze;
-        } else if ("Refrigerator".equals(storage)) {
+        } else if (LocalDataContract.STORAGE_REFRIGERATOR_ID.equals(storageId)) {
             icon = R.drawable.ic_storage_fridge;
         } else {
             icon = R.drawable.ic_storage_room;
         }
 
-        String quantity = quantityInput.getText().toString().trim();
-        if (quantity.isEmpty()) quantity = "1";
+        String quantity = ProductQuantityValidator.normalize(quantityInput.getText().toString());
+        if (quantity == null) {
+            quantityInput.setError(activity.getString(R.string.quantity_invalid));
+            quantityInput.requestFocus();
+            Toast.makeText(activity, R.string.quantity_invalid, Toast.LENGTH_SHORT).show();
+            return;
+        }
         String unit = unitSpinner.getSelectedItem().toString();
 
         String imageUrl = currentPhotoPath != null ? currentPhotoPath : product.getImageUrl();
@@ -443,5 +443,15 @@ public class EditProductDialog {
                 onUpdated.run();
             }
         }, error -> Toast.makeText(activity, R.string.error_load, Toast.LENGTH_SHORT).show());
+    }
+
+    private String selectedStorage() {
+        if (selectedStorageId == R.id.editStorageFridge) {
+            return LocalDataContract.STORAGE_REFRIGERATOR_NAME;
+        }
+        if (selectedStorageId == R.id.editStorageFreezer) {
+            return LocalDataContract.STORAGE_FREEZE_NAME;
+        }
+        return LocalDataContract.STORAGE_ROOM_TEMP_NAME;
     }
 }

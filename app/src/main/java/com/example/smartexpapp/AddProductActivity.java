@@ -37,6 +37,7 @@ import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.DateParser;
 import com.example.smartexpapp.util.DateParser.DateCandidate;
 import com.example.smartexpapp.util.ImageLoader;
+import com.example.smartexpapp.util.ProductQuantityValidator;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.mlkit.vision.common.InputImage;
@@ -136,7 +137,7 @@ public class AddProductActivity extends BaseActivity {
         photoPreview = findViewById(R.id.photoPreview);
         btnOcrScan = findViewById(R.id.btnOcrScan);
 
-        findViewById(R.id.btnLaunchGeminiLive).setOnClickListener(v -> startSmartAddVoice());
+        findViewById(R.id.btnLaunchSmartVoice).setOnClickListener(v -> startSmartAddVoice());
         findViewById(R.id.btnTypeSmartAdd).setOnClickListener(v -> showSmartAddTextDialog());
 
         photoPreview.setOnClickListener(v -> pickPhotoLauncher.launch("image/*"));
@@ -283,9 +284,10 @@ public class AddProductActivity extends BaseActivity {
             refreshCategorySpinner();
         }
 
-        if ("Refrigerator".equals(draft.getStorage())) {
+        String storageId = LocalDataContract.storageIdForName(draft.getStorage());
+        if (LocalDataContract.STORAGE_REFRIGERATOR_ID.equals(storageId)) {
             selectStorage(R.id.storageFridge);
-        } else if ("Freeze".equals(draft.getStorage())) {
+        } else if (LocalDataContract.STORAGE_FREEZE_ID.equals(storageId)) {
             selectStorage(R.id.storageFreezer);
         } else {
             selectStorage(R.id.storageRoom);
@@ -856,12 +858,12 @@ public class AddProductActivity extends BaseActivity {
             showPhotoPreview(imgPath);
         }
 
-        String storage = product.getStorage();
-        if ("Room Temp".equals(storage)) {
+        String storageId = LocalDataContract.storageIdForName(product.getStorage());
+        if (LocalDataContract.STORAGE_ROOM_TEMP_ID.equals(storageId)) {
             selectStorage(R.id.storageRoom);
-        } else if ("Refrigerator".equals(storage)) {
+        } else if (LocalDataContract.STORAGE_REFRIGERATOR_ID.equals(storageId)) {
             selectStorage(R.id.storageFridge);
-        } else if ("Freeze".equals(storage)) {
+        } else if (LocalDataContract.STORAGE_FREEZE_ID.equals(storageId)) {
             selectStorage(R.id.storageFreezer);
         }
 
@@ -887,8 +889,13 @@ public class AddProductActivity extends BaseActivity {
 
         String category = selectedCategory == null || selectedCategory.isEmpty() ? "General" : canonicalCategory(selectedCategory);
 
-        String quantity = quantityInput.getText().toString().trim();
-        if (quantity.isEmpty()) quantity = getString(R.string.quantity_default);
+        String quantity = ProductQuantityValidator.normalize(quantityInput.getText().toString());
+        if (quantity == null) {
+            quantityInput.setError(getString(R.string.quantity_invalid));
+            quantityInput.requestFocus();
+            Toast.makeText(this, R.string.quantity_invalid, Toast.LENGTH_SHORT).show();
+            return;
+        }
         final String finalQuantity = quantity;
         String unit = unitSpinner.getSelectedItem().toString();
         submitButton.setEnabled(false);
@@ -1055,19 +1062,20 @@ public class AddProductActivity extends BaseActivity {
 
     private String selectedStorage() {
         if (selectedStorageId == R.id.storageFridge) {
-            return "Refrigerator";
+            return LocalDataContract.STORAGE_REFRIGERATOR_NAME;
         }
         if (selectedStorageId == R.id.storageFreezer) {
-            return "Freeze";
+            return LocalDataContract.STORAGE_FREEZE_NAME;
         }
-        return "Room Temp";
+        return LocalDataContract.STORAGE_ROOM_TEMP_NAME;
     }
 
     private int iconForStorage(String storage) {
-        if ("Freeze".equals(storage)) {
+        String storageId = LocalDataContract.storageIdForName(storage);
+        if (LocalDataContract.STORAGE_FREEZE_ID.equals(storageId)) {
             return R.drawable.ic_storage_freeze;
         }
-        if ("Refrigerator".equals(storage)) {
+        if (LocalDataContract.STORAGE_REFRIGERATOR_ID.equals(storageId)) {
             return R.drawable.ic_storage_fridge;
         }
         return R.drawable.ic_storage_room;

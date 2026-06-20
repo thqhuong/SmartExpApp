@@ -8,6 +8,7 @@ import com.example.smartexpapp.BuildConfig;
 import com.example.smartexpapp.R;
 import com.example.smartexpapp.data.local.AgentMessageEntity;
 import com.example.smartexpapp.data.local.AppDatabase;
+import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.data.local.RecipeCacheEntity;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.model.ProductDraft;
@@ -90,7 +91,7 @@ public final class AgentRepository {
             unit = normalizeUnit(quantityMatcher.group(2));
         }
 
-        String storage = "Room Temp";
+        String storage = LocalDataContract.STORAGE_ROOM_TEMP_NAME;
         if (lower.contains("fridge")
                 || lower.contains("refrigerator")
                 || lower.contains("refrigerated")
@@ -103,7 +104,7 @@ public final class AgentRepository {
                 || lower.contains("cất lạnh")
                 || lower.contains("bao quan lanh")
                 || lower.contains("bảo quản lạnh")) {
-            storage = "Refrigerator";
+            storage = LocalDataContract.STORAGE_REFRIGERATOR_NAME;
         } else if (lower.contains("freezer")
                 || lower.contains("frozen")
                 || lower.contains("freeze")
@@ -111,7 +112,7 @@ public final class AgentRepository {
                 || lower.contains("ngăn đông")
                 || lower.contains("dong lanh")
                 || lower.contains("đông lạnh")) {
-            storage = "Freeze";
+            storage = LocalDataContract.STORAGE_FREEZE_NAME;
         }
 
         String category = inferCategory(lower);
@@ -840,10 +841,10 @@ public final class AgentRepository {
                 + "Fields: name, category, quantity, unit, storage, expiryText, expiryDaysFromNow. "
                 + "Normalize Vietnamese food names with proper diacritics and capitalization. "
                 + "For example: 'thit bo' must become 'Thịt bò', 'ca chua' must become 'Cà chua', 'rau muong' must become 'Rau muống'. "
-                + "'tu lanh' means Refrigerator, 'ngan dong' means Freeze, and 'het han ngay mai' means expiryDaysFromNow = 1. "
+                + "'tu lanh' means Refrigerator, 'ngan dong' means Freezer, and 'het han ngay mai' means expiryDaysFromNow = 1. "
                 + "The name field must contain only the product name, not storage or expiry words. "
                 + "category must be one of Dairy, General, Meat, Pantry, Produce, Vegetables. "
-                + "storage must be one of Room Temp, Refrigerator, Freeze. "
+                + "storage must be one of Room Temp, Refrigerator, Freezer. "
                 + "expiryDaysFromNow must be a non-negative integer when a relative expiry is clear, otherwise -1. "
                 + "Do not include markdown. User request: " + (input == null ? "" : input);
     }
@@ -856,10 +857,10 @@ public final class AgentRepository {
                 + "Each object must use fields: name, category, quantity, unit, storage, expiryText, expiryDaysFromNow. "
                 + "Normalize Vietnamese food names with proper diacritics and capitalization. "
                 + "For example: 'thit bo' must become 'Thịt bò', 'ca chua' must become 'Cà chua', 'rau muong' must become 'Rau muống'. "
-                + "'tu lanh' means Refrigerator, 'ngan dong' means Freeze, and 'het han ngay mai' means expiryDaysFromNow = 1. "
+                + "'tu lanh' means Refrigerator, 'ngan dong' means Freezer, and 'het han ngay mai' means expiryDaysFromNow = 1. "
                 + "The name field must contain only the product name, not storage or expiry words. "
                 + "category must be one of Dairy, General, Meat, Pantry, Produce, Vegetables. "
-                + "storage must be one of Room Temp, Refrigerator, Freeze. "
+                + "storage must be one of Room Temp, Refrigerator, Freezer. "
                 + "expiryDaysFromNow must be a non-negative integer when a relative expiry is clear, otherwise -1. "
                 + "Do not include markdown or explanatory text. User request: " + (input == null ? "" : input);
     }
@@ -1356,10 +1357,10 @@ public final class AgentRepository {
     }
 
     private static String normalizeStorage(String rawStorage) {
-        if (rawStorage == null) return "Room Temp";
+        if (rawStorage == null) return LocalDataContract.STORAGE_ROOM_TEMP_NAME;
         String storage = rawStorage.trim().toLowerCase(Locale.US);
-        if (storage.contains("fridge") || storage.contains("refrigerator") || storage.contains("refrigerated")) return "Refrigerator";
-        if (storage.contains("freez") || storage.contains("frozen")) return "Freeze";
-        return "Room Temp";
+        if (storage.contains("fridge") || storage.contains("refrigerator") || storage.contains("refrigerated")) return LocalDataContract.STORAGE_REFRIGERATOR_NAME;
+        if (storage.contains("freez") || storage.contains("frozen")) return LocalDataContract.STORAGE_FREEZE_NAME;
+        return LocalDataContract.STORAGE_ROOM_TEMP_NAME;
     }
 }

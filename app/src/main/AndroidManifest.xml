@@ -54,7 +54,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".StatsActivity"
             android:exported="false" />
         <activity
             android:name=".SignInActivity"

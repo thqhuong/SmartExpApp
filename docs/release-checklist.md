@@ -1,109 +1,85 @@
-# SmartExpApp: Setup and Release Checklist
+# SmartExpApp School Submission Checklist
 
-This document details the complete path to configure, build, and release the SmartExpApp native Android product to the Google Play Store.
+This checklist is for the final school APK/demo package. It is not a Play Store release checklist.
 
-## 1. Local Setup & Build
+## Local Setup
 
-For a new developer joining the project:
+1. Open the repository in Android Studio from the project root.
+2. Keep `local.properties` local only. It may contain optional Worker URLs:
 
-1. **Clone & Open:**
-   - Clone the repository and checkout the latest `dev` branch.
-   - Open the project root in **Android Studio**.
+   ```properties
+   AI_WORKER_URL=https://your-worker.example.workers.dev
+   RECIPE_IMAGE_WORKER_URL=https://your-worker.example.workers.dev
+   PRODUCT_PARSER_WORKER_URL=https://your-worker.example.workers.dev
+   ```
 
-2. **Configure Local Properties (Dev Key Setup):**
-   - In the root directory, create or open `local.properties`.
-   - Add your Cloudflare AI Worker URL for local development:
-     ```properties
-     RECIPE_IMAGE_WORKER_URL="your-cloudflare-worker-url-here"
-     ```
-   - *Note: This URL is injected via `BuildConfig` during the build process. Do not commit `local.properties`.*
+   *Note: These URLs are injected via `BuildConfig` during the build process. Do not commit `local.properties`.*
+3. Do not commit real Firebase files or secrets. `app/google-services.json` is ignored, and the Gradle build creates a placeholder file when it is missing.
 
-3. **Verify Build & Test:**
-   - Run unit tests:
-     ```powershell
-     .\gradlew.bat test
-     ```
-   - Build the debug variant:
-     ```powershell
-     .\gradlew.bat :app:assembleDebug
-     ```
+## Verification Gates
 
-## 2. Backend & Cloud Services
+Run these before packaging the final APK:
 
-Although the current app operates local-first, the following cloud integrations must be managed:
+```powershell
+.\gradlew.bat test
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :app:lintDebug
+npm run test:firestore-rules
+```
 
-- **Firebase Setup:**
-  - If integrating Analytics, Crashlytics, or Auth in the future, create a Firebase project.
-  - Download the `google-services.json` file and place it in the `app/` directory.
-  - *Current Status:* Firebase is not yet required for local-first operations.
+With an emulator or device attached, also run:
 
-- **Cloudflare AI Backend & Firestore Sync:**
-  - **Development:** AI calls target the Cloudflare Worker URL from `local.properties`.
-  - **Production AI:** Ensure the Worker endpoint has appropriate rate limits and CORS policies configured for production domains before release.
-  - **Firestore Sync:** Run `npm run test:firestore-rules` in the functions directory before release to ensure security rules are intact for synced inventory. Test sign-in and sync flows to ensure local-to-cloud sync behaves as expected for authenticated users.
+```powershell
+.\gradlew.bat connectedDebugAndroidTest
+```
 
-## 3. Security, Permissions & Privacy
+## Cloud And AI Behavior
 
+- The Android app is local-first. Inventory, OCR drafts, recipe cache, settings, reminders, and export/delete flows work from local app storage.
+- Cloudflare Workers AI is optional. If Worker URLs are absent, the app uses local fallback parsing and recipe suggestions.
+- Worker URLs are public endpoint configuration, not private API keys. Any Cloudflare secrets must stay in Worker environment bindings or Cloudflare dashboard settings, not in the APK.
+- Firestore sync is optional and only applies to signed-in user data when Firebase is configured. Guest/local-only data remains local.
+- The checked-in Worker under `cloudflare-recipe-images/` supports recipe images, product parsing, and AI recipe/chat endpoints.
 - **Declared Permissions:**
   - `INTERNET`: Required for communicating with Cloudflare AI endpoints and Firestore.
   - `POST_NOTIFICATIONS`: Required for Android 13+ to send local expiry reminders.
   - *Note: The camera intent is used via `MediaStore.ACTION_IMAGE_CAPTURE`, so no explicit `CAMERA` permission is required in the manifest.*
 
-- **Privacy Policy:**
-  - You **must** host a Privacy Policy URL.
-  - The policy must explicitly disclose the use of on-device images (OCR) and text generation via AI endpoints (Cloudflare).
-  - Clarify that inventory data is stored locally on the device.
+## Privacy And Security Notes
 
-- **Backup Rules:**
-  - `android:allowBackup="true"` is enabled.
-  - Data extraction and backup rules (`xml/data_extraction_rules.xml` and `xml/backup_rules.xml`) dictate what user data is synced with Google Drive. Review these files to ensure sensitive AI cache or temporary images are excluded if necessary.
+- OCR uses images selected or captured by the user to extract expiry text and product drafts. These are processed completely on-device (via ML Kit) and not sent to the cloud.
+- Voice input uses Android speech recognition, then the parsed text may be handled locally or by the configured Worker.
+- The Privacy Policy (if hosted) must explicitly disclose the use of on-device images (OCR) and text generation via AI endpoints (Cloudflare), and clarify that inventory data is stored locally on the device by default.
+- Local export/delete controls are available in account/settings flows.
+- Backup remains enabled. Review `app/src/main/res/xml/backup_rules.xml` and `app/src/main/res/xml/data_extraction_rules.xml` if the school requires a stricter privacy posture.
+- Before the final APK demo, verify that no real secrets are embedded in `BuildConfig`, `local.properties`, `.env*`, `google-services.json`, or documentation screenshots.
 
-## 4. Release Configuration
+For the cleanest school evidence build, use the placeholder Firebase helper so any ignored local Firebase config is restored after the build:
 
-Before building the final AAB (Android App Bundle), apply these configurations in `app/build.gradle.kts` and `AndroidManifest.xml`:
+```powershell
+.\scripts\build-placeholder-debug-apk.ps1
+.\scripts\scan-apk-secrets.ps1
+```
 
-- **App ID (Critical):**
-  - **You MUST change the `applicationId`** from `com.example.smartexpapp` to a production-ready package name (e.g., `com.smartexp.app`). 
-  - *Google Play rejects any app using the `com.example.*` namespace.*
+## APK Sanity
 
-- **App Name & Icon:**
-  - Verify the final user-facing app name in `res/values/strings.xml` (`app_name`).
-  - Verify the launcher icons in `res/mipmap/` (`ic_launcher` and `ic_launcher_round`).
+- Keep the package name `com.example.smartexpapp` for school submission unless the school explicitly requires a production package.
+- Verify English and Vietnamese resources both compile with `lintDebug`.
+- Check the visible storage labels: `Room Temp`, `Refrigerator`, and `Freezer` in English, with matching Vietnamese translations.
+- Confirm quantity validation rejects blank, zero, negative, and non-numeric values, and accepts positive decimals.
 
-- **Signing:**
-  - Generate a secure Upload Keystore via Android Studio (Build > Generate Signed Bundle / APK).
-  - Configure the `signingConfigs` block in `build.gradle.kts` for the `release` build type using environment variables or a local secure properties file.
+## Manual Smoke Test
 
-- **Minify / R8:**
-  - Enable R8 code shrinking and obfuscation in `build.gradle.kts`:
-    ```kotlin
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    ```
-  - Test the obfuscated release build thoroughly to ensure Room and ML Kit dependencies are not broken by R8.
+- First launch as guest/local user.
+- Add, edit, delete, undo, and restore a product.
+- Add a product through OCR review.
+- Add one or more products with Smart Add text or voice.
+- Search, filter, sort, and open product actions from inventory.
+- Review stats ranges and storage overview.
+- Toggle reminder settings.
+- Open account/settings, export data, and verify delete-local-data confirmation.
+- Test with Cloudflare Worker URLs configured and with them blank to confirm local fallback.
 
-## 5. Google Play Submission Checklist
+## Play Store Later
 
-Before submitting to the Play Console, ensure you have:
-
-- [ ] **App Assets:**
-  - App Icon (512x512 PNG).
-  - Feature Graphic (1024x500 PNG).
-  - Phone and Tablet Screenshots highlighting key features (Inventory, Add Product via OCR, Recipes).
-- [ ] **Store Listing Details:**
-  - Short and Long descriptions localized appropriately.
-- [ ] **Privacy & Data Safety Policy:**
-  - Link to the hosted Privacy Policy.
-  - Fill out the Data Safety form correctly, clarifying that user inventory data remains local and explaining the API calls made for OCR and AI recipes.
-- [ ] **Target API Level:**
-  - Ensure `targetSdk` meets Google Play's latest requirements (currently set to 36, which is excellent).
-- [ ] **Internal Testing:**
-  - Upload the signed `.aab` to the Internal Testing track.
-  - Have QA / team members test the installed build on real devices prior to Production rollout.
+For a future Play Store release, revisit package rename, signing, R8/minification, hosted privacy policy, store assets, Play Data Safety, and production monitoring. Those are not required for the current school submission unless the school specifically asks for them.

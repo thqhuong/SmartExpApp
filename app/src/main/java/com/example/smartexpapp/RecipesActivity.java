@@ -84,10 +84,10 @@ public class RecipesActivity extends BaseActivity {
         recipeStateText = findViewById(R.id.recipeStateText);
         recipePromptChipGroup = findViewById(R.id.recipePromptChipGroup);
         setupTextToSpeech();
-        setupGeminiLive();
+        setupVoiceAssistant();
         loadDefaultRecipesOncePerSession();
 
-        if (getIntent().getBooleanExtra("start_gemini_live", false)) {
+        if (getIntent().getBooleanExtra("start_voice_assistant", false)) {
             startAgentVoice();
         }
     }
@@ -117,8 +117,8 @@ public class RecipesActivity extends BaseActivity {
         });
     }
 
-    private void setupGeminiLive() {
-        TextView titleView = findViewById(R.id.geminiLiveTitle);
+    private void setupVoiceAssistant() {
+        TextView titleView = findViewById(R.id.voiceAssistantTitle);
         if (titleView != null) {
             titleView.post(() -> {
                 int width = titleView.getWidth();
@@ -142,9 +142,9 @@ public class RecipesActivity extends BaseActivity {
             });
         }
 
-        View geminiLiveButton = findViewById(R.id.geminiLiveButton);
-        if (geminiLiveButton != null) {
-            geminiLiveButton.setOnClickListener(v -> startAgentVoice());
+        View voiceAssistantButton = findViewById(R.id.voiceAssistantButton);
+        if (voiceAssistantButton != null) {
+            voiceAssistantButton.setOnClickListener(v -> startAgentVoice());
         }
         View askByTextButton = findViewById(R.id.askByTextButton);
         if (askByTextButton != null) {
@@ -243,7 +243,7 @@ public class RecipesActivity extends BaseActivity {
     }
 
     private void startPulseAnimation() {
-        View pulseView = findViewById(R.id.geminiLivePulseView);
+        View pulseView = findViewById(R.id.voiceAssistantPulseView);
         if (pulseView == null) return;
 
         ScaleAnimation scaleAnim = new ScaleAnimation(

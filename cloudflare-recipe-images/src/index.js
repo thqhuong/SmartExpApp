@@ -127,14 +127,14 @@ async function handleParseProduct(request, env) {
     "Extract inventory products from the user's text for SmartExpApp.",
     "Return one item per distinct product mentioned by the user. Do not invent products.",
     "Normalize category to one of: Dairy, General, Meat, Pantry, Produce, Vegetables.",
-    "Normalize storage to one of: Room Temp, Refrigerator, Freeze.",
+    "Normalize storage to one of: Room Temp, Refrigerator, Freezer.",
     "Normalize units to one of: pcs, g, kg, ml, l, oz, lb, cup, tbsp, tsp, gal, bag, loaf.",
     "Quantity must be numeric text only, without the unit. If quantity is missing, use quantity '1' and unit 'pcs'.",
     "If expiry is relative and clear, set expiryDaysFromNow to a non-negative integer.",
     "If expiry is unclear or absent, set expiryDaysFromNow to -1 and include expiryText as an empty string.",
     "Support English and Vietnamese. Normalize Vietnamese food names with proper diacritics.",
     "Examples: thit bo -> Thịt bò, ca chua -> Cà chua, rau muong -> Rau muống.",
-    "Vietnamese storage: tu lanh/ngan mat -> Refrigerator; ngan dong/dong lanh -> Freeze.",
+    "Vietnamese storage: tu lanh/ngan mat -> Refrigerator; ngan dong/dong lanh -> Freezer.",
     "Vietnamese expiry: hom nay -> 0; ngay mai -> 1.",
     "Use these exact Vietnamese mappings: thit bo -> Th\u1ecbt b\u00f2; ca chua -> C\u00e0 chua; rau muong -> Rau mu\u1ed1ng.",
     "When examples conflict, use the exact Vietnamese mappings above.",
@@ -558,7 +558,7 @@ function normalizeStorage(value) {
     return "Refrigerator";
   }
   if (normalized.includes("freez") || normalized.includes("frozen") || normalized.includes("ngan dong") || normalized.includes("dong lanh")) {
-    return "Freeze";
+    return "Freezer";
   }
   return "Room Temp";
 }

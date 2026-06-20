@@ -6,6 +6,7 @@
     <color name="smart_surface_container_low">#F8FAFC</color>
     <color name="smart_surface_variant">#E2E8F0</color>
     <color name="smart_on_surface">#1A1C1C</color>
+    <color name="smart_on_surface_variant">#564334</color>
     <color name="smart_secondary">#5F5E5E</color>
     <color name="smart_muted">#8C8C8C</color>
     <color name="smart_primary">#904D00</color>
@@ -46,8 +47,8 @@
     <color name="smart_glass_inner_glow">#B3FFFFFF</color>
     <color name="smart_glass_input_bg">#80FFFFFF</color>
     <color name="smart_glass_input_stroke">#26000000</color>
-    <color name="smart_gemini_purple">#8EA4FF</color>
-    <color name="smart_gemini_pink">#FFB7D5</color>
+    <color name="smart_ai_purple">#8EA4FF</color>
+    <color name="smart_ai_pink">#FFB7D5</color>
     <color name="smart_glass_wash_start">#26FF8C00</color>
     <color name="smart_glass_wash_mid">#F9F9F9</color>
     <color name="smart_glass_wash_end">#26818CF8</color>
@@ -70,4 +71,6 @@
     <!-- Urgent Badge Colors (Light Mode) -->
     <color name="urgent_triangle_color">#FBECE5</color>
     <color name="urgent_count_text">#BA1A1A</color>
+
+    <color name="smart_outline_variant">#DDC1AE</color>
 </resources>

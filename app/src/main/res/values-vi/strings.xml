@@ -54,8 +54,8 @@
     <string name="inventory_title">Kho của tôi</string>
     <string name="category_label">DANH MỤC</string>
     <string name="storage_room_temp">Nhiệt độ phòng</string>
-    <string name="storage_cool">Mát</string>
-    <string name="storage_frozen">Đông lạnh</string>
+    <string name="storage_cool">Tủ lạnh</string>
+    <string name="storage_frozen">Ngăn đông</string>
     <string name="cat_dairy">Sữa</string>
     <string name="cat_meat">Thịt</string>
     <string name="cat_produce">Rau quả</string>
@@ -124,7 +124,7 @@
     <string name="settings_sign_in">Đăng nhập</string>
     <string name="recipe_details_title">Chi tiết công thức</string>
     <string name="difficulty_easy_uppercase">DỄ</string>
-    <string name="gemini_smart_tip">Mẹo thông minh AI</string>
+    <string name="smart_ai_tip">Mẹo thông minh AI</string>
     <string name="no_recommendations">Chưa có gợi ý chống lãng phí.</string>
     <string name="label_ingredients">Nguyên liệu</string>
     <string name="label_instructions">Cách làm</string>
@@ -154,6 +154,19 @@
     <string name="urgent_attention">CẦN CHÚ Ý GẤP</string>
     <string name="items_expiring_soon_label">Món sắp hết hạn</string>
     <string name="immediate_attention_desc">Cần xử lý ngay</string>
+    <string name="stats_title">Bảng điều khiển và thống kê</string>
+    <string name="stats_range_week">Tuần</string>
+    <string name="stats_range_month">Tháng</string>
+    <string name="stats_range_all_time">Tất cả</string>
+    <string name="stats_consumed">Đã dùng</string>
+    <string name="stats_donated">Đã tặng</string>
+    <string name="stats_wasted">Lãng phí</string>
+    <string name="stats_expired">Hết hạn</string>
+    <string name="stats_active_now">Đang có</string>
+    <string name="stats_prevented_waste">Đã tránh lãng phí</string>
+    <string name="stats_waste_prevention_trend">Xu hướng tránh lãng phí</string>
+    <string name="stats_prevented_zero">0% đã tránh</string>
+    <string name="stats_prevented_percent_format">%1$d%% đã tránh</string>
     <string name="total_tracked">Tổng đang theo dõi</string>
     <string name="waste_prevented">Lãng phí đã tránh</string>
     <string name="storage_overview">Tổng quan bảo quản</string>
@@ -180,6 +193,7 @@
     <string name="product_name_hint">VD: Sữa hữu cơ</string>
     <string name="quantity_label">SỐ LƯỢNG</string>
     <string name="quantity_default">1</string>
+    <string name="quantity_invalid">Nhập số lượng lớn hơn 0.</string>
     <string name="manage_label">Quản lý</string>
     <string name="storage_method_label">CÁCH BẢO QUẢN</string>
     <string name="storage_room_temp_upper">NHIỆT ĐỘ\nPHÒNG</string>
@@ -303,8 +317,8 @@
     <string name="signed_in_mode">Đã đăng nhập</string>
     <string name="guest_mode_label">Chế độ khách</string>
     <string name="ai_access_label">Truy cập AI</string>
-    <string name="optional_api_key_hint">Khóa API tùy chọn</string>
-    <string name="optional_local_api_key">Khóa API cục bộ tùy chọn</string>
+    <string name="optional_api_key_hint">Cấu hình khi build</string>
+    <string name="optional_local_api_key">Cloudflare tùy chọn; luôn có dự phòng cục bộ</string>
     <string name="local_data_title">Dữ liệu cục bộ</string>
     <string name="local_data_desc">Kho, bản quét, công thức và nhắc nhở được lưu trong cơ sở dữ liệu của ứng dụng.</string>
     <string name="authentication_label">Xác thực</string>
@@ -368,6 +382,31 @@
     <string name="toast_mark_wasted_format">Đã đánh dấu lãng phí %1$s.</string>
     <string name="toast_mark_donated_format">Đã đánh dấu quyên góp %1$s.</string>
     <string name="note_marked_from_inventory">Được đánh dấu từ kho</string>
+
+    <string name="history_title">Lịch sử</string>
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_consumed">Đã dùng</string>
+    <string name="filter_wasted">Lãng phí</string>
+    <string name="filter_donated">Đã quyên góp</string>
+    <string name="restore_label">Khôi phục</string>
+    <string name="restore_title">Khôi phục sản phẩm?</string>
+    <string name="restore_message_format">Khôi phục %1$s vào kho đang dùng?</string>
+    <string name="restore_confirm">Khôi phục</string>
+    <string name="restored_format">Đã khôi phục %1$s vào kho</string>
+    <string name="history_empty">Chưa có lịch sử</string>
+    <string name="history_empty_desc">Các sản phẩm bạn đánh dấu đã dùng, lãng phí hoặc đã quyên góp sẽ xuất hiện tại đây.</string>
+    <string name="badge_consumed">Đã dùng</string>
+    <string name="badge_wasted">Lãng phí</string>
+    <string name="badge_donated">Đã quyên góp</string>
+    <string name="back">Quay lại</string>
+    <string name="stats_format">Đã dùng: %1$d - Lãng phí: %2$d - Đã quyên góp: %3$d</string>
+    <string name="restore_error">Không thể khôi phục sản phẩm. Vui lòng thử lại.</string>
+    <string name="mark_status_confirm">Xác nhận</string>
+    <string name="mark_status_note_hint">Thêm ghi chú (tùy chọn)</string>
+    <string name="mark_status_snackbar_format">Đã đánh dấu \"%1$s\" là %2$s</string>
+    <string name="mark_undo">Hoàn tác</string>
+    <string name="mark_undone_format">Đã chuyển \"%1$s\" về trạng thái đang dùng</string>
+    <string name="mark_wasted_confirm_text">Sản phẩm này sẽ được đánh dấu là lãng phí.</string>
 
     <!-- Authentication Strings -->
     <string name="sign_out_label">Đăng xuất</string>

@@ -51,19 +51,19 @@
 
                     <!-- Pulse Glow Ring -->
                     <View
-                        android:id="@+id/geminiLivePulseView"
+                        android:id="@+id/voiceAssistantPulseView"
                         android:layout_width="128dp"
                         android:layout_height="128dp"
-                        android:background="@drawable/bg_gemini_pulse"
+                        android:background="@drawable/bg_ai_pulse"
                         android:alpha="0.2" />
 
                     <!-- Main Glass Button -->
                     <FrameLayout
-                        android:id="@+id/geminiLiveButton"
+                        android:id="@+id/voiceAssistantButton"
                         android:layout_width="112dp"
                         android:layout_height="112dp"
                         android:layout_gravity="center"
-                        android:background="@drawable/bg_gemini_button"
+                        android:background="@drawable/bg_ai_button"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
@@ -73,14 +73,14 @@
                             android:layout_width="56dp"
                             android:layout_height="56dp"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_gemini_sparkles"
+                            android:src="@drawable/ic_ai_sparkles"
                             android:importantForAccessibility="no" />
                     </FrameLayout>
                 </FrameLayout>
 
                 <!-- Gradient assistant title -->
                 <TextView
-                    android:id="@+id/geminiLiveTitle"
+                    android:id="@+id/voiceAssistantTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/smart_recipe_assistant"
