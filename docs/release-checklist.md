@@ -22,6 +22,7 @@ Run these before packaging the final APK:
 ```powershell
 .\gradlew.bat test
 .\gradlew.bat :app:assembleDebug
+.\gradlew.bat :app:assembleRelease
 .\gradlew.bat :app:lintDebug
 npm run test:firestore-rules
 ```
@@ -54,6 +55,24 @@ For the cleanest school evidence build, use the placeholder Firebase helper so a
 .\scripts\build-placeholder-debug-apk.ps1
 .\scripts\scan-apk-secrets.ps1
 ```
+
+## Release Signing
+
+Debug APKs are enough for the current school demo only if the instructor accepts them. For a release APK, keep signing credentials out of Git and provide either:
+
+- `release-signing.properties` in the project root, or
+- environment variables named `SMARTEXP_RELEASE_STORE_FILE`, `SMARTEXP_RELEASE_STORE_PASSWORD`, `SMARTEXP_RELEASE_KEY_ALIAS`, and `SMARTEXP_RELEASE_KEY_PASSWORD`.
+
+The properties file uses:
+
+```properties
+STORE_FILE=C:\\path\\to\\smartexp-release.jks
+STORE_PASSWORD=...
+KEY_ALIAS=...
+KEY_PASSWORD=...
+```
+
+When those values are absent, `assembleRelease` produces `app-release-unsigned.apk` for inspection only. Verify a signed artifact with Android SDK `apksigner verify --print-certs`.
 
 ## APK Sanity
 

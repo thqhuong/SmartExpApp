@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
@@ -26,7 +26,10 @@ public class ExampleInstrumentedTest {
         AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));
 
         try (ActivityScenario<InventoryActivity> ignored = ActivityScenario.launch(InventoryActivity.class)) {
-            onView(withText(R.string.inventory_title)).check(matches(isDisplayed()));
+            onView(withId(R.id.searchInput)).check(matches(isDisplayed()));
+            onView(withId(R.id.expirySpinner)).check(matches(isDisplayed()));
+            onView(withId(R.id.storageSpinner)).check(matches(isDisplayed()));
+            onView(withId(R.id.sortSpinner)).check(matches(isDisplayed()));
         }
     }
 }

@@ -13,6 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+release-signing.properties
+local-signing/
+*.jks
+*.keystore
 /.idea/misc.xml
 app/google-services.json
 
