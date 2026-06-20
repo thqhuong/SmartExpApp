@@ -64,6 +64,30 @@ val productParserWorkerUrl = providers.environmentVariable("PRODUCT_PARSER_WORKE
     .orElse(localProperties.getProperty("PRODUCT_PARSER_WORKER_URL", if (aiWorkerUrl.isNotBlank()) aiWorkerUrl else recipeImageWorkerUrl))
     .get()
 
+val releaseSigningProperties = Properties().apply {
+    val file = rootProject.file("release-signing.properties")
+    if (file.exists()) {
+        file.inputStream().use(::load)
+    }
+}
+
+fun releaseSigningValue(name: String): String {
+    return providers.environmentVariable("SMARTEXP_RELEASE_$name")
+        .orElse(releaseSigningProperties.getProperty(name, ""))
+        .get()
+}
+
+val releaseStoreFilePath = releaseSigningValue("STORE_FILE")
+val releaseStorePassword = releaseSigningValue("STORE_PASSWORD")
+val releaseKeyAlias = releaseSigningValue("KEY_ALIAS")
+val releaseKeyPassword = releaseSigningValue("KEY_PASSWORD")
+val hasReleaseSigningConfig = listOf(
+    releaseStoreFilePath,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword
+).all { it.isNotBlank() }
+
 android {
     namespace = "com.example.smartexpapp"
     compileSdk {
@@ -97,8 +121,27 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        if (hasReleaseSigningConfig) {
+            create("release") {
+                val configuredStoreFile = File(releaseStoreFilePath)
+                storeFile = if (configuredStoreFile.isAbsolute) {
+                    configuredStoreFile
+                } else {
+                    rootProject.file(releaseStoreFilePath)
+                }
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfigs.findByName("release")?.let {
+                signingConfig = it
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

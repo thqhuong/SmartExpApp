@@ -40,6 +40,27 @@ With an emulator/device attached:
 .\gradlew.bat connectedDebugAndroidTest
 ```
 
+## Release APK
+
+For a signed release APK, create an ignored `release-signing.properties` file in the project root:
+
+```properties
+STORE_FILE=C:\\path\\to\\smartexp-release.jks
+STORE_PASSWORD=...
+KEY_ALIAS=...
+KEY_PASSWORD=...
+```
+
+Or set equivalent environment variables: `SMARTEXP_RELEASE_STORE_FILE`, `SMARTEXP_RELEASE_STORE_PASSWORD`, `SMARTEXP_RELEASE_KEY_ALIAS`, and `SMARTEXP_RELEASE_KEY_PASSWORD`.
+
+Then run:
+
+```powershell
+.\gradlew.bat :app:assembleRelease
+```
+
+If signing values are absent, Gradle still produces `app-release-unsigned.apk` for inspection, but that file is not installable as a release submission artifact.
+
 ## Demo Flow
 
 1. Launch as guest or local-only user.
