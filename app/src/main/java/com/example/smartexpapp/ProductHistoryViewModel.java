@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.model.ProductStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,16 +38,17 @@ public class ProductHistoryViewModel extends ViewModel {
             int consumed = 0, wasted = 0, donated = 0;
             for (Product p : allProducts) {
                 String status = p.getStatus();
-                if (Product.SYNC_STATUS_LOCAL.equals(status)) continue;
-                if ("CONSUMED".equals(status)) {
+                if (ProductStatus.CONSUMED.equals(status)) {
                     inactive.add(p);
                     consumed++;
-                } else if ("WASTED".equals(status)) {
+                } else if (ProductStatus.WASTED.equals(status)) {
                     inactive.add(p);
                     wasted++;
-                } else if ("DONATED".equals(status)) {
+                } else if (ProductStatus.DONATED.equals(status)) {
                     inactive.add(p);
                     donated++;
+                } else if (ProductStatus.DELETED.equals(status)) {
+                    inactive.add(p);
                 }
             }
             consumedCount.setValue(consumed);
@@ -72,11 +74,11 @@ public class ProductHistoryViewModel extends ViewModel {
             String status = p.getStatus();
             if ("All".equals(currentFilter)) {
                 filtered.add(p);
-            } else if ("CONSUMED".equals(currentFilter) && "CONSUMED".equals(status)) {
+            } else if (ProductStatus.CONSUMED.equals(currentFilter) && ProductStatus.CONSUMED.equals(status)) {
                 filtered.add(p);
-            } else if ("WASTED".equals(currentFilter) && "WASTED".equals(status)) {
+            } else if (ProductStatus.WASTED.equals(currentFilter) && ProductStatus.WASTED.equals(status)) {
                 filtered.add(p);
-            } else if ("DONATED".equals(currentFilter) && "DONATED".equals(status)) {
+            } else if (ProductStatus.DONATED.equals(currentFilter) && ProductStatus.DONATED.equals(status)) {
                 filtered.add(p);
             }
         }

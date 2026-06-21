@@ -433,6 +433,7 @@
     <string name="badge_consumed">Consumed</string>
     <string name="badge_wasted">Wasted</string>
     <string name="badge_donated">Donated</string>
+    <string name="badge_deleted">Deleted</string>
     <string name="back">Back</string>
     <string name="stats_format">Consumed: %1$d  ·  Wasted: %2$d  ·  Donated: %3$d</string>
     <string name="restore_error">Could not restore product. Please try again.</string>

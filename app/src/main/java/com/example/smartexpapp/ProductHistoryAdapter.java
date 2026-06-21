@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.model.ProductStatus;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
@@ -100,12 +101,14 @@ public class ProductHistoryAdapter extends ListAdapter<Product, ProductHistoryAd
 
             String status = product.getStatus();
 
-            if ("CONSUMED".equals(status)) {
+            if (ProductStatus.CONSUMED.equals(status)) {
                 actionInfo.setText(R.string.badge_consumed);
-            } else if ("WASTED".equals(status)) {
+            } else if (ProductStatus.WASTED.equals(status)) {
                 actionInfo.setText(R.string.badge_wasted);
-            } else if ("DONATED".equals(status)) {
+            } else if (ProductStatus.DONATED.equals(status)) {
                 actionInfo.setText(R.string.badge_donated);
+            } else if (ProductStatus.DELETED.equals(status)) {
+                actionInfo.setText(R.string.badge_deleted);
             } else {
                 actionInfo.setText(status);
             }

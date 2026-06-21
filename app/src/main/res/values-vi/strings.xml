@@ -433,6 +433,7 @@
     <string name="badge_consumed">Đã dùng</string>
     <string name="badge_wasted">Lãng phí</string>
     <string name="badge_donated">Đã quyên góp</string>
+    <string name="badge_deleted">Đã xóa</string>
     <string name="back">Quay lại</string>
     <string name="stats_format">Đã dùng: %1$d - Lãng phí: %2$d - Đã quyên góp: %3$d</string>
     <string name="restore_error">Không thể khôi phục sản phẩm. Vui lòng thử lại.</string>
