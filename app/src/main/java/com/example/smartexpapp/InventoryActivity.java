@@ -8,8 +8,10 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -23,18 +25,22 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.smartexpapp.AppContainer;
 import com.example.smartexpapp.data.AuthStateRepository;
+import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.model.ProductStatus;
 import com.example.smartexpapp.notifications.ReminderScheduler;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class InventoryActivity extends BaseActivity {
     private static final String[] STORAGE_KEYS = {
@@ -70,6 +76,11 @@ public class InventoryActivity extends BaseActivity {
     private InventoryViewModel viewModel;
     private View undoBarView;
     private Handler undoHandler;
+
+    private View multiSelectBar;
+    private View searchFilterContainer;
+    private TextView multiSelectTitle;
+    private View multiSelectActions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +120,15 @@ public class InventoryActivity extends BaseActivity {
                 confirmDelete(product);
             }
         });
+        adapter.setOnProductLongClickListener(product -> {
+            enterMultiSelect(product);
+            return true;
+        });
+        adapter.setOnSelectionChangedListener(ids -> {
+            int count = ids.size();
+            multiSelectTitle.setText(getString(R.string.selected_count_format, count));
+            multiSelectActions.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
+        });
         productList.setAdapter(adapter);
 
         emptyState = findViewById(R.id.emptyState);
@@ -126,6 +146,17 @@ public class InventoryActivity extends BaseActivity {
         expiryFilterChevron = findViewById(R.id.expiryFilterChevron);
         storageFilterChevron = findViewById(R.id.storageFilterChevron);
         sortFilterChevron = findViewById(R.id.sortFilterChevron);
+        searchFilterContainer = findViewById(R.id.searchFilterContainer);
+        multiSelectBar = findViewById(R.id.multiSelectBar);
+        multiSelectTitle = findViewById(R.id.multiSelectTitle);
+        multiSelectActions = findViewById(R.id.multiSelectActions);
+
+        findViewById(R.id.btnCloseMultiSelect).setOnClickListener(v -> finishMultiSelect());
+        findViewById(R.id.btnSelectAll).setOnClickListener(v -> adapter.selectAll());
+        findViewById(R.id.btnBatchConsumed).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.CONSUMED));
+        findViewById(R.id.btnBatchWasted).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.WASTED));
+        findViewById(R.id.btnBatchDonated).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.DONATED));
+        findViewById(R.id.btnBatchDelete).setOnClickListener(v -> batchDelete(adapter.getSelectedIds()));
 
         AppContainer appContainer = ((SmartExpApplication) getApplicationContext()).appContainer;
         InventoryViewModelFactory factory = new InventoryViewModelFactory(appContainer.getProductRepository());
@@ -178,6 +209,180 @@ public class InventoryActivity extends BaseActivity {
         viewModel.loadProducts();
     }
 
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View focused = getCurrentFocus();
+            if (focused instanceof EditText) {
+                int[] pos = new int[2];
+                focused.getLocationOnScreen(pos);
+                float x = event.getRawX();
+                float y = event.getRawY();
+                if (x < pos[0] || x > pos[0] + focused.getWidth()
+                        || y < pos[1] || y > pos[1] + focused.getHeight()) {
+                    focused.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (multiSelectBar.getVisibility() == View.VISIBLE) {
+            finishMultiSelect();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    private void enterMultiSelect(Product product) {
+        Set<String> ids = new HashSet<>();
+        ids.add(product.getId());
+        adapter.setSelectedIds(ids);
+        showMultiSelectBar();
+    }
+
+    private void showMultiSelectBar() {
+        searchFilterContainer.setVisibility(View.GONE);
+        multiSelectBar.setVisibility(View.VISIBLE);
+        multiSelectBar.setTranslationY(-multiSelectBar.getHeight());
+        multiSelectBar.setAlpha(0f);
+        multiSelectBar.animate()
+                .translationY(0)
+                .alpha(1f)
+                .setDuration(200)
+                .start();
+    }
+
+    private void finishMultiSelect() {
+        multiSelectBar.animate()
+                .translationY(-multiSelectBar.getHeight())
+                .alpha(0f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    multiSelectBar.setVisibility(View.GONE);
+                    adapter.setSelectedIds(null);
+                    searchFilterContainer.setVisibility(View.VISIBLE);
+                })
+                .start();
+    }
+
+    private void batchMarkStatus(Set<String> ids, String status) {
+        String note = "Batch action from multi-select";
+        String label;
+        int iconRes;
+        int iconBgRes;
+        int iconTintRes;
+        if (ProductStatus.CONSUMED.equals(status)) {
+            label = getString(R.string.action_consumed);
+            iconRes = R.drawable.ic_check_circle;
+            iconBgRes = R.drawable.bg_action_icon_circle;
+            iconTintRes = R.color.smart_primary;
+        } else if (ProductStatus.WASTED.equals(status)) {
+            label = getString(R.string.action_wasted);
+            iconRes = R.drawable.ic_close;
+            iconBgRes = R.drawable.bg_action_icon_circle_delete;
+            iconTintRes = R.color.smart_error;
+        } else {
+            label = getString(R.string.action_donated);
+            iconRes = R.drawable.ic_favorite_filled;
+            iconBgRes = R.drawable.bg_action_icon_circle;
+            iconTintRes = R.color.smart_notification_red;
+        }
+
+        List<Product> affectedProducts = new ArrayList<>();
+        for (Product p : latestProducts) {
+            if (ids.contains(p.getId())) affectedProducts.add(p);
+        }
+
+        String message = getString(R.string.batch_status_format, ids.size()) + " • " + label;
+
+        int[] completed = {0};
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == ids.size()) {
+                    runOnUiThread(() -> {
+                        finishMultiSelect();
+                        viewModel.loadProducts();
+                        showUndoBar(null, iconRes, iconBgRes, iconTintRes, message,
+                                () -> batchUndo(affectedProducts));
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch mark failed", e);
+        for (String id : ids) {
+            if (ProductStatus.CONSUMED.equals(status)) {
+                viewModel.markConsumed(id, note, callback, errorCallback);
+            } else if (ProductStatus.WASTED.equals(status)) {
+                viewModel.markWasted(id, note, callback, errorCallback);
+            } else if (ProductStatus.DONATED.equals(status)) {
+                viewModel.markDonated(id, note, callback, errorCallback);
+            }
+        }
+    }
+
+    private void batchDelete(Set<String> ids) {
+        List<Product> affectedProducts = new ArrayList<>();
+        for (Product p : latestProducts) {
+            if (ids.contains(p.getId())) affectedProducts.add(p);
+        }
+
+        String note = "Batch deleted from inventory";
+        String message = getString(R.string.batch_deleted_format, ids.size());
+
+        int[] completed = {0};
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == ids.size()) {
+                    runOnUiThread(() -> {
+                        finishMultiSelect();
+                        viewModel.loadProducts();
+                        showUndoBar(null,
+                                R.drawable.ic_delete, R.drawable.bg_action_icon_circle_delete,
+                                R.color.smart_error, message,
+                                () -> batchUndo(affectedProducts));
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch delete failed", e);
+        for (String id : ids) {
+            viewModel.softDeleteProduct(id, note, callback, errorCallback);
+        }
+    }
+
+    private void batchUndo(List<Product> products) {
+        int[] completed = {0};
+        int total = products.size();
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == total) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this,
+                                getString(R.string.batch_undone_format, total),
+                                Toast.LENGTH_SHORT).show();
+                        ReminderScheduler.runSoon(this);
+                        viewModel.loadProducts();
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e ->
+                Log.e(TAG, "Batch undo failed", e);
+        for (Product product : products) {
+            viewModel.revertStatus(product.getId(), "Batch undo", callback, errorCallback);
+        }
+    }
+
     private void setupSearch() {
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override
@@ -186,6 +391,7 @@ public class InventoryActivity extends BaseActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                finishMultiSelect();
                 viewModel.setSearchQuery(s.toString());
             }
 
@@ -222,6 +428,7 @@ public class InventoryActivity extends BaseActivity {
                     default: filter = "All"; break;
                 }
                 expiryFilterValue.setText(label);
+                finishMultiSelect();
                 viewModel.setExpiryFilter(filter);
                 toggleDropdown(expiryFilterDropdown, expiryFilterChevron);
             }
@@ -232,6 +439,7 @@ public class InventoryActivity extends BaseActivity {
             public void onSelected(int index, String label) {
                 String storage = (index >= 0 && index < STORAGE_KEYS.length) ? STORAGE_KEYS[index] : "All";
                 storageFilterValue.setText(label);
+                finishMultiSelect();
                 viewModel.setStorageFilter(storage);
                 toggleDropdown(storageFilterDropdown, storageFilterChevron);
             }
@@ -247,6 +455,7 @@ public class InventoryActivity extends BaseActivity {
                     default: sort = "oldest"; break;
                 }
                 sortFilterValue.setText(label);
+                finishMultiSelect();
                 viewModel.setSortOrder(sort);
                 toggleDropdown(sortFilterDropdown, sortFilterChevron);
             }
