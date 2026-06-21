@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.app.AlertDialog;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
@@ -179,19 +180,51 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void showSmartAddTextDialog() {
-        EditText input = new EditText(this);
-        input.setHint(R.string.smart_add_hint);
-        input.setSingleLine(false);
-        int padding = Math.round(16 * getResources().getDisplayMetrics().density);
-        input.setPadding(padding, padding / 2, padding, padding / 2);
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.smart_add_dialog_title)
-                .setMessage(R.string.smart_add_dialog_message)
-                .setView(input)
-                .setPositiveButton(R.string.parse_label, (dialog, which) ->
-                        parseSmartAddDraft(input.getText().toString()))
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_smart_add, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setDimAmount(0.8f);
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
+        EditText input = dialogView.findViewById(R.id.smartAddEditText);
+        TextView charCounter = dialogView.findViewById(R.id.charCounterText);
+        View btnCancel = dialogView.findViewById(R.id.btnCancel);
+        View btnParse = dialogView.findViewById(R.id.btnParse);
+
+        input.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                int length = s.length();
+                charCounter.setText(length + " / 250");
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                if (s.length() > 250) {
+                    s.delete(250, s.length());
+                }
+            }
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnParse.setOnClickListener(v -> {
+            String text = input.getText().toString().trim();
+            if (!text.isEmpty()) {
+                dialog.dismiss();
+                parseSmartAddDraft(text);
+            } else {
+                Toast.makeText(this, R.string.enter_product_name, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
     }
 
     private void parseSmartAddDraft(String input) {
@@ -200,56 +233,167 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void showSmartDraftConfirmation(List<ProductDraft> drafts) {
+        showReviewDraftsDialog(drafts);
+    }
+
+    private void showReviewDraftsDialog(List<ProductDraft> drafts) {
         if (drafts == null || drafts.isEmpty()) {
             Toast.makeText(this, R.string.smart_add_no_details, Toast.LENGTH_SHORT).show();
             return;
         }
-        if (drafts.size() == 1) {
-            showSingleSmartDraftConfirmation(drafts.get(0));
-            return;
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_review_drafts, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setDimAmount(0.8f);
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
         }
 
-        StringBuilder message = new StringBuilder(getString(R.string.smart_add_batch_intro_format, drafts.size()));
-        for (int i = 0; i < drafts.size(); i++) {
-            ProductDraft draft = drafts.get(i);
-            message.append("\n")
-                    .append(i + 1)
-                    .append(". ")
-                    .append(draft.getName())
-                    .append(" - ")
-                    .append(draft.getQuantity())
-                    .append(" ")
-                    .append(draft.getUnit());
-        }
+        TextView badgeItemCount = dialogView.findViewById(R.id.badgeItemCount);
+        TextView rowValueName = dialogView.findViewById(R.id.rowValueName);
+        TextView rowValueQuantity = dialogView.findViewById(R.id.rowValueQuantity);
+        TextView rowValueCategory = dialogView.findViewById(R.id.rowValueCategory);
+        TextView rowValueStorage = dialogView.findViewById(R.id.rowValueStorage);
+        TextView rowValueExpiry = dialogView.findViewById(R.id.rowValueExpiry);
+        TextView sourceInputText = dialogView.findViewById(R.id.sourceInputText);
 
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.smart_add_batch_title)
-                .setMessage(message.toString())
-                .setPositiveButton(R.string.start_review, (dialog, which) -> applySmartDraftBatch(drafts))
-                .setNegativeButton(R.string.cancel, null)
-                .show();
-    }
+        View layoutPagingControls = dialogView.findViewById(R.id.layoutPagingControls);
+        View btnPrev = dialogView.findViewById(R.id.btnPrev);
+        View btnNext = dialogView.findViewById(R.id.btnNext);
 
-    private void showSingleSmartDraftConfirmation(ProductDraft draft) {
-        String expiry = draft.hasExpiryDate()
-                ? new SimpleDateFormat("MMM d, yyyy", Locale.US).format(new java.util.Date(draft.getExpiryDateMillis()))
-                : getString(R.string.not_detected);
-        String message = getString(
-                R.string.smart_add_draft_summary_format,
-                draft.getName(),
-                draft.getQuantity(),
-                draft.getUnit(),
-                draft.getCategory(),
-                draft.getStorage(),
-                expiry,
-                draft.getSourceText()
-        );
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.smart_add_draft_title)
-                .setMessage(message)
-                .setPositiveButton(R.string.fill_form, (dialog, which) -> applySmartDraft(draft))
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        View btnCancel = dialogView.findViewById(R.id.btnReviewCancel);
+        View btnFillForm = dialogView.findViewById(R.id.btnFillForm);
+
+        final int[] currentIndex = {0};
+        final int totalCount = drafts.size();
+
+        Runnable bindDraft = new Runnable() {
+            @Override
+            public void run() {
+                ProductDraft draft = drafts.get(currentIndex[0]);
+
+                badgeItemCount.setText(getString(R.string.smart_add_item_count_format, currentIndex[0] + 1, totalCount));
+
+                if (draft.getName() != null && !draft.getName().trim().isEmpty()) {
+                    rowValueName.setText(draft.getName());
+                    rowValueName.setTextColor(Color.WHITE);
+                    rowValueName.setTypeface(null, android.graphics.Typeface.BOLD);
+                } else {
+                    rowValueName.setText(R.string.not_detected);
+                    rowValueName.setTextColor(Color.parseColor("#8C8C8C"));
+                    rowValueName.setTypeface(null, android.graphics.Typeface.ITALIC);
+                }
+
+                String qtyStr = "";
+                if (draft.getQuantity() != null && !draft.getQuantity().trim().isEmpty()) {
+                    qtyStr = draft.getQuantity();
+                    if (draft.getUnit() != null && !draft.getUnit().trim().isEmpty()) {
+                        qtyStr += " " + draft.getUnit();
+                    }
+                }
+                if (!qtyStr.trim().isEmpty()) {
+                    rowValueQuantity.setText(qtyStr);
+                    rowValueQuantity.setTextColor(Color.WHITE);
+                    rowValueQuantity.setTypeface(null, android.graphics.Typeface.BOLD);
+                } else {
+                    rowValueQuantity.setText(R.string.not_detected);
+                    rowValueQuantity.setTextColor(Color.parseColor("#8C8C8C"));
+                    rowValueQuantity.setTypeface(null, android.graphics.Typeface.ITALIC);
+                }
+
+                if (draft.getCategory() != null && !draft.getCategory().trim().isEmpty()) {
+                    rowValueCategory.setText(draft.getCategory());
+                    rowValueCategory.setTextColor(Color.WHITE);
+                    rowValueCategory.setTypeface(null, android.graphics.Typeface.BOLD);
+                } else {
+                    rowValueCategory.setText(R.string.not_detected);
+                    rowValueCategory.setTextColor(Color.parseColor("#8C8C8C"));
+                    rowValueCategory.setTypeface(null, android.graphics.Typeface.ITALIC);
+                }
+
+                if (draft.getStorage() != null && !draft.getStorage().trim().isEmpty()) {
+                    rowValueStorage.setText(draft.getStorage());
+                    rowValueStorage.setTextColor(Color.WHITE);
+                    rowValueStorage.setTypeface(null, android.graphics.Typeface.BOLD);
+                } else {
+                    rowValueStorage.setText(R.string.not_detected);
+                    rowValueStorage.setTextColor(Color.parseColor("#8C8C8C"));
+                    rowValueStorage.setTypeface(null, android.graphics.Typeface.ITALIC);
+                }
+
+                if (draft.hasExpiryDate()) {
+                    String expiry = new SimpleDateFormat("MMM d, yyyy", Locale.US).format(new java.util.Date(draft.getExpiryDateMillis()));
+                    rowValueExpiry.setText(expiry);
+                    rowValueExpiry.setTextColor(Color.WHITE);
+                    rowValueExpiry.setTypeface(null, android.graphics.Typeface.BOLD);
+                } else {
+                    rowValueExpiry.setText(R.string.not_detected);
+                    rowValueExpiry.setTextColor(Color.parseColor("#8C8C8C"));
+                    rowValueExpiry.setTypeface(null, android.graphics.Typeface.ITALIC);
+                }
+
+                String src = draft.getSourceText();
+                if (src == null) src = "";
+                src = src.trim();
+                if (!src.startsWith("\"")) {
+                    src = "\"" + src + "\"";
+                }
+                sourceInputText.setText(src);
+
+                if (totalCount <= 1) {
+                    layoutPagingControls.setVisibility(View.GONE);
+                } else {
+                    layoutPagingControls.setVisibility(View.VISIBLE);
+
+                    if (currentIndex[0] == 0) {
+                        btnPrev.setEnabled(false);
+                        btnPrev.setAlpha(0.3f);
+                    } else {
+                        btnPrev.setEnabled(true);
+                        btnPrev.setAlpha(1.0f);
+                    }
+
+                    if (currentIndex[0] == totalCount - 1) {
+                        btnNext.setEnabled(false);
+                        btnNext.setAlpha(0.3f);
+                    } else {
+                        btnNext.setEnabled(true);
+                        btnNext.setAlpha(1.0f);
+                    }
+                }
+            }
+        };
+
+        btnPrev.setOnClickListener(v -> {
+            if (currentIndex[0] > 0) {
+                currentIndex[0]--;
+                bindDraft.run();
+            }
+        });
+
+        btnNext.setOnClickListener(v -> {
+            if (currentIndex[0] < totalCount - 1) {
+                currentIndex[0]++;
+                bindDraft.run();
+            }
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnFillForm.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (totalCount == 1) {
+                applySmartDraft(drafts.get(0));
+            } else {
+                applySmartDraftBatch(drafts);
+            }
+        });
+
+        bindDraft.run();
+        dialog.show();
     }
 
     private void applySmartDraft(ProductDraft draft) {

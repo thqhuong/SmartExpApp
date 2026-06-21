@@ -11,6 +11,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.graphics.Color;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
@@ -218,53 +221,105 @@ public class SettingsActivity extends BaseActivity {
             }
 
             final int[] selected = {checked};
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.default_storage_title)
-                    .setSingleChoiceItems(labels, checked, (dialog, which) -> selected[0] = which)
-                    .setPositiveButton(R.string.save_label, (dialog, which) ->
-                            SettingsRepository.setDefaultStorageLocationAsync(
-                                    this,
-                                    ids[selected[0]],
-                                    updated -> Toast.makeText(this, getString(R.string.default_storage_saved_format, updated.getDefaultStorageName()), Toast.LENGTH_SHORT).show(),
-                                    error -> Toast.makeText(this, R.string.default_storage_save_error, Toast.LENGTH_SHORT).show()
-                            ))
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_single_choice, null);
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                    .setView(dialogView)
+                    .create();
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setDimAmount(0.8f);
+                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            }
+
+            TextView title = dialogView.findViewById(R.id.dialogTitle);
+            title.setText(R.string.default_storage_title);
+
+            RadioGroup radioGroup = dialogView.findViewById(R.id.dialogRadioGroup);
+            radioGroup.removeAllViews();
+            for (int i = 0; i < labels.length; i++) {
+                RadioButton radioButton = new RadioButton(this);
+                radioButton.setText(labels[i]);
+                radioButton.setId(i);
+                radioButton.setTextColor(Color.WHITE);
+                radioButton.setTextSize(16);
+                radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12));
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    radioButton.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8C00")));
+                }
+                radioGroup.addView(radioButton);
+                if (i == checked) {
+                    radioGroup.check(i);
+                }
+            }
+
+            radioGroup.setOnCheckedChangeListener((group, checkedId) -> selected[0] = checkedId);
+
+            dialogView.findViewById(R.id.btnNegative).setOnClickListener(v -> dialog.dismiss());
+            dialogView.findViewById(R.id.btnPositive).setOnClickListener(v -> {
+                dialog.dismiss();
+                SettingsRepository.setDefaultStorageLocationAsync(
+                        this,
+                        ids[selected[0]],
+                        updated -> Toast.makeText(this, getString(R.string.default_storage_saved_format, updated.getDefaultStorageName()), Toast.LENGTH_SHORT).show(),
+                        error -> Toast.makeText(this, R.string.default_storage_save_error, Toast.LENGTH_SHORT).show()
+                );
+            });
+
+            dialog.show();
         }, error -> Toast.makeText(this, R.string.default_storage_load_error, Toast.LENGTH_SHORT).show());
     }
 
     private void showDietaryPreferencesDialog() {
         SettingsRepository.getSettingsAsync(this, settings -> {
-            EditText input = new EditText(this);
-            input.setSingleLine(false);
-            input.setMinLines(2);
-            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_text_input, null);
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                    .setView(dialogView)
+                    .create();
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setDimAmount(0.8f);
+                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            }
+
+            TextView title = dialogView.findViewById(R.id.dialogTitle);
+            title.setText(R.string.settings_dietary_title);
+
+            TextView message = dialogView.findViewById(R.id.dialogMessage);
+            message.setVisibility(View.VISIBLE);
+            message.setText(R.string.dietary_preferences_message);
+
+            EditText input = dialogView.findViewById(R.id.dialogEditText);
             input.setHint(R.string.dietary_preferences_hint);
             input.setText(settings.getDietaryPreferences());
-            input.setSelectAllOnFocus(false);
-            int padding = (int) (16 * getResources().getDisplayMetrics().density);
-            input.setPadding(padding, padding / 2, padding, padding / 2);
 
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.settings_dietary_title)
-                    .setMessage(R.string.dietary_preferences_message)
-                    .setView(input)
-                    .setPositiveButton(R.string.save_label, (dialog, which) ->
-                            SettingsRepository.setDietaryPreferencesAsync(
-                                    this,
-                                    input.getText().toString(),
-                                    updated -> Toast.makeText(this, R.string.dietary_preferences_saved, Toast.LENGTH_SHORT).show(),
-                                    error -> Toast.makeText(this, R.string.dietary_preferences_save_error, Toast.LENGTH_SHORT).show()
-                            ))
-                    .setNeutralButton(R.string.clear_label, (dialog, which) ->
-                            SettingsRepository.setDietaryPreferencesAsync(
-                                    this,
-                                    "",
-                                    updated -> Toast.makeText(this, R.string.dietary_preferences_cleared, Toast.LENGTH_SHORT).show(),
-                                    error -> Toast.makeText(this, R.string.dietary_preferences_clear_error, Toast.LENGTH_SHORT).show()
-                            ))
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
+            TextView positiveText = dialogView.findViewById(R.id.btnPositiveText);
+            positiveText.setText(R.string.save_label);
+
+            TextView btnNeutral = dialogView.findViewById(R.id.btnNeutral);
+            btnNeutral.setVisibility(View.VISIBLE);
+            btnNeutral.setText(R.string.clear_label);
+            btnNeutral.setOnClickListener(v -> {
+                dialog.dismiss();
+                SettingsRepository.setDietaryPreferencesAsync(
+                        this,
+                        "",
+                        updated -> Toast.makeText(this, R.string.dietary_preferences_cleared, Toast.LENGTH_SHORT).show(),
+                        error -> Toast.makeText(this, R.string.dietary_preferences_clear_error, Toast.LENGTH_SHORT).show()
+                );
+            });
+
+            dialogView.findViewById(R.id.btnNegative).setOnClickListener(v -> dialog.dismiss());
+            dialogView.findViewById(R.id.btnPositive).setOnClickListener(v -> {
+                dialog.dismiss();
+                SettingsRepository.setDietaryPreferencesAsync(
+                        this,
+                        input.getText().toString(),
+                        updated -> Toast.makeText(this, R.string.dietary_preferences_saved, Toast.LENGTH_SHORT).show(),
+                        error -> Toast.makeText(this, R.string.dietary_preferences_save_error, Toast.LENGTH_SHORT).show()
+                );
+            });
+
+            dialog.show();
         }, error -> Toast.makeText(this, R.string.dietary_preferences_load_error, Toast.LENGTH_SHORT).show());
     }
 
@@ -279,23 +334,55 @@ public class SettingsActivity extends BaseActivity {
             int checked = "vi".equals(settings.getLanguageTag()) ? 1 : 0;
             final int[] selected = {checked};
 
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.settings_language_title)
-                    .setSingleChoiceItems(labels, checked, (dialog, which) -> selected[0] = which)
-                    .setPositiveButton(R.string.save_label, (dialog, which) -> {
-                        String languageTag = tags[selected[0]];
-                        SettingsRepository.setLanguageTagAsync(
-                                this,
-                                languageTag,
-                                updated -> {
-                                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(updated.getLanguageTag()));
-                                    Toast.makeText(this, R.string.language_saved, Toast.LENGTH_SHORT).show();
-                                },
-                                error -> Toast.makeText(this, R.string.language_save_error, Toast.LENGTH_SHORT).show()
-                        );
-                    })
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_single_choice, null);
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                    .setView(dialogView)
+                    .create();
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setDimAmount(0.8f);
+                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            }
+
+            TextView title = dialogView.findViewById(R.id.dialogTitle);
+            title.setText(R.string.settings_language_title);
+
+            RadioGroup radioGroup = dialogView.findViewById(R.id.dialogRadioGroup);
+            radioGroup.removeAllViews();
+            for (int i = 0; i < labels.length; i++) {
+                RadioButton radioButton = new RadioButton(this);
+                radioButton.setText(labels[i]);
+                radioButton.setId(i);
+                radioButton.setTextColor(Color.WHITE);
+                radioButton.setTextSize(16);
+                radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12));
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    radioButton.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8C00")));
+                }
+                radioGroup.addView(radioButton);
+                if (i == checked) {
+                    radioGroup.check(i);
+                }
+            }
+
+            radioGroup.setOnCheckedChangeListener((group, checkedId) -> selected[0] = checkedId);
+
+            dialogView.findViewById(R.id.btnNegative).setOnClickListener(v -> dialog.dismiss());
+            dialogView.findViewById(R.id.btnPositive).setOnClickListener(v -> {
+                dialog.dismiss();
+                String languageTag = tags[selected[0]];
+                SettingsRepository.setLanguageTagAsync(
+                        this,
+                        languageTag,
+                        updated -> {
+                            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(updated.getLanguageTag()));
+                            Toast.makeText(this, R.string.language_saved, Toast.LENGTH_SHORT).show();
+                        },
+                        error -> Toast.makeText(this, R.string.language_save_error, Toast.LENGTH_SHORT).show()
+                );
+            });
+
+            dialog.show();
         }, error -> Toast.makeText(this, R.string.language_load_error, Toast.LENGTH_SHORT).show());
     }
 }

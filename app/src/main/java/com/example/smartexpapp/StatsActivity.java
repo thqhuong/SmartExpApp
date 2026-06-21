@@ -62,8 +62,8 @@ public class StatsActivity extends BaseActivity {
             ((TextView) findViewById(R.id.consumedCount)).setText(String.valueOf(snapshot.getConsumedActionCount()));
             ((TextView) findViewById(R.id.wastedCount)).setText(String.valueOf(snapshot.getWastedActionCount()));
             ((TextView) findViewById(R.id.donatedCount)).setText(String.valueOf(snapshot.getDonatedActionCount()));
-            ((TextView) findViewById(R.id.expiredActionCount))
-                    .setText(String.valueOf(snapshot.getExpiredActionCount()));
+            ((TextView) findViewById(R.id.expiredCount))
+                    .setText(String.valueOf(snapshot.getExpiredCount()));
             ((TextView) findViewById(R.id.activeCount)).setText(String.valueOf(snapshot.getActiveCount()));
             ((TextView) findViewById(R.id.preventedWasteCount))
                     .setText(String.valueOf(snapshot.getPreventedWasteCount()));
@@ -89,7 +89,7 @@ public class StatsActivity extends BaseActivity {
             ((TextView) findViewById(R.id.consumedCount)).setText("0");
             ((TextView) findViewById(R.id.wastedCount)).setText("0");
             ((TextView) findViewById(R.id.donatedCount)).setText("0");
-            ((TextView) findViewById(R.id.expiredActionCount)).setText("0");
+            ((TextView) findViewById(R.id.expiredCount)).setText("0");
             ((TextView) findViewById(R.id.activeCount)).setText("0");
             ((TextView) findViewById(R.id.preventedWasteCount)).setText("0");
             ((TextView) findViewById(R.id.trendLabel))

@@ -93,7 +93,7 @@ public class ProductHistoryAdapter extends ListAdapter<Product, ProductHistoryAd
                 ViewUtils.setIcon(productIcon, product.getIconRes(), tintColor);
             }
 
-            expiryStatus.setText(product.getExpiryStatus());
+            expiryStatus.setText(product.getExpiryStatus(itemView.getContext()));
 
             int progress = product.getExpiryProgress();
             expiryProgress.setProgress(progress);
@@ -101,11 +101,11 @@ public class ProductHistoryAdapter extends ListAdapter<Product, ProductHistoryAd
             String status = product.getStatus();
 
             if ("CONSUMED".equals(status)) {
-                actionInfo.setText("Consumed");
+                actionInfo.setText(R.string.badge_consumed);
             } else if ("WASTED".equals(status)) {
-                actionInfo.setText("Wasted");
+                actionInfo.setText(R.string.badge_wasted);
             } else if ("DONATED".equals(status)) {
-                actionInfo.setText("Donated");
+                actionInfo.setText(R.string.badge_donated);
             } else {
                 actionInfo.setText(status);
             }

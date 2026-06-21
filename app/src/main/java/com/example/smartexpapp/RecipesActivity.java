@@ -198,17 +198,33 @@ public class RecipesActivity extends BaseActivity {
     }
 
     private void showTypedPromptDialog() {
-        EditText input = new EditText(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_text_input, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setDimAmount(0.8f);
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView title = dialogView.findViewById(R.id.dialogTitle);
+        title.setText(R.string.ask_agent_title);
+
+        EditText input = dialogView.findViewById(R.id.dialogEditText);
         input.setHint(R.string.ask_agent_hint);
-        input.setSingleLine(false);
-        int padding = Math.round(16 * getResources().getDisplayMetrics().density);
-        input.setPadding(padding, padding / 2, padding, padding / 2);
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.ask_agent_title)
-                .setView(input)
-                .setPositiveButton(R.string.ask_label, (dialog, which) -> askAgent(input.getText().toString()))
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+
+        TextView positiveText = dialogView.findViewById(R.id.btnPositiveText);
+        positiveText.setText(R.string.ask_label);
+
+        dialogView.findViewById(R.id.btnNegative).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btnPositive).setOnClickListener(v -> {
+            String text = input.getText().toString().trim();
+            dialog.dismiss();
+            askAgent(text);
+        });
+
+        dialog.show();
     }
 
     private void askAgent(String prompt) {

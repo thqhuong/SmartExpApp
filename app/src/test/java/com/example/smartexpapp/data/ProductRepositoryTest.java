@@ -310,6 +310,34 @@ public class ProductRepositoryTest {
     }
 
     @Test
+    public void statsSnapshotForSignedInUserCountsExpiredActiveProductsSeparatelyFromExpiredActions() {
+        ProductSyncRepository.setTestSyncAvailableOverride(false);
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("email-uid", "Chef", "chef@smartexp.com")
+        );
+        for (int i = 0; i < 8; i++) {
+            repository.addProduct(product("email-expired-" + i, "Expired Item " + i, "Pantry",
+                    LocalDataContract.STORAGE_ROOM_TEMP_NAME, -1 - i));
+        }
+
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("google-uid", "Google User", "google@example.com")
+        );
+        repository.addProduct(product("google-expired", "Other Owner Expired", "Pantry",
+                LocalDataContract.STORAGE_ROOM_TEMP_NAME, -1));
+
+        AuthStateRepository.setTestAuthStateOverride(
+                AuthStateRepository.AuthState.signedIn("email-uid", "Chef", "chef@smartexp.com")
+        );
+        ProductRepository.StatsSnapshot allTime = repository.getStatsSnapshot(0L);
+        ProductRepository.StatsSnapshot future = repository.getStatsSnapshot(System.currentTimeMillis() + 1000L);
+
+        assertEquals(8, allTime.getExpiredCount());
+        assertEquals(0, allTime.getExpiredActionCount());
+        assertEquals(8, future.getExpiredCount());
+    }
+
+    @Test
     public void signedInUsersOnlySeeTheirOwnProducts() {
         ProductRepository.ensureLocalDefaults(database);
         AuthStateRepository.setTestAuthStateOverride(AuthStateRepository.AuthState.guest(true));

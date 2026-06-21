@@ -214,6 +214,14 @@
     <string name="smart_add_batch_title">Xem lại loạt Thêm thông minh</string>
     <string name="smart_add_batch_intro_format">Đã phát hiện %1$d món. Bạn sẽ xem lại và lưu từng món trước khi thêm.\n</string>
     <string name="not_detected">Không phát hiện</string>
+    <string name="smart_add_ai_ready">AI sẵn sàng phân tích</string>
+    <string name="smart_add_source_input">NGUỒN NHẬP</string>
+    <string name="smart_add_name_label">TÊN</string>
+    <string name="smart_add_quantity_label">SỐ LƯỢNG</string>
+    <string name="smart_add_category_label">DANH MỤC</string>
+    <string name="smart_add_storage_label">BẢO QUẢN</string>
+    <string name="smart_add_expiry_label">HẠN DÙNG</string>
+    <string name="smart_add_item_count_format">Món %1$d / %2$d</string>
     <string name="smart_add_draft_summary_format">Tên: %1$s\nSố lượng: %2$s %3$s\nDanh mục: %4$s\nBảo quản: %5$s\nHết hạn: %6$s\n\nNguồn: %7$s</string>
     <string name="ocr_draft_summary_format">Tên: %1$s\nSố lượng: %2$s %3$s\nDanh mục: %4$s\nBảo quản: %5$s</string>
     <string name="start_review">Bắt đầu xem lại</string>

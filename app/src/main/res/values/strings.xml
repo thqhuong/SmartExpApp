@@ -215,6 +215,14 @@
     <string name="smart_add_batch_title">Review Smart Add Batch</string>
     <string name="smart_add_batch_intro_format">Detected %1$d items. You will review and save each one before it is added.\n</string>
     <string name="not_detected">Not detected</string>
+    <string name="smart_add_ai_ready">AI ready to parse</string>
+    <string name="smart_add_source_input">SOURCE INPUT</string>
+    <string name="smart_add_name_label">NAME</string>
+    <string name="smart_add_quantity_label">QUANTITY</string>
+    <string name="smart_add_category_label">CATEGORY</string>
+    <string name="smart_add_storage_label">STORAGE</string>
+    <string name="smart_add_expiry_label">EXPIRY</string>
+    <string name="smart_add_item_count_format">Item %1$d of %2$d</string>
     <string name="smart_add_draft_summary_format">Name: %1$s\nQuantity: %2$s %3$s\nCategory: %4$s\nStorage: %5$s\nExpiry: %6$s\n\nSource: %7$s</string>
     <string name="ocr_draft_summary_format">Name: %1$s\nQuantity: %2$s %3$s\nCategory: %4$s\nStorage: %5$s</string>
     <string name="start_review">Start Review</string>
@@ -388,7 +396,7 @@
     <string name="filter_consumed">Consumed</string>
     <string name="filter_wasted">Wasted</string>
     <string name="filter_donated">Donated</string>
-    <string name="restore_label">Khôi phục</string>
+    <string name="restore_label">Restore</string>
     <string name="restore_title">Restore product?</string>
     <string name="restore_message_format">Restore %1$s to active inventory?</string>
     <string name="restore_confirm">Restore</string>
