@@ -440,6 +440,7 @@
     <string name="mark_status_snackbar_format">Marked \"%1$s\" as %2$s</string>
     <string name="mark_undo">Undo</string>
     <string name="mark_undone_format">Reverted \"%1$s\" back to active</string>
+    <string name="undo_delete_format">Deleted %1$s</string>
     <string name="mark_wasted_confirm_text">This will mark this product as wasted.</string>
 
     <!-- Authentication Strings -->
@@ -464,5 +465,17 @@
     <string name="forgot_password_email_empty">Please enter your email address first.</string>
     <string name="signing_in_progress">Signing in...</string>
     <string name="registering_in_progress">Registering...</string>
+    <string name="action_select">Select</string>
+    <string name="action_select_all">Select all</string>
+    <string name="action_consumed">Consumed</string>
+    <string name="action_wasted">Wasted</string>
+    <string name="action_donated">Donated</string>
+    <string name="selected_count_format">Đã chọn %1$d</string>
+    <string name="batch_consumed_format">Đã đánh dấu %1$d sản phẩm đã dùng</string>
+    <string name="batch_wasted_format">Đã đánh dấu %1$d sản phẩm bỏ đi</string>
+    <string name="batch_donated_format">Đã đánh dấu %1$d sản phẩm đã tặng</string>
+    <string name="batch_deleted_format">Đã xóa %1$d sản phẩm</string>
+    <string name="batch_status_format">Đã cập nhật %1$d sản phẩm</string>
+    <string name="batch_undone_format">Đã hoàn tác %1$d sản phẩm</string>
     <string name="signIn_btn_label">Sign In</string>
 </resources>

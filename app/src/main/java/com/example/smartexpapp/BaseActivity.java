@@ -83,6 +83,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, SettingsActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
 
@@ -133,6 +134,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, InventoryActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
 
@@ -223,7 +225,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             Intent intent = new Intent(this, target);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
-            overridePendingTransition(0, 0);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             finish();
         });
     }

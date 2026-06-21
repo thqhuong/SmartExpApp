@@ -2,18 +2,21 @@ package com.example.smartexpapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,18 +25,22 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.smartexpapp.AppContainer;
 import com.example.smartexpapp.data.AuthStateRepository;
+import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.model.ProductStatus;
 import com.example.smartexpapp.notifications.ReminderScheduler;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class InventoryActivity extends BaseActivity {
     private static final String[] STORAGE_KEYS = {
@@ -55,12 +62,25 @@ public class InventoryActivity extends BaseActivity {
     private TextView errorState;
     private ProgressBar loadingIndicator;
     private EditText searchInput;
-    private Spinner expirySpinner;
-    private Spinner storageSpinner;
-    private Spinner sortSpinner;
+    private TextView expiryFilterValue;
+    private TextView storageFilterValue;
+    private TextView sortFilterValue;
+    private LinearLayout expiryFilterDropdown;
+    private LinearLayout storageFilterDropdown;
+    private LinearLayout sortFilterDropdown;
+    private ImageView expiryFilterChevron;
+    private ImageView storageFilterChevron;
+    private ImageView sortFilterChevron;
 
     private List<Product> latestProducts = new ArrayList<>();
     private InventoryViewModel viewModel;
+    private View undoBarView;
+    private Handler undoHandler;
+
+    private View multiSelectBar;
+    private View searchFilterContainer;
+    private TextView multiSelectTitle;
+    private View multiSelectActions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +120,15 @@ public class InventoryActivity extends BaseActivity {
                 confirmDelete(product);
             }
         });
+        adapter.setOnProductLongClickListener(product -> {
+            enterMultiSelect(product);
+            return true;
+        });
+        adapter.setOnSelectionChangedListener(ids -> {
+            int count = ids.size();
+            multiSelectTitle.setText(getString(R.string.selected_count_format, count));
+            multiSelectActions.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
+        });
         productList.setAdapter(adapter);
 
         emptyState = findViewById(R.id.emptyState);
@@ -108,16 +137,33 @@ public class InventoryActivity extends BaseActivity {
         errorState = findViewById(R.id.errorState);
         loadingIndicator = findViewById(R.id.loadingIndicator);
         searchInput = findViewById(R.id.searchInput);
-        expirySpinner = findViewById(R.id.expirySpinner);
-        storageSpinner = findViewById(R.id.storageSpinner);
-        sortSpinner = findViewById(R.id.sortSpinner);
+        expiryFilterValue = findViewById(R.id.expiryFilterValue);
+        storageFilterValue = findViewById(R.id.storageFilterValue);
+        sortFilterValue = findViewById(R.id.sortFilterValue);
+        expiryFilterDropdown = findViewById(R.id.expiryFilterDropdown);
+        storageFilterDropdown = findViewById(R.id.storageFilterDropdown);
+        sortFilterDropdown = findViewById(R.id.sortFilterDropdown);
+        expiryFilterChevron = findViewById(R.id.expiryFilterChevron);
+        storageFilterChevron = findViewById(R.id.storageFilterChevron);
+        sortFilterChevron = findViewById(R.id.sortFilterChevron);
+        searchFilterContainer = findViewById(R.id.searchFilterContainer);
+        multiSelectBar = findViewById(R.id.multiSelectBar);
+        multiSelectTitle = findViewById(R.id.multiSelectTitle);
+        multiSelectActions = findViewById(R.id.multiSelectActions);
+
+        findViewById(R.id.btnCloseMultiSelect).setOnClickListener(v -> finishMultiSelect());
+        findViewById(R.id.btnSelectAll).setOnClickListener(v -> adapter.selectAll());
+        findViewById(R.id.btnBatchConsumed).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.CONSUMED));
+        findViewById(R.id.btnBatchWasted).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.WASTED));
+        findViewById(R.id.btnBatchDonated).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.DONATED));
+        findViewById(R.id.btnBatchDelete).setOnClickListener(v -> batchDelete(adapter.getSelectedIds()));
 
         AppContainer appContainer = ((SmartExpApplication) getApplicationContext()).appContainer;
         InventoryViewModelFactory factory = new InventoryViewModelFactory(appContainer.getProductRepository());
         viewModel = new ViewModelProvider(this, factory).get(InventoryViewModel.class);
 
         setupSearch();
-        setupSpinners();
+        setupFilters();
         applyLaunchFilter(getIntent());
 
         setupObservers();
@@ -163,6 +209,180 @@ public class InventoryActivity extends BaseActivity {
         viewModel.loadProducts();
     }
 
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View focused = getCurrentFocus();
+            if (focused instanceof EditText) {
+                int[] pos = new int[2];
+                focused.getLocationOnScreen(pos);
+                float x = event.getRawX();
+                float y = event.getRawY();
+                if (x < pos[0] || x > pos[0] + focused.getWidth()
+                        || y < pos[1] || y > pos[1] + focused.getHeight()) {
+                    focused.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (multiSelectBar.getVisibility() == View.VISIBLE) {
+            finishMultiSelect();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    private void enterMultiSelect(Product product) {
+        Set<String> ids = new HashSet<>();
+        ids.add(product.getId());
+        adapter.setSelectedIds(ids);
+        showMultiSelectBar();
+    }
+
+    private void showMultiSelectBar() {
+        searchFilterContainer.setVisibility(View.GONE);
+        multiSelectBar.setVisibility(View.VISIBLE);
+        multiSelectBar.setTranslationY(-multiSelectBar.getHeight());
+        multiSelectBar.setAlpha(0f);
+        multiSelectBar.animate()
+                .translationY(0)
+                .alpha(1f)
+                .setDuration(200)
+                .start();
+    }
+
+    private void finishMultiSelect() {
+        multiSelectBar.animate()
+                .translationY(-multiSelectBar.getHeight())
+                .alpha(0f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    multiSelectBar.setVisibility(View.GONE);
+                    adapter.setSelectedIds(null);
+                    searchFilterContainer.setVisibility(View.VISIBLE);
+                })
+                .start();
+    }
+
+    private void batchMarkStatus(Set<String> ids, String status) {
+        String note = "Batch action from multi-select";
+        String label;
+        int iconRes;
+        int iconBgRes;
+        int iconTintRes;
+        if (ProductStatus.CONSUMED.equals(status)) {
+            label = getString(R.string.action_consumed);
+            iconRes = R.drawable.ic_check_circle;
+            iconBgRes = R.drawable.bg_action_icon_circle;
+            iconTintRes = R.color.smart_primary;
+        } else if (ProductStatus.WASTED.equals(status)) {
+            label = getString(R.string.action_wasted);
+            iconRes = R.drawable.ic_close;
+            iconBgRes = R.drawable.bg_action_icon_circle_delete;
+            iconTintRes = R.color.smart_error;
+        } else {
+            label = getString(R.string.action_donated);
+            iconRes = R.drawable.ic_favorite_filled;
+            iconBgRes = R.drawable.bg_action_icon_circle;
+            iconTintRes = R.color.smart_notification_red;
+        }
+
+        List<Product> affectedProducts = new ArrayList<>();
+        for (Product p : latestProducts) {
+            if (ids.contains(p.getId())) affectedProducts.add(p);
+        }
+
+        String message = getString(R.string.batch_status_format, ids.size()) + " • " + label;
+
+        int[] completed = {0};
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == ids.size()) {
+                    runOnUiThread(() -> {
+                        finishMultiSelect();
+                        viewModel.loadProducts();
+                        showUndoBar(null, iconRes, iconBgRes, iconTintRes, message,
+                                () -> batchUndo(affectedProducts));
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch mark failed", e);
+        for (String id : ids) {
+            if (ProductStatus.CONSUMED.equals(status)) {
+                viewModel.markConsumed(id, note, callback, errorCallback);
+            } else if (ProductStatus.WASTED.equals(status)) {
+                viewModel.markWasted(id, note, callback, errorCallback);
+            } else if (ProductStatus.DONATED.equals(status)) {
+                viewModel.markDonated(id, note, callback, errorCallback);
+            }
+        }
+    }
+
+    private void batchDelete(Set<String> ids) {
+        List<Product> affectedProducts = new ArrayList<>();
+        for (Product p : latestProducts) {
+            if (ids.contains(p.getId())) affectedProducts.add(p);
+        }
+
+        String note = "Batch deleted from inventory";
+        String message = getString(R.string.batch_deleted_format, ids.size());
+
+        int[] completed = {0};
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == ids.size()) {
+                    runOnUiThread(() -> {
+                        finishMultiSelect();
+                        viewModel.loadProducts();
+                        showUndoBar(null,
+                                R.drawable.ic_delete, R.drawable.bg_action_icon_circle_delete,
+                                R.color.smart_error, message,
+                                () -> batchUndo(affectedProducts));
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch delete failed", e);
+        for (String id : ids) {
+            viewModel.softDeleteProduct(id, note, callback, errorCallback);
+        }
+    }
+
+    private void batchUndo(List<Product> products) {
+        int[] completed = {0};
+        int total = products.size();
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == total) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this,
+                                getString(R.string.batch_undone_format, total),
+                                Toast.LENGTH_SHORT).show();
+                        ReminderScheduler.runSoon(this);
+                        viewModel.loadProducts();
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e ->
+                Log.e(TAG, "Batch undo failed", e);
+        for (Product product : products) {
+            viewModel.revertStatus(product.getId(), "Batch undo", callback, errorCallback);
+        }
+    }
+
     private void setupSearch() {
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override
@@ -171,6 +391,7 @@ public class InventoryActivity extends BaseActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                finishMultiSelect();
                 viewModel.setSearchQuery(s.toString());
             }
 
@@ -180,77 +401,141 @@ public class InventoryActivity extends BaseActivity {
         });
     }
 
-    private void setupSpinners() {
-        ArrayAdapter<CharSequence> expiryAdapter = ArrayAdapter.createFromResource(this,
-                R.array.expiry_filter_options, android.R.layout.simple_spinner_item);
-        expiryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        expirySpinner.setAdapter(expiryAdapter);
-        expirySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+    private void setupFilters() {
+        findViewById(R.id.expiryFilterRow).setOnClickListener(v -> {
+            closeDropdown(storageFilterDropdown, storageFilterChevron);
+            closeDropdown(sortFilterDropdown, sortFilterChevron);
+            toggleDropdown(expiryFilterDropdown, expiryFilterChevron);
+        });
+        findViewById(R.id.storageFilterRow).setOnClickListener(v -> {
+            closeDropdown(expiryFilterDropdown, expiryFilterChevron);
+            closeDropdown(sortFilterDropdown, sortFilterChevron);
+            toggleDropdown(storageFilterDropdown, storageFilterChevron);
+        });
+        findViewById(R.id.sortFilterRow).setOnClickListener(v -> {
+            closeDropdown(expiryFilterDropdown, expiryFilterChevron);
+            closeDropdown(storageFilterDropdown, storageFilterChevron);
+            toggleDropdown(sortFilterDropdown, sortFilterChevron);
+        });
+
+        populateDropdown(expiryFilterDropdown, R.array.expiry_filter_options, new DropdownCallback() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            public void onSelected(int index, String label) {
                 String filter;
-                switch (position) {
-                    case 1:
-                        filter = "StillGood";
-                        break;
-                    case 2:
-                        filter = "Expired";
-                        break;
-                    default:
-                        filter = "All";
-                        break;
+                switch (index) {
+                    case 1: filter = "StillGood"; break;
+                    case 2: filter = "Expired"; break;
+                    default: filter = "All"; break;
                 }
+                expiryFilterValue.setText(label);
+                finishMultiSelect();
                 viewModel.setExpiryFilter(filter);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+                toggleDropdown(expiryFilterDropdown, expiryFilterChevron);
             }
         });
 
-        ArrayAdapter<CharSequence> storageAdapter = ArrayAdapter.createFromResource(this,
-                R.array.storage_filter_options, android.R.layout.simple_spinner_item);
-        storageAdapter        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        storageSpinner.setAdapter(storageAdapter);
-        storageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        populateDropdown(storageFilterDropdown, R.array.storage_filter_options, new DropdownCallback() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String storage = (position >= 0 && position < STORAGE_KEYS.length) ? STORAGE_KEYS[position] : "All";
+            public void onSelected(int index, String label) {
+                String storage = (index >= 0 && index < STORAGE_KEYS.length) ? STORAGE_KEYS[index] : "All";
+                storageFilterValue.setText(label);
+                finishMultiSelect();
                 viewModel.setStorageFilter(storage);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                viewModel.setStorageFilter("All");
+                toggleDropdown(storageFilterDropdown, storageFilterChevron);
             }
         });
 
-        ArrayAdapter<CharSequence> sortAdapter = ArrayAdapter.createFromResource(this,
-                R.array.sort_options, android.R.layout.simple_spinner_item);
-        sortAdapter        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sortSpinner.setAdapter(sortAdapter);
-        sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        populateDropdown(sortFilterDropdown, R.array.sort_options, new DropdownCallback() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            public void onSelected(int index, String label) {
                 String sort;
-                switch (position) {
-                    case 1:
-                        sort = "name";
-                        break;
-                    case 2:
-                        sort = "newest";
-                        break;
-                    default:
-                        sort = "oldest";
-                        break;
+                switch (index) {
+                    case 1: sort = "name"; break;
+                    case 2: sort = "newest"; break;
+                    default: sort = "oldest"; break;
                 }
+                sortFilterValue.setText(label);
+                finishMultiSelect();
                 viewModel.setSortOrder(sort);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+                toggleDropdown(sortFilterDropdown, sortFilterChevron);
             }
         });
+
+        expiryFilterValue.setText(getResources().getStringArray(R.array.expiry_filter_options)[0]);
+        storageFilterValue.setText(getResources().getStringArray(R.array.storage_filter_options)[0]);
+        sortFilterValue.setText(getResources().getStringArray(R.array.sort_options)[0]);
+    }
+
+    private void toggleDropdown(LinearLayout dropdown, ImageView chevron) {
+        boolean isOpen = dropdown.getVisibility() == View.VISIBLE;
+        if (isOpen) {
+            hideDropdown(dropdown, chevron);
+        } else {
+            showDropdown(dropdown, chevron);
+        }
+    }
+
+    private void showDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.setAlpha(0f);
+        dropdown.setTranslationY(-8f);
+        dropdown.setVisibility(View.VISIBLE);
+        dropdown.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(200)
+                .start();
+        chevron.animate().rotation(180f).setDuration(200).start();
+    }
+
+    private void hideDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.animate()
+                .alpha(0f)
+                .translationY(-8f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    dropdown.setVisibility(View.GONE);
+                    dropdown.setTranslationY(0f);
+                })
+                .start();
+        chevron.animate().rotation(0f).setDuration(200).start();
+    }
+
+    private void closeDropdown(LinearLayout dropdown, ImageView chevron) {
+        if (dropdown.getVisibility() == View.VISIBLE) {
+            hideDropdown(dropdown, chevron);
+        }
+    }
+
+    private void populateDropdown(LinearLayout container, int arrayResId, DropdownCallback callback) {
+        String[] options = getResources().getStringArray(arrayResId);
+        container.removeAllViews();
+        for (int i = 0; i < options.length; i++) {
+            View option = getLayoutInflater().inflate(R.layout.item_filter_option, container, false);
+            TextView label = option.findViewById(R.id.filterOptionLabel);
+            ImageView radio = option.findViewById(R.id.filterOptionRadio);
+            label.setText(options[i]);
+            final int pos = i;
+            option.setOnClickListener(v -> {
+                updateRadioSelection(container, pos);
+                callback.onSelected(pos, options[pos]);
+            });
+            container.addView(option);
+        }
+        updateRadioSelection(container, 0);
+    }
+
+    private void updateRadioSelection(LinearLayout container, int selectedIndex) {
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View option = container.getChildAt(i);
+            ImageView radio = option.findViewById(R.id.filterOptionRadio);
+            radio.setImageResource(i == selectedIndex
+                    ? R.drawable.ic_radio_button_checked
+                    : R.drawable.ic_radio_button_unchecked);
+        }
+    }
+
+    interface DropdownCallback {
+        void onSelected(int index, String label);
     }
 
     private void applyLaunchFilter(Intent intent) {
@@ -269,15 +554,15 @@ public class InventoryActivity extends BaseActivity {
         if (searchInput != null && searchInput.length() > 0) {
             searchInput.setText("");
         }
-        if (expirySpinner != null && expirySpinner.getSelectedItemPosition() != 0) {
-            expirySpinner.setSelection(0);
-        }
-        if (storageSpinner != null && storageSpinner.getSelectedItemPosition() != 0) {
-            storageSpinner.setSelection(0);
-        }
-        if (sortSpinner != null && sortSpinner.getSelectedItemPosition() != 0) {
-            sortSpinner.setSelection(0);
-        }
+        String[] expiryOptions = getResources().getStringArray(R.array.expiry_filter_options);
+        String[] storageOptions = getResources().getStringArray(R.array.storage_filter_options);
+        String[] sortOptions = getResources().getStringArray(R.array.sort_options);
+        expiryFilterValue.setText(expiryOptions[0]);
+        storageFilterValue.setText(storageOptions[0]);
+        sortFilterValue.setText(sortOptions[0]);
+        updateRadioSelection(expiryFilterDropdown, 0);
+        updateRadioSelection(storageFilterDropdown, 0);
+        updateRadioSelection(sortFilterDropdown, 0);
         viewModel.resetFilters();
     }
 
@@ -435,49 +720,63 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void executeMarkAction(Product product, String action, String note) {
+        int iconRes;
+        int iconBgRes;
+        int iconTintRes;
+        String statusLabel;
+
+        switch (action) {
+            case "wasted":
+                iconRes = R.drawable.ic_close;
+                iconBgRes = R.drawable.bg_action_icon_circle_delete;
+                iconTintRes = R.color.smart_error;
+                statusLabel = getString(R.string.action_mark_wasted);
+                break;
+            case "donated":
+                iconRes = R.drawable.ic_favorite_filled;
+                iconBgRes = R.drawable.bg_action_icon_circle;
+                iconTintRes = R.color.smart_notification_red;
+                statusLabel = getString(R.string.action_mark_donated);
+                break;
+            default:
+                iconRes = R.drawable.ic_check_circle;
+                iconBgRes = R.drawable.bg_action_icon_circle;
+                iconTintRes = R.color.smart_primary;
+                statusLabel = getString(R.string.action_mark_consumed);
+                break;
+        }
+
         switch (action) {
             case "wasted":
                 viewModel.markWasted(product.getId(), note,
-                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_wasted_format, product.getName())),
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
                         this::onStatusUpdateFailed);
                 break;
             case "donated":
                 viewModel.markDonated(product.getId(), note,
-                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_donated_format, product.getName())),
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
                         this::onStatusUpdateFailed);
                 break;
             default:
                 viewModel.markConsumed(product.getId(), note,
-                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_consumed_format, product.getName())),
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
                         this::onStatusUpdateFailed);
                 break;
         }
     }
 
-    private void onStatusSuccess(Boolean updated, Product product, String toastMessage) {
+    private void onMarkSuccess(Boolean updated, Product product,
+                               int iconRes, int iconBgRes, int iconTintRes, String statusLabel) {
         if (Boolean.TRUE.equals(updated)) {
             ReminderScheduler.runSoon(this);
             viewModel.loadProducts();
-
-            String snackAction = actionLabel(toastMessage);
-            Snackbar.make(findViewById(android.R.id.content),
-                    getString(R.string.mark_status_snackbar_format, product.getName(), snackAction),
-                    Snackbar.LENGTH_LONG)
-                    .setAction(R.string.mark_undo, v -> undoMark(product))
-                    .show();
+            String message = getString(R.string.mark_status_snackbar_format, product.getName(), statusLabel);
+            showUndoBar(product, iconRes, iconBgRes, iconTintRes, message, () -> undoMark(product));
         }
     }
 
-    private String actionLabel(String toastMessage) {
-        if (toastMessage.contains(getString(R.string.action_mark_wasted).toLowerCase()))
-            return getString(R.string.action_mark_wasted);
-        if (toastMessage.contains(getString(R.string.action_mark_donated).toLowerCase()))
-            return getString(R.string.action_mark_donated);
-        return getString(R.string.action_mark_consumed);
-    }
-
     private void undoMark(Product product) {
-        viewModel.revertStatus(product.getId(), "Reverted from snack bar undo",
+        viewModel.revertStatus(product.getId(), "Reverted from undo bar",
                 reverted -> {
                     if (Boolean.TRUE.equals(reverted)) {
                         Toast.makeText(this,
@@ -487,6 +786,72 @@ public class InventoryActivity extends BaseActivity {
                         viewModel.loadProducts();
                     }
                 }, this::onStatusUpdateFailed);
+    }
+
+    private void showUndoBar(Product product, int iconRes, int iconBgRes, int iconTintRes,
+                             String message, Runnable undoAction) {
+        ViewGroup root = findViewById(R.id.root);
+        if (root == null) return;
+
+        if (undoBarView != null) {
+            root.removeView(undoBarView);
+            undoBarView = null;
+        }
+        if (undoHandler != null) {
+            undoHandler.removeCallbacksAndMessages(null);
+        }
+
+        undoBarView = LayoutInflater.from(this).inflate(R.layout.dialog_undo_delete, root, false);
+
+        FrameLayout iconContainer = undoBarView.findViewById(R.id.undoIconContainer);
+        iconContainer.setBackgroundResource(iconBgRes);
+
+        ImageView icon = undoBarView.findViewById(R.id.undoIcon);
+        icon.setImageResource(iconRes);
+        icon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                getColor(iconTintRes)));
+
+        ((TextView) undoBarView.findViewById(R.id.undoMessage)).setText(message);
+
+        undoBarView.findViewById(R.id.undoAction).setOnClickListener(v -> {
+            dismissUndoBar();
+            undoAction.run();
+        });
+
+        root.addView(undoBarView, root.getChildCount() - 1);
+
+        undoBarView.setTranslationY(200f);
+        undoBarView.setAlpha(0f);
+        undoBarView.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(350)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .start();
+
+        undoHandler = new Handler(Looper.getMainLooper());
+        undoHandler.postDelayed(this::dismissUndoBar, 5000);
+    }
+
+    private void dismissUndoBar() {
+        if (undoHandler != null) {
+            undoHandler.removeCallbacksAndMessages(null);
+        }
+        if (undoBarView != null) {
+            undoBarView.animate()
+                    .translationY(200f)
+                    .alpha(0f)
+                    .setDuration(250)
+                    .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                    .withEndAction(() -> {
+                        ViewGroup root = findViewById(R.id.root);
+                        if (root != null && undoBarView != null) {
+                            root.removeView(undoBarView);
+                        }
+                        undoBarView = null;
+                    })
+                    .start();
+        }
     }
 
     private void openEditDialog(Product product) {
@@ -515,11 +880,12 @@ public class InventoryActivity extends BaseActivity {
                 if (Boolean.TRUE.equals(deleted)) {
                     ReminderScheduler.runSoon(this);
                     viewModel.loadProducts();
-                    Snackbar.make(findViewById(android.R.id.content),
-                            getString(R.string.product_deleted) + ": " + product.getName(),
-                            Snackbar.LENGTH_LONG)
-                            .setAction(R.string.mark_undo, v2 -> undoMark(product))
-                            .show();
+                    showUndoBar(product,
+                            R.drawable.ic_delete,
+                            R.drawable.bg_action_icon_circle_delete,
+                            R.color.smart_error,
+                            getString(R.string.undo_delete_format, product.getName()),
+                            () -> undoMark(product));
                 }
             }, error -> {
                 Log.e(TAG, "Failed to delete product", error);

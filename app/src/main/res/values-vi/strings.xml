@@ -440,6 +440,7 @@
     <string name="mark_status_snackbar_format">Đã đánh dấu \"%1$s\" là %2$s</string>
     <string name="mark_undo">Hoàn tác</string>
     <string name="mark_undone_format">Đã chuyển \"%1$s\" về trạng thái đang dùng</string>
+    <string name="undo_delete_format">Đã xóa %1$s</string>
     <string name="mark_wasted_confirm_text">Sản phẩm này sẽ được đánh dấu là lãng phí.</string>
 
     <!-- Authentication Strings -->
@@ -465,4 +466,16 @@
     <string name="signing_in_progress">Đang đăng nhập...</string>
     <string name="registering_in_progress">Đang đăng ký...</string>
     <string name="signIn_btn_label">Đăng nhập</string>
+    <string name="action_select">Chọn</string>
+    <string name="action_select_all">Chọn tất cả</string>
+    <string name="action_consumed">Đã dùng</string>
+    <string name="action_wasted">Bỏ đi</string>
+    <string name="action_donated">Đã tặng</string>
+    <string name="selected_count_format">Đã chọn %1$d</string>
+    <string name="batch_consumed_format">Đã đánh dấu %1$d sản phẩm đã dùng</string>
+    <string name="batch_wasted_format">Đã đánh dấu %1$d sản phẩm bỏ đi</string>
+    <string name="batch_donated_format">Đã đánh dấu %1$d sản phẩm đã tặng</string>
+    <string name="batch_deleted_format">Đã xóa %1$d sản phẩm</string>
+    <string name="batch_status_format">Đã cập nhật %1$d sản phẩm</string>
+    <string name="batch_undone_format">Đã hoàn tác %1$d sản phẩm</string>
 </resources>

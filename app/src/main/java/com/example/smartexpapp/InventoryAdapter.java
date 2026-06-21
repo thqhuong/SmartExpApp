@@ -2,6 +2,7 @@ package com.example.smartexpapp;
 
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +11,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,11 +24,24 @@ import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 import com.google.android.material.card.MaterialCardView;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.ViewHolder> {
 
     public interface OnProductClickListener {
         void onProductClick(Product product);
         void onDeleteClick(Product product);
+    }
+
+    public interface OnProductLongClickListener {
+        boolean onProductLongClick(Product product);
+    }
+
+    public interface OnSelectionChangedListener {
+        void onSelectionChanged(Set<String> selectedIds);
     }
 
     private static final DiffUtil.ItemCallback<Product> DIFF_CALLBACK = new DiffUtil.ItemCallback<Product>() {
@@ -47,11 +63,54 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
         }
     };
 
-    private final OnProductClickListener listener;
+    private final OnProductClickListener clickListener;
+    @Nullable private OnProductLongClickListener longClickListener;
+    @Nullable private OnSelectionChangedListener selectionChangedListener;
+    @Nullable private Set<String> selectedIds;
 
     public InventoryAdapter(OnProductClickListener listener) {
         super(DIFF_CALLBACK);
-        this.listener = listener;
+        this.clickListener = listener;
+    }
+
+    public void setOnProductLongClickListener(@Nullable OnProductLongClickListener listener) {
+        this.longClickListener = listener;
+    }
+
+    public void setOnSelectionChangedListener(@Nullable OnSelectionChangedListener listener) {
+        this.selectionChangedListener = listener;
+    }
+
+    public void setSelectedIds(@Nullable Set<String> ids) {
+        this.selectedIds = ids != null ? new HashSet<>(ids) : null;
+        notifyItemRangeChanged(0, getItemCount());
+        if (selectionChangedListener != null) {
+            selectionChangedListener.onSelectionChanged(selectedIds != null ? selectedIds : new HashSet<String>());
+        }
+    }
+
+    public void selectAll() {
+        if (selectedIds == null) return;
+        for (int i = 0; i < getItemCount(); i++) {
+            selectedIds.add(getItem(i).getId());
+        }
+        notifyItemRangeChanged(0, getItemCount());
+        if (selectionChangedListener != null) {
+            selectionChangedListener.onSelectionChanged(selectedIds);
+        }
+    }
+
+    @Nullable
+    public Set<String> getSelectedIds() {
+        return selectedIds != null ? Collections.unmodifiableSet(selectedIds) : null;
+    }
+
+    private boolean isSelected(String id) {
+        return selectedIds != null && selectedIds.contains(id);
+    }
+
+    public boolean isInSelectionMode() {
+        return selectedIds != null;
     }
 
     @NonNull
@@ -73,6 +132,7 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
         private final TextView expiryStatus;
         private final ProgressBar progress;
         private final View deleteBtn;
+        private final ImageView btnCheckbox;
         private final View categoryDot;
         private final ImageView icon;
         private final TextView productName;
@@ -85,6 +145,7 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
             expiryStatus = itemView.findViewById(R.id.expiryStatus);
             progress = itemView.findViewById(R.id.expiryProgress);
             deleteBtn = itemView.findViewById(R.id.btnDelete);
+            btnCheckbox = itemView.findViewById(R.id.btnCheckbox);
             categoryDot = itemView.findViewById(R.id.categoryDot);
             icon = itemView.findViewById(R.id.productIcon);
             productName = itemView.findViewById(R.id.productName);
@@ -92,8 +153,25 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
         }
 
         void bind(Product product) {
-            card.setOnClickListener(v -> listener.onProductClick(product));
-            deleteBtn.setOnClickListener(v -> listener.onDeleteClick(product));
+            String productId = product.getId();
+            boolean selected = isSelected(productId);
+            boolean selectionMode = isInSelectionMode();
+
+            card.setOnClickListener(v -> {
+                if (selectionMode) {
+                    toggleSelection(productId);
+                } else {
+                    clickListener.onProductClick(product);
+                }
+            });
+            deleteBtn.setOnClickListener(v -> clickListener.onDeleteClick(product));
+            card.setOnLongClickListener(v -> {
+                if (longClickListener != null) {
+                    card.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                    return longClickListener.onProductLongClick(product);
+                }
+                return false;
+            });
 
             categoryDot.getBackground().setTint(
                     card.getContext().getColor(CategoryColorHelper.getColor(card.getContext(), product.getCategory()))
@@ -145,6 +223,39 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
                 expiryStatus.setTextColor(card.getContext().getColor(R.color.smart_on_surface));
                 progress.setProgressDrawable(AppCompatResources.getDrawable(card.getContext(), R.drawable.progress_gray));
             }
+
+            if (selectionMode) {
+                deleteBtn.setVisibility(View.GONE);
+                btnCheckbox.setVisibility(View.VISIBLE);
+                btnCheckbox.setImageResource(selected ? R.drawable.ic_check_circle : R.drawable.ic_circle_outline);
+                btnCheckbox.setImageTintList(ColorStateList.valueOf(
+                        ContextCompat.getColor(card.getContext(), selected ? R.color.smart_primary : R.color.smart_muted)));
+                if (selected) {
+                    card.setStrokeColor(ContextCompat.getColor(card.getContext(), R.color.smart_primary));
+                    card.setStrokeWidth((int) (2f * density));
+                    card.setCardBackgroundColor(ContextCompat.getColor(card.getContext(), R.color.smart_primary_soft));
+                } else {
+                    card.setStrokeColor(ContextCompat.getColor(card.getContext(), R.color.smart_glass_stroke));
+                    card.setStrokeWidth((int) (1.0f * density));
+                }
+            } else {
+                deleteBtn.setVisibility(View.VISIBLE);
+                btnCheckbox.setVisibility(View.GONE);
+            }
+        }
+
+        private void toggleSelection(String productId) {
+            if (selectedIds == null) return;
+            boolean wasSelected = selectedIds.contains(productId);
+            if (wasSelected) {
+                selectedIds.remove(productId);
+            } else {
+                selectedIds.add(productId);
+            }
+            if (selectionChangedListener != null) {
+                selectionChangedListener.onSelectionChanged(selectedIds);
+            }
+            notifyItemChanged(getAbsoluteAdapterPosition());
         }
     }
 }
