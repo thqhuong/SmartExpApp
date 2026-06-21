@@ -1,6 +1,5 @@
 package com.example.smartexpapp;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -323,14 +322,15 @@ public class InventoryActivity extends BaseActivity {
 
     private void showProductActions(Product product) {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_product_actions, null);
+        View view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_product_actions,
+                findViewById(android.R.id.content), false);
         dialog.setContentView(view);
 
         TextView name = view.findViewById(R.id.bsProductName);
         name.setText(product.getName());
 
         TextView meta = view.findViewById(R.id.bsProductMeta);
-        meta.setText(product.getStorage() + " \u2022 " + product.getAmount());
+        meta.setText(getString(R.string.product_meta_format, product.getStorage(), product.getAmount()));
 
         ImageView icon = view.findViewById(R.id.bsProductImage);
         ImageView placeholder = view.findViewById(R.id.bsProductPlaceholder);
@@ -377,14 +377,16 @@ public class InventoryActivity extends BaseActivity {
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
                 .setView(R.layout.dialog_mark_status)
                 .create();
-        dialog.getWindow().setDimAmount(0.6f);
-        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
-                android.graphics.Color.TRANSPARENT));
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
         dialog.show();
 
         ((TextView) dialog.findViewById(R.id.dialogProductName)).setText(product.getName());
 
-        int actionLabelRes;
         int iconRes;
         int iconTintRes;
         String upperLabel;
@@ -392,20 +394,17 @@ public class InventoryActivity extends BaseActivity {
 
         switch (action) {
             case "wasted":
-                actionLabelRes = R.string.action_mark_wasted;
                 iconRes = R.drawable.ic_close;
                 iconTintRes = R.color.smart_error;
                 upperLabel = "MARK WASTED";
                 showWarning = true;
                 break;
             case "donated":
-                actionLabelRes = R.string.action_mark_donated;
                 iconRes = R.drawable.ic_favorite_filled;
                 iconTintRes = R.color.smart_notification_red;
                 upperLabel = "MARK DONATED";
                 break;
             default:
-                actionLabelRes = R.string.action_mark_consumed;
                 iconRes = R.drawable.ic_check_circle;
                 iconTintRes = R.color.smart_primary;
                 upperLabel = "MARK CONSUMED";
@@ -460,7 +459,7 @@ public class InventoryActivity extends BaseActivity {
             ReminderScheduler.runSoon(this);
             viewModel.loadProducts();
 
-            String snackAction = actionLabel(product, toastMessage);
+            String snackAction = actionLabel(toastMessage);
             Snackbar.make(findViewById(android.R.id.content),
                     getString(R.string.mark_status_snackbar_format, product.getName(), snackAction),
                     Snackbar.LENGTH_LONG)
@@ -469,7 +468,7 @@ public class InventoryActivity extends BaseActivity {
         }
     }
 
-    private String actionLabel(Product product, String toastMessage) {
+    private String actionLabel(String toastMessage) {
         if (toastMessage.contains(getString(R.string.action_mark_wasted).toLowerCase()))
             return getString(R.string.action_mark_wasted);
         if (toastMessage.contains(getString(R.string.action_mark_donated).toLowerCase()))
@@ -478,7 +477,7 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void undoMark(Product product) {
-        viewModel.revertStatus(product.getId(), "Reverted from snackbar undo",
+        viewModel.revertStatus(product.getId(), "Reverted from snack bar undo",
                 reverted -> {
                     if (Boolean.TRUE.equals(reverted)) {
                         Toast.makeText(this,
@@ -498,9 +497,12 @@ public class InventoryActivity extends BaseActivity {
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
                 .setView(R.layout.dialog_delete_confirm)
                 .create();
-        dialog.getWindow().setDimAmount(0.6f);
-        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
-                android.graphics.Color.TRANSPARENT));
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
         dialog.show();
 
         ((TextView) dialog.findViewById(R.id.dialogTitle)).setText(R.string.delete_title);

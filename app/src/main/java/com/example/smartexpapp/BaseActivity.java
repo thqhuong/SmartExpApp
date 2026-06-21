@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.IdRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -26,8 +28,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public abstract class BaseActivity extends AppCompatActivity {
+    private Consumer<Uri> productPhotoCallback;
+    private final ActivityResultLauncher<String> productPhotoPicker =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                Consumer<Uri> callback = productPhotoCallback;
+                productPhotoCallback = null;
+                if (callback != null) {
+                    callback.accept(uri);
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Apply saved theme preference BEFORE super.onCreate so the correct
@@ -178,6 +191,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         ImageButton menuButton = findViewById(R.id.topActionMenu);
         if (menuButton != null) {
             menuButton.setImageResource(R.drawable.ic_arrow_back);
+            menuButton.setContentDescription(getString(R.string.back));
             menuButton.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.smart_primary)));
             menuButton.setOnClickListener(v -> finish());
         }
@@ -278,5 +292,10 @@ public abstract class BaseActivity extends AppCompatActivity {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public void pickProductPhoto(Consumer<Uri> callback) {
+        productPhotoCallback = callback;
+        productPhotoPicker.launch("image/*");
     }
 }

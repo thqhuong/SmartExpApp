@@ -35,6 +35,7 @@
 
         <ImageView
             android:id="@+id/bsProductPlaceholder"
+            android:importantForAccessibility="no"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
@@ -91,6 +92,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_edit"
                     app:tint="@color/smart_primary" />
             </FrameLayout>
@@ -127,6 +129,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_check_circle"
                     app:tint="@color/smart_primary" />
             </FrameLayout>
@@ -163,6 +166,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_close"
                     app:tint="@color/smart_error" />
             </FrameLayout>
@@ -199,6 +203,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_favorite_filled"
                     app:tint="@color/smart_notification_red" />
             </FrameLayout>
@@ -241,6 +246,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_delete"
                     app:tint="@color/smart_error" />
             </FrameLayout>

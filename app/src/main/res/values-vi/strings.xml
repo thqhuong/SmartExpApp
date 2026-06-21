@@ -273,7 +273,6 @@
     <string name="category_already_exists_format">Danh mục \"%1$s\" đã tồn tại</string>
     <string name="category_delete_message_with_products">Sản phẩm trong danh mục này sẽ được chuyển sang \"Chung\".</string>
     <string name="category_delete_message_empty">Bạn có chắc muốn xóa danh mục này?</string>
-    <string name="edit_photo_in_add_screen">Chỉnh sửa ảnh trong màn hình thêm sản phẩm</string>
     <string name="product_not_found">Không tìm thấy sản phẩm</string>
     <string name="product_save_error">Không thể lưu sản phẩm.</string>
     <string name="product_added_format">Đã thêm %1$s.</string>

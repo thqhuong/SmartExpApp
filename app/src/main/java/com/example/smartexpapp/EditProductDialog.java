@@ -1,8 +1,10 @@
 package com.example.smartexpapp;
 
 import android.app.DatePickerDialog;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -12,13 +14,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import com.example.smartexpapp.data.CategoryRepository;
+import com.example.smartexpapp.data.LocalImageRepository;
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ProductQuantityValidator;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -51,6 +59,7 @@ public class EditProductDialog {
     private BottomSheetDialog dialog;
     private android.app.Dialog manageDialog;
     private String currentPhotoPath;
+    private String originalPhotoPath;
 
     public EditProductDialog(Product product, Runnable onUpdated) {
         this(product, onUpdated, Collections.emptyList());
@@ -88,6 +97,7 @@ public class EditProductDialog {
         setupCategorySpinner(activity);
 
         String imgPath = product.getImageUrl();
+        originalPhotoPath = imgPath;
         if (imgPath != null && !imgPath.isEmpty()) {
             currentPhotoPath = imgPath;
             showPhoto();
@@ -106,9 +116,8 @@ public class EditProductDialog {
         expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
         expiryDateInput.setTextColor(activity.getColor(R.color.smart_on_surface));
 
-        view.findViewById(R.id.editPhotoPreview).setOnClickListener(v -> {
-            Toast.makeText(activity, R.string.edit_photo_in_add_screen, Toast.LENGTH_SHORT).show();
-        });
+        view.findViewById(R.id.editPhotoPreview).setOnClickListener(v ->
+                activity.pickProductPhoto(uri -> onPhotoPicked(activity, uri)));
 
         view.findViewById(R.id.editStorageRoom).setOnClickListener(v -> selectStorage(R.id.editStorageRoom));
         view.findViewById(R.id.editStorageFridge).setOnClickListener(v -> selectStorage(R.id.editStorageFridge));
@@ -134,6 +143,30 @@ public class EditProductDialog {
         view.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
         view.findViewById(R.id.btnConfirm).setOnClickListener(v -> confirm(activity));
 
+        View scroll = view.findViewById(R.id.editScroll);
+        View buttonBar = view.findViewById(R.id.editButtonBar);
+        int scrollPadTop = scroll.getPaddingTop();
+        int buttonPadBottom = buttonBar.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(view, (insetView, windowInsets) -> {
+            Insets bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            scroll.setPadding(scroll.getPaddingLeft(), scrollPadTop + bars.top,
+                    scroll.getPaddingRight(), scroll.getPaddingBottom());
+            buttonBar.setPadding(buttonBar.getPaddingLeft(), buttonBar.getPaddingTop(),
+                    buttonBar.getPaddingRight(), buttonPadBottom + bars.bottom);
+            return windowInsets;
+        });
+        dialog.setOnShowListener(d -> {
+            View sheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (sheet != null) {
+                ViewGroup.LayoutParams params = sheet.getLayoutParams();
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                sheet.setLayoutParams(params);
+                BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(sheet);
+                behavior.setSkipCollapsed(true);
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
+
         dialog.show();
     }
 
@@ -152,6 +185,22 @@ public class EditProductDialog {
         editIconOverlay.setVisibility(View.GONE);
         btnRemovePhoto.setVisibility(View.GONE);
         photoPlaceholder.setVisibility(View.VISIBLE);
+    }
+
+    private void onPhotoPicked(BaseActivity activity, Uri uri) {
+        if (uri == null) {
+            return;
+        }
+        String path = activity.saveImageToInternalStorage(uri);
+        if (path == null) {
+            Toast.makeText(activity, R.string.photo_save_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (currentPhotoPath != null && !currentPhotoPath.equals(originalPhotoPath)) {
+            LocalImageRepository.deleteProductImage(activity.getApplicationContext(), currentPhotoPath);
+        }
+        currentPhotoPath = path;
+        showPhoto();
     }
 
     private void selectStorage(int storageId) {

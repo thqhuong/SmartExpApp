@@ -25,6 +25,7 @@
 
                 <ImageView
                     android:id="@+id/dialogActionIcon"
+                    android:importantForAccessibility="no"
                     android:layout_width="26dp"
                     android:layout_height="26dp"
                     android:layout_gravity="center"
@@ -63,6 +64,7 @@
             android:visibility="gone">
 
             <ImageView
+                android:importantForAccessibility="no"
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_warning"
