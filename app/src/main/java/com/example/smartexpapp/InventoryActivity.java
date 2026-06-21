@@ -2,14 +2,18 @@ package com.example.smartexpapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -61,6 +65,8 @@ public class InventoryActivity extends BaseActivity {
 
     private List<Product> latestProducts = new ArrayList<>();
     private InventoryViewModel viewModel;
+    private View undoBarView;
+    private Handler undoHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -435,49 +441,63 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void executeMarkAction(Product product, String action, String note) {
+        int iconRes;
+        int iconBgRes;
+        int iconTintRes;
+        String statusLabel;
+
+        switch (action) {
+            case "wasted":
+                iconRes = R.drawable.ic_close;
+                iconBgRes = R.drawable.bg_action_icon_circle_delete;
+                iconTintRes = R.color.smart_error;
+                statusLabel = getString(R.string.action_mark_wasted);
+                break;
+            case "donated":
+                iconRes = R.drawable.ic_favorite_filled;
+                iconBgRes = R.drawable.bg_action_icon_circle;
+                iconTintRes = R.color.smart_notification_red;
+                statusLabel = getString(R.string.action_mark_donated);
+                break;
+            default:
+                iconRes = R.drawable.ic_check_circle;
+                iconBgRes = R.drawable.bg_action_icon_circle;
+                iconTintRes = R.color.smart_primary;
+                statusLabel = getString(R.string.action_mark_consumed);
+                break;
+        }
+
         switch (action) {
             case "wasted":
                 viewModel.markWasted(product.getId(), note,
-                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_wasted_format, product.getName())),
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
                         this::onStatusUpdateFailed);
                 break;
             case "donated":
                 viewModel.markDonated(product.getId(), note,
-                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_donated_format, product.getName())),
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
                         this::onStatusUpdateFailed);
                 break;
             default:
                 viewModel.markConsumed(product.getId(), note,
-                        updated -> onStatusSuccess(updated, product, getString(R.string.toast_mark_consumed_format, product.getName())),
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
                         this::onStatusUpdateFailed);
                 break;
         }
     }
 
-    private void onStatusSuccess(Boolean updated, Product product, String toastMessage) {
+    private void onMarkSuccess(Boolean updated, Product product,
+                               int iconRes, int iconBgRes, int iconTintRes, String statusLabel) {
         if (Boolean.TRUE.equals(updated)) {
             ReminderScheduler.runSoon(this);
             viewModel.loadProducts();
-
-            String snackAction = actionLabel(toastMessage);
-            Snackbar.make(findViewById(android.R.id.content),
-                    getString(R.string.mark_status_snackbar_format, product.getName(), snackAction),
-                    Snackbar.LENGTH_LONG)
-                    .setAction(R.string.mark_undo, v -> undoMark(product))
-                    .show();
+            String message = getString(R.string.mark_status_snackbar_format, product.getName(), statusLabel);
+            showUndoBar(product, iconRes, iconBgRes, iconTintRes, message, () -> undoMark(product));
         }
     }
 
-    private String actionLabel(String toastMessage) {
-        if (toastMessage.contains(getString(R.string.action_mark_wasted).toLowerCase()))
-            return getString(R.string.action_mark_wasted);
-        if (toastMessage.contains(getString(R.string.action_mark_donated).toLowerCase()))
-            return getString(R.string.action_mark_donated);
-        return getString(R.string.action_mark_consumed);
-    }
-
     private void undoMark(Product product) {
-        viewModel.revertStatus(product.getId(), "Reverted from snack bar undo",
+        viewModel.revertStatus(product.getId(), "Reverted from undo bar",
                 reverted -> {
                     if (Boolean.TRUE.equals(reverted)) {
                         Toast.makeText(this,
@@ -487,6 +507,72 @@ public class InventoryActivity extends BaseActivity {
                         viewModel.loadProducts();
                     }
                 }, this::onStatusUpdateFailed);
+    }
+
+    private void showUndoBar(Product product, int iconRes, int iconBgRes, int iconTintRes,
+                             String message, Runnable undoAction) {
+        ViewGroup root = findViewById(R.id.root);
+        if (root == null) return;
+
+        if (undoBarView != null) {
+            root.removeView(undoBarView);
+            undoBarView = null;
+        }
+        if (undoHandler != null) {
+            undoHandler.removeCallbacksAndMessages(null);
+        }
+
+        undoBarView = LayoutInflater.from(this).inflate(R.layout.dialog_undo_delete, root, false);
+
+        FrameLayout iconContainer = undoBarView.findViewById(R.id.undoIconContainer);
+        iconContainer.setBackgroundResource(iconBgRes);
+
+        ImageView icon = undoBarView.findViewById(R.id.undoIcon);
+        icon.setImageResource(iconRes);
+        icon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                getColor(iconTintRes)));
+
+        ((TextView) undoBarView.findViewById(R.id.undoMessage)).setText(message);
+
+        undoBarView.findViewById(R.id.undoAction).setOnClickListener(v -> {
+            dismissUndoBar();
+            undoAction.run();
+        });
+
+        root.addView(undoBarView, root.getChildCount() - 1);
+
+        undoBarView.setTranslationY(200f);
+        undoBarView.setAlpha(0f);
+        undoBarView.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(350)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .start();
+
+        undoHandler = new Handler(Looper.getMainLooper());
+        undoHandler.postDelayed(this::dismissUndoBar, 5000);
+    }
+
+    private void dismissUndoBar() {
+        if (undoHandler != null) {
+            undoHandler.removeCallbacksAndMessages(null);
+        }
+        if (undoBarView != null) {
+            undoBarView.animate()
+                    .translationY(200f)
+                    .alpha(0f)
+                    .setDuration(250)
+                    .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                    .withEndAction(() -> {
+                        ViewGroup root = findViewById(R.id.root);
+                        if (root != null && undoBarView != null) {
+                            root.removeView(undoBarView);
+                        }
+                        undoBarView = null;
+                    })
+                    .start();
+        }
     }
 
     private void openEditDialog(Product product) {
@@ -515,11 +601,12 @@ public class InventoryActivity extends BaseActivity {
                 if (Boolean.TRUE.equals(deleted)) {
                     ReminderScheduler.runSoon(this);
                     viewModel.loadProducts();
-                    Snackbar.make(findViewById(android.R.id.content),
-                            getString(R.string.product_deleted) + ": " + product.getName(),
-                            Snackbar.LENGTH_LONG)
-                            .setAction(R.string.mark_undo, v2 -> undoMark(product))
-                            .show();
+                    showUndoBar(product,
+                            R.drawable.ic_delete,
+                            R.drawable.bg_action_icon_circle_delete,
+                            R.color.smart_error,
+                            getString(R.string.undo_delete_format, product.getName()),
+                            () -> undoMark(product));
                 }
             }, error -> {
                 Log.e(TAG, "Failed to delete product", error);

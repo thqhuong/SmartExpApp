@@ -413,6 +413,7 @@
     <string name="mark_status_snackbar_format">Đã đánh dấu \"%1$s\" là %2$s</string>
     <string name="mark_undo">Hoàn tác</string>
     <string name="mark_undone_format">Đã chuyển \"%1$s\" về trạng thái đang dùng</string>
+    <string name="undo_delete_format">Đã xóa %1$s</string>
     <string name="mark_wasted_confirm_text">Sản phẩm này sẽ được đánh dấu là lãng phí.</string>
 
     <!-- Authentication Strings -->
