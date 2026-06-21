@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.smartexpapp.AppContainer;
 import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.data.ProductRepository;
+import com.example.smartexpapp.data.firestore.ProductSyncRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.model.ProductStatus;
@@ -168,7 +169,7 @@ public class InventoryActivity extends BaseActivity {
 
         setupObservers();
 
-        viewModel.loadProducts();
+        loadProductsWithInitialSync(appContainer);
     }
 
     private void setupObservers() {
@@ -193,6 +194,24 @@ public class InventoryActivity extends BaseActivity {
                 errorState.setVisibility(View.VISIBLE);
             }
         });
+    }
+
+    private void loadProductsWithInitialSync(AppContainer appContainer) {
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (!authState.isSignedIn()) {
+            viewModel.loadProducts();
+            return;
+        }
+
+        ProductSyncRepository.initialSyncAsync(
+                this,
+                appContainer.getDatabase(),
+                ignored -> viewModel.loadProducts(),
+                error -> {
+                    Log.w(TAG, "Initial product sync failed; loading local inventory cache.", error);
+                    viewModel.loadProducts();
+                }
+        );
     }
 
     @Override
