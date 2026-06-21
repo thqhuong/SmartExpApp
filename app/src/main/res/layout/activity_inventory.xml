@@ -46,6 +46,7 @@
 
             <!-- Filters Panel (Glass Card containing selectors) -->
             <LinearLayout
+                android:id="@+id/filterPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -54,84 +55,162 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Expiry Filter Row -->
+                <!-- Expiry Filter -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/expiry_label"
-                        android:textColor="@color/smart_secondary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <Spinner
-                        android:id="@+id/expirySpinner"
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:id="@+id/expiryFilterRow"
+                        android:layout_width="match_parent"
                         android:layout_height="42dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
                         android:background="@drawable/bg_glass_input"
                         android:paddingStart="12dp"
-                        android:paddingEnd="12dp" />
+                        android:paddingEnd="12dp">
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/expiry_label"
+                            android:textColor="@color/smart_secondary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/expiryFilterValue"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:textColor="@color/smart_on_surface"
+                            android:textSize="14sp" />
+
+                        <ImageView
+                            android:id="@+id/expiryFilterChevron"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_expand_more"
+                            app:tint="@color/smart_outline_variant"
+                            android:importantForAccessibility="no" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/expiryFilterDropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:background="@drawable/bg_filter_dropdown" />
                 </LinearLayout>
 
-                <!-- Storage Filter Row -->
+                <!-- Storage Filter -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/storage_type_label"
-                        android:textColor="@color/smart_secondary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <Spinner
-                        android:id="@+id/storageSpinner"
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:id="@+id/storageFilterRow"
+                        android:layout_width="match_parent"
                         android:layout_height="42dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
                         android:background="@drawable/bg_glass_input"
                         android:paddingStart="12dp"
-                        android:paddingEnd="12dp" />
+                        android:paddingEnd="12dp">
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/storage_type_label"
+                            android:textColor="@color/smart_secondary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/storageFilterValue"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:textColor="@color/smart_on_surface"
+                            android:textSize="14sp" />
+
+                        <ImageView
+                            android:id="@+id/storageFilterChevron"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_expand_more"
+                            app:tint="@color/smart_outline_variant"
+                            android:importantForAccessibility="no" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/storageFilterDropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:background="@drawable/bg_filter_dropdown" />
                 </LinearLayout>
 
-                <!-- Sort Row -->
+                <!-- Sort Filter -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/sort_by"
-                        android:textColor="@color/smart_secondary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <Spinner
-                        android:id="@+id/sortSpinner"
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:id="@+id/sortFilterRow"
+                        android:layout_width="match_parent"
                         android:layout_height="42dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
                         android:background="@drawable/bg_glass_input"
                         android:paddingStart="12dp"
-                        android:paddingEnd="12dp" />
+                        android:paddingEnd="12dp">
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sort_by"
+                            android:textColor="@color/smart_secondary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/sortFilterValue"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:textColor="@color/smart_on_surface"
+                            android:textSize="14sp" />
+
+                        <ImageView
+                            android:id="@+id/sortFilterChevron"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_expand_more"
+                            app:tint="@color/smart_outline_variant"
+                            android:importantForAccessibility="no" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/sortFilterDropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:background="@drawable/bg_filter_dropdown" />
                 </LinearLayout>
             </LinearLayout>
 

@@ -10,14 +10,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,9 +56,15 @@ public class InventoryActivity extends BaseActivity {
     private TextView errorState;
     private ProgressBar loadingIndicator;
     private EditText searchInput;
-    private Spinner expirySpinner;
-    private Spinner storageSpinner;
-    private Spinner sortSpinner;
+    private TextView expiryFilterValue;
+    private TextView storageFilterValue;
+    private TextView sortFilterValue;
+    private LinearLayout expiryFilterDropdown;
+    private LinearLayout storageFilterDropdown;
+    private LinearLayout sortFilterDropdown;
+    private ImageView expiryFilterChevron;
+    private ImageView storageFilterChevron;
+    private ImageView sortFilterChevron;
 
     private List<Product> latestProducts = new ArrayList<>();
     private InventoryViewModel viewModel;
@@ -114,16 +117,22 @@ public class InventoryActivity extends BaseActivity {
         errorState = findViewById(R.id.errorState);
         loadingIndicator = findViewById(R.id.loadingIndicator);
         searchInput = findViewById(R.id.searchInput);
-        expirySpinner = findViewById(R.id.expirySpinner);
-        storageSpinner = findViewById(R.id.storageSpinner);
-        sortSpinner = findViewById(R.id.sortSpinner);
+        expiryFilterValue = findViewById(R.id.expiryFilterValue);
+        storageFilterValue = findViewById(R.id.storageFilterValue);
+        sortFilterValue = findViewById(R.id.sortFilterValue);
+        expiryFilterDropdown = findViewById(R.id.expiryFilterDropdown);
+        storageFilterDropdown = findViewById(R.id.storageFilterDropdown);
+        sortFilterDropdown = findViewById(R.id.sortFilterDropdown);
+        expiryFilterChevron = findViewById(R.id.expiryFilterChevron);
+        storageFilterChevron = findViewById(R.id.storageFilterChevron);
+        sortFilterChevron = findViewById(R.id.sortFilterChevron);
 
         AppContainer appContainer = ((SmartExpApplication) getApplicationContext()).appContainer;
         InventoryViewModelFactory factory = new InventoryViewModelFactory(appContainer.getProductRepository());
         viewModel = new ViewModelProvider(this, factory).get(InventoryViewModel.class);
 
         setupSearch();
-        setupSpinners();
+        setupFilters();
         applyLaunchFilter(getIntent());
 
         setupObservers();
@@ -186,77 +195,138 @@ public class InventoryActivity extends BaseActivity {
         });
     }
 
-    private void setupSpinners() {
-        ArrayAdapter<CharSequence> expiryAdapter = ArrayAdapter.createFromResource(this,
-                R.array.expiry_filter_options, android.R.layout.simple_spinner_item);
-        expiryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        expirySpinner.setAdapter(expiryAdapter);
-        expirySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+    private void setupFilters() {
+        findViewById(R.id.expiryFilterRow).setOnClickListener(v -> {
+            closeDropdown(storageFilterDropdown, storageFilterChevron);
+            closeDropdown(sortFilterDropdown, sortFilterChevron);
+            toggleDropdown(expiryFilterDropdown, expiryFilterChevron);
+        });
+        findViewById(R.id.storageFilterRow).setOnClickListener(v -> {
+            closeDropdown(expiryFilterDropdown, expiryFilterChevron);
+            closeDropdown(sortFilterDropdown, sortFilterChevron);
+            toggleDropdown(storageFilterDropdown, storageFilterChevron);
+        });
+        findViewById(R.id.sortFilterRow).setOnClickListener(v -> {
+            closeDropdown(expiryFilterDropdown, expiryFilterChevron);
+            closeDropdown(storageFilterDropdown, storageFilterChevron);
+            toggleDropdown(sortFilterDropdown, sortFilterChevron);
+        });
+
+        populateDropdown(expiryFilterDropdown, R.array.expiry_filter_options, new DropdownCallback() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            public void onSelected(int index, String label) {
                 String filter;
-                switch (position) {
-                    case 1:
-                        filter = "StillGood";
-                        break;
-                    case 2:
-                        filter = "Expired";
-                        break;
-                    default:
-                        filter = "All";
-                        break;
+                switch (index) {
+                    case 1: filter = "StillGood"; break;
+                    case 2: filter = "Expired"; break;
+                    default: filter = "All"; break;
                 }
+                expiryFilterValue.setText(label);
                 viewModel.setExpiryFilter(filter);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+                toggleDropdown(expiryFilterDropdown, expiryFilterChevron);
             }
         });
 
-        ArrayAdapter<CharSequence> storageAdapter = ArrayAdapter.createFromResource(this,
-                R.array.storage_filter_options, android.R.layout.simple_spinner_item);
-        storageAdapter        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        storageSpinner.setAdapter(storageAdapter);
-        storageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        populateDropdown(storageFilterDropdown, R.array.storage_filter_options, new DropdownCallback() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String storage = (position >= 0 && position < STORAGE_KEYS.length) ? STORAGE_KEYS[position] : "All";
+            public void onSelected(int index, String label) {
+                String storage = (index >= 0 && index < STORAGE_KEYS.length) ? STORAGE_KEYS[index] : "All";
+                storageFilterValue.setText(label);
                 viewModel.setStorageFilter(storage);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                viewModel.setStorageFilter("All");
+                toggleDropdown(storageFilterDropdown, storageFilterChevron);
             }
         });
 
-        ArrayAdapter<CharSequence> sortAdapter = ArrayAdapter.createFromResource(this,
-                R.array.sort_options, android.R.layout.simple_spinner_item);
-        sortAdapter        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sortSpinner.setAdapter(sortAdapter);
-        sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        populateDropdown(sortFilterDropdown, R.array.sort_options, new DropdownCallback() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            public void onSelected(int index, String label) {
                 String sort;
-                switch (position) {
-                    case 1:
-                        sort = "name";
-                        break;
-                    case 2:
-                        sort = "newest";
-                        break;
-                    default:
-                        sort = "oldest";
-                        break;
+                switch (index) {
+                    case 1: sort = "name"; break;
+                    case 2: sort = "newest"; break;
+                    default: sort = "oldest"; break;
                 }
+                sortFilterValue.setText(label);
                 viewModel.setSortOrder(sort);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+                toggleDropdown(sortFilterDropdown, sortFilterChevron);
             }
         });
+
+        expiryFilterValue.setText(getResources().getStringArray(R.array.expiry_filter_options)[0]);
+        storageFilterValue.setText(getResources().getStringArray(R.array.storage_filter_options)[0]);
+        sortFilterValue.setText(getResources().getStringArray(R.array.sort_options)[0]);
+    }
+
+    private void toggleDropdown(LinearLayout dropdown, ImageView chevron) {
+        boolean isOpen = dropdown.getVisibility() == View.VISIBLE;
+        if (isOpen) {
+            hideDropdown(dropdown, chevron);
+        } else {
+            showDropdown(dropdown, chevron);
+        }
+    }
+
+    private void showDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.setAlpha(0f);
+        dropdown.setTranslationY(-8f);
+        dropdown.setVisibility(View.VISIBLE);
+        dropdown.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(200)
+                .start();
+        chevron.animate().rotation(180f).setDuration(200).start();
+    }
+
+    private void hideDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.animate()
+                .alpha(0f)
+                .translationY(-8f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    dropdown.setVisibility(View.GONE);
+                    dropdown.setTranslationY(0f);
+                })
+                .start();
+        chevron.animate().rotation(0f).setDuration(200).start();
+    }
+
+    private void closeDropdown(LinearLayout dropdown, ImageView chevron) {
+        if (dropdown.getVisibility() == View.VISIBLE) {
+            hideDropdown(dropdown, chevron);
+        }
+    }
+
+    private void populateDropdown(LinearLayout container, int arrayResId, DropdownCallback callback) {
+        String[] options = getResources().getStringArray(arrayResId);
+        container.removeAllViews();
+        for (int i = 0; i < options.length; i++) {
+            View option = getLayoutInflater().inflate(R.layout.item_filter_option, container, false);
+            TextView label = option.findViewById(R.id.filterOptionLabel);
+            ImageView radio = option.findViewById(R.id.filterOptionRadio);
+            label.setText(options[i]);
+            final int pos = i;
+            option.setOnClickListener(v -> {
+                updateRadioSelection(container, pos);
+                callback.onSelected(pos, options[pos]);
+            });
+            container.addView(option);
+        }
+        updateRadioSelection(container, 0);
+    }
+
+    private void updateRadioSelection(LinearLayout container, int selectedIndex) {
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View option = container.getChildAt(i);
+            ImageView radio = option.findViewById(R.id.filterOptionRadio);
+            radio.setImageResource(i == selectedIndex
+                    ? R.drawable.ic_radio_button_checked
+                    : R.drawable.ic_radio_button_unchecked);
+        }
+    }
+
+    interface DropdownCallback {
+        void onSelected(int index, String label);
     }
 
     private void applyLaunchFilter(Intent intent) {
@@ -275,15 +345,15 @@ public class InventoryActivity extends BaseActivity {
         if (searchInput != null && searchInput.length() > 0) {
             searchInput.setText("");
         }
-        if (expirySpinner != null && expirySpinner.getSelectedItemPosition() != 0) {
-            expirySpinner.setSelection(0);
-        }
-        if (storageSpinner != null && storageSpinner.getSelectedItemPosition() != 0) {
-            storageSpinner.setSelection(0);
-        }
-        if (sortSpinner != null && sortSpinner.getSelectedItemPosition() != 0) {
-            sortSpinner.setSelection(0);
-        }
+        String[] expiryOptions = getResources().getStringArray(R.array.expiry_filter_options);
+        String[] storageOptions = getResources().getStringArray(R.array.storage_filter_options);
+        String[] sortOptions = getResources().getStringArray(R.array.sort_options);
+        expiryFilterValue.setText(expiryOptions[0]);
+        storageFilterValue.setText(storageOptions[0]);
+        sortFilterValue.setText(sortOptions[0]);
+        updateRadioSelection(expiryFilterDropdown, 0);
+        updateRadioSelection(storageFilterDropdown, 0);
+        updateRadioSelection(sortFilterDropdown, 0);
         viewModel.resetFilters();
     }
 
