@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/smart_add_dialog_title"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/dialog_text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/smart_add_dialog_message"
-            android:textColor="#8E8E93"
+            android:textColor="@color/dialog_text_secondary"
             android:textSize="13sp" />
 
         <EditText
@@ -38,8 +38,8 @@
             android:background="@drawable/bg_dark_input"
             android:gravity="top|start"
             android:hint="@string/smart_add_hint"
-            android:textColorHint="#44FFFFFF"
-            android:textColor="#FFFFFF"
+            android:textColorHint="@color/dialog_text_hint"
+            android:textColor="@color/dialog_text_primary"
             android:textSize="15sp"
             android:inputType="textMultiLine|textCapSentences"
             android:padding="16dp"
@@ -64,7 +64,7 @@
                     android:layout_width="14dp"
                     android:layout_height="14dp"
                     android:src="@drawable/ic_ai_sparkles"
-                    app:tint="#8E8E93"
+                    app:tint="@color/dialog_text_secondary"
                     android:importantForAccessibility="no" />
 
                 <TextView
@@ -73,7 +73,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:text="@string/smart_add_ai_ready"
-                    android:textColor="#8E8E93"
+                    android:textColor="@color/dialog_text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -88,7 +88,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0 / 250"
-                android:textColor="#8E8E93"
+                android:textColor="@color/dialog_text_secondary"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -104,7 +104,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/cancel"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/dialog_text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:padding="12dp"

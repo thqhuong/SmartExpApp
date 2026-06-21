@@ -24,6 +24,9 @@ public class UserSettingsEntity {
     @ColumnInfo(name = "reminder_days_before")
     public int reminderDaysBefore = 3;
 
+    @ColumnInfo(name = "reminder_notify_time_minutes", defaultValue = "540")
+    public int reminderNotifyTimeMinutes = 540;
+
     @ColumnInfo(name = "dietary_preferences")
     public String dietaryPreferences;
 

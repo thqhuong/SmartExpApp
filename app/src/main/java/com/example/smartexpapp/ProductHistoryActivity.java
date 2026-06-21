@@ -131,30 +131,43 @@ public class ProductHistoryActivity extends BaseActivity {
     }
 
     private void onRestoreClick(Product product) {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.restore_title)
-                .setMessage(getString(R.string.restore_message_format, product.getName()))
-                .setPositiveButton(R.string.restore_confirm, (dialog, which) -> {
-                    viewModel.restoreProduct(product.getId(),
-                            success -> {
-                                if (success) {
-                                    runOnUiThread(() -> {
-                                        Snackbar.make(productList,
-                                                getString(R.string.restored_format, product.getName()),
-                                                Snackbar.LENGTH_LONG).show();
-                                        viewModel.loadHistory();
-                                    });
-                                }
-                            },
-                            error -> {
-                                runOnUiThread(() -> {
-                                    Snackbar.make(productList,
-                                            getString(R.string.restore_error),
-                                            Snackbar.LENGTH_LONG).show();
-                                });
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_restore_confirm)
+                .create();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogTitle)).setText(R.string.restore_title);
+        ((TextView) dialog.findViewById(R.id.dialogMessage)).setText(
+                getString(R.string.restore_message_format, product.getName()));
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            viewModel.restoreProduct(product.getId(),
+                    success -> {
+                        if (success) {
+                            runOnUiThread(() -> {
+                                Snackbar.make(productList,
+                                        getString(R.string.restored_format, product.getName()),
+                                        Snackbar.LENGTH_LONG).show();
+                                viewModel.loadHistory();
                             });
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+                        }
+                    },
+                    error -> {
+                        runOnUiThread(() -> {
+                            Snackbar.make(productList,
+                                    getString(R.string.restore_error),
+                                    Snackbar.LENGTH_LONG).show();
+                        });
+                    });
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 }

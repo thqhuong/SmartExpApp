@@ -73,4 +73,31 @@
     <color name="urgent_count_text">#BA1A1A</color>
 
     <color name="smart_outline_variant">#DDC1AE</color>
+
+    <!-- Dialog & Sign-In Adaptive Theme Colors (Light Mode) -->
+    <color name="dialog_bg">#FFFFFF</color>
+    <color name="dialog_border">#E2E8F0</color>
+    <color name="dialog_input_bg">#F1F5F9</color>
+    <color name="dialog_input_bg_focused">#FFFFFF</color>
+    <color name="dialog_input_border">#CBD5E1</color>
+    <color name="dialog_input_border_focused">#FF8C00</color>
+    <color name="dialog_text_primary">#1A1C1C</color>
+    <color name="dialog_text_secondary">#5F5E5E</color>
+    <color name="dialog_text_hint">#94A3B8</color>
+    <color name="dialog_divider">#1A000000</color>
+
+    <color name="signin_bg_start">#F9F9F9</color>
+    <color name="signin_bg_center">#FFF5E6</color>
+    <color name="signin_bg_end">#EEF2F6</color>
+    <color name="signin_overlay">#B3F8FAFC</color>
+    <color name="signin_header_text">#FF8C00</color>
+    <color name="signin_panel_bg">#E6FFFFFF</color>
+    <color name="signin_panel_border">#E2E8F0</color>
+    <color name="signin_title">#1A1C1C</color>
+    <color name="signin_subtitle">#5F5E5E</color>
+    <color name="signin_label">#904D00</color>
+    <color name="signin_input_bg">#F1F5F9</color>
+    <color name="signin_input_border">#CBD5E1</color>
+    <color name="signin_btn_sec_bg">#F1F5F9</color>
+    <color name="signin_btn_sec_stroke">#CBD5E1</color>
 </resources>

@@ -46,6 +46,7 @@ public class SettingsRepositoryTest {
 
         assertTrue(settings.areNotificationsEnabled());
         assertEquals(3, settings.getReminderDaysBefore());
+        assertEquals(540, settings.getReminderNotifyTimeMinutes());
         assertEquals("Local User", settings.getDisplayName());
         assertFalse(settings.isDarkMode());
         assertEquals("en", settings.getLanguageTag());
@@ -61,6 +62,7 @@ public class SettingsRepositoryTest {
     public void settingsUpdatesPersistToRoom() {
         SettingsRepository.setNotificationsEnabled(database, false);
         SettingsRepository.setReminderDaysBefore(database, 5);
+        SettingsRepository.setReminderNotifyTimeMinutes(database, 21 * 60 + 30);
         SettingsRepository.setDisplayName(database, "Kitchen Team");
         SettingsRepository.setDarkMode(database, true);
         SettingsRepository.setLanguageTag(database, "vi-VN");
@@ -71,6 +73,7 @@ public class SettingsRepositoryTest {
 
         assertFalse(settings.areNotificationsEnabled());
         assertEquals(5, settings.getReminderDaysBefore());
+        assertEquals(1290, settings.getReminderNotifyTimeMinutes());
         assertEquals("Kitchen Team", settings.getDisplayName());
         assertTrue(settings.isDarkMode());
         assertEquals("vi", settings.getLanguageTag());
@@ -82,6 +85,7 @@ public class SettingsRepositoryTest {
         assertNotNull(entity);
         assertFalse(entity.notificationEnabled);
         assertEquals(5, entity.reminderDaysBefore);
+        assertEquals(1290, entity.reminderNotifyTimeMinutes);
         assertEquals("Kitchen Team", entity.displayName);
         assertTrue(entity.darkMode);
         assertEquals("vi", entity.languageTag);
@@ -90,10 +94,37 @@ public class SettingsRepositoryTest {
     }
 
     @Test
+    public void notificationSettingsUpdatePersistsAllNotificationFieldsTogether() {
+        SettingsRepository.setNotificationSettings(database, false, 14, 8 * 60 + 15);
+
+        SettingsRepository.SettingsSnapshot settings = SettingsRepository.getSettings(database);
+
+        assertFalse(settings.areNotificationsEnabled());
+        assertEquals(14, settings.getReminderDaysBefore());
+        assertEquals(495, settings.getReminderNotifyTimeMinutes());
+    }
+
+    @Test
     public void reminderDaysAreClampedToZero() {
         SettingsRepository.setReminderDaysBefore(database, -2);
 
         assertEquals(0, SettingsRepository.getSettings(database).getReminderDaysBefore());
+    }
+
+    @Test
+    public void reminderDaysAreClampedToMax() {
+        SettingsRepository.setReminderDaysBefore(database, 500);
+
+        assertEquals(SettingsRepository.MAX_REMINDER_DAYS_BEFORE, SettingsRepository.getSettings(database).getReminderDaysBefore());
+    }
+
+    @Test
+    public void reminderNotifyTimeIsClampedToValidDayMinutes() {
+        SettingsRepository.setReminderNotifyTimeMinutes(database, -1);
+        assertEquals(0, SettingsRepository.getSettings(database).getReminderNotifyTimeMinutes());
+
+        SettingsRepository.setReminderNotifyTimeMinutes(database, 24 * 60);
+        assertEquals(1439, SettingsRepository.getSettings(database).getReminderNotifyTimeMinutes());
     }
 
     @Test

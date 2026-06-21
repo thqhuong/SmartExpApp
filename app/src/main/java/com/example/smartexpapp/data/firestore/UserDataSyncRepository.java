@@ -170,6 +170,7 @@ public final class UserDataSyncRepository {
         data.put("ownerUserId", ownerUserId);
         data.put("displayName", settings.displayName);
         data.put("reminderDaysBefore", settings.reminderDaysBefore);
+        data.put("reminderNotifyTimeMinutes", settings.reminderNotifyTimeMinutes);
         data.put("dietaryPreferences", settings.dietaryPreferences);
         data.put("darkMode", settings.darkMode);
         data.put("languageTag", settings.languageTag);
@@ -185,6 +186,7 @@ public final class UserDataSyncRepository {
         settings.id = FirestoreContract.DEFAULT_SETTINGS_ID;
         settings.displayName = stringValue(data, "displayName", "Local User");
         settings.reminderDaysBefore = (int) longValue(data.get("reminderDaysBefore"), 3L);
+        settings.reminderNotifyTimeMinutes = (int) longValue(data.get("reminderNotifyTimeMinutes"), 540L);
         settings.dietaryPreferences = stringValue(data, "dietaryPreferences", null);
         settings.darkMode = booleanValue(data.get("darkMode"), false);
         settings.languageTag = stringValue(data, "languageTag", "en");

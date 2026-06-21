@@ -45,13 +45,13 @@ public class ExpiryReminderWorker extends Worker {
         List<Product> expiring = ProductRepository.getExpiringBetween(context, window.startMillis, window.endMillis);
         ExpiryReminderContent.Message message = ExpiryReminderContent.messageFor(expiring);
         if (message == null) {
-            return Result.success();
+            return successAndScheduleNext(context);
         }
 
         createChannel(context);
         if (Build.VERSION.SDK_INT >= 33
                 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            return Result.success();
+            return successAndScheduleNext(context);
         }
 
         Intent intent = inventoryReminderIntent(context);
@@ -72,7 +72,7 @@ public class ExpiryReminderWorker extends Worker {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build());
-        return Result.success();
+        return successAndScheduleNext(context);
     }
 
     static Intent inventoryReminderIntent(Context context) {
@@ -96,6 +96,13 @@ public class ExpiryReminderWorker extends Worker {
         );
         channel.setDescription("Local reminders for products nearing expiry.");
         manager.createNotificationChannel(channel);
+    }
+
+    private static Result successAndScheduleNext(Context context) {
+        if (SettingsRepository.areNotificationsEnabled(context)) {
+            ReminderScheduler.scheduleNextDaily(context);
+        }
+        return Result.success();
     }
 
 }

@@ -16,6 +16,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class SettingsRepository {
+    public static final int DEFAULT_REMINDER_NOTIFY_TIME_MINUTES = 9 * 60;
+    public static final int MAX_REMINDER_DAYS_BEFORE = 365;
     private static final String SETTINGS_ID = "default";
     private static final String LEGACY_PREFS = "smart_settings";
     private static final String KEY_NOTIFICATIONS_ENABLED = "notifications_enabled";
@@ -35,6 +37,7 @@ public final class SettingsRepository {
     public static final class SettingsSnapshot {
         private final boolean notificationsEnabled;
         private final int reminderDaysBefore;
+        private final int reminderNotifyTimeMinutes;
         private final String displayName;
         private final boolean darkMode;
         private final String languageTag;
@@ -42,28 +45,37 @@ public final class SettingsRepository {
         private final String dietaryPreferences;
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore) {
-            this(notificationsEnabled, reminderDaysBefore, "Local User", false, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
+            this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES);
+        }
+
+        public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, int reminderNotifyTimeMinutes) {
+            this(notificationsEnabled, reminderDaysBefore, reminderNotifyTimeMinutes, "Local User", false, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName) {
-            this(notificationsEnabled, reminderDaysBefore, displayName, false, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
+            this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, displayName, false, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode) {
-            this(notificationsEnabled, reminderDaysBefore, displayName, darkMode, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
+            this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, displayName, darkMode, "en", LocalDataContract.STORAGE_ROOM_TEMP_ID, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode, String defaultStorageLocationId) {
-            this(notificationsEnabled, reminderDaysBefore, displayName, darkMode, "en", defaultStorageLocationId, null);
+            this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, displayName, darkMode, "en", defaultStorageLocationId, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode, String defaultStorageLocationId, String dietaryPreferences) {
-            this(notificationsEnabled, reminderDaysBefore, displayName, darkMode, "en", defaultStorageLocationId, dietaryPreferences);
+            this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, displayName, darkMode, "en", defaultStorageLocationId, dietaryPreferences);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode, String languageTag, String defaultStorageLocationId, String dietaryPreferences) {
+            this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, displayName, darkMode, languageTag, defaultStorageLocationId, dietaryPreferences);
+        }
+
+        public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, int reminderNotifyTimeMinutes, String displayName, boolean darkMode, String languageTag, String defaultStorageLocationId, String dietaryPreferences) {
             this.notificationsEnabled = notificationsEnabled;
-            this.reminderDaysBefore = reminderDaysBefore;
+            this.reminderDaysBefore = normalizeReminderDaysBefore(reminderDaysBefore);
+            this.reminderNotifyTimeMinutes = normalizeReminderNotifyTimeMinutes(reminderNotifyTimeMinutes);
             this.displayName = displayName == null || displayName.trim().isEmpty()
                     ? "Local User"
                     : displayName.trim();
@@ -79,6 +91,10 @@ public final class SettingsRepository {
 
         public int getReminderDaysBefore() {
             return reminderDaysBefore;
+        }
+
+        public int getReminderNotifyTimeMinutes() {
+            return reminderNotifyTimeMinutes;
         }
 
         public String getDisplayName() {
@@ -160,6 +176,33 @@ public final class SettingsRepository {
         }, callback, errorCallback);
     }
 
+    public static void setNotificationSettings(Context context, boolean enabled, int reminderDaysBefore, int reminderNotifyTimeMinutes) {
+        AppDatabase database = AppDatabase.getInstance(context);
+        UserSettingsEntity settings = getOrCreateSettings(context, database);
+        settings.notificationEnabled = enabled;
+        settings.reminderDaysBefore = normalizeReminderDaysBefore(reminderDaysBefore);
+        settings.reminderNotifyTimeMinutes = normalizeReminderNotifyTimeMinutes(reminderNotifyTimeMinutes);
+        settings.updatedAt = System.currentTimeMillis();
+        database.userSettingsDao().insert(settings);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
+    }
+
+    public static void setNotificationSettingsAsync(Context context, boolean enabled, int reminderDaysBefore, int reminderNotifyTimeMinutes, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
+        execute(() -> {
+            setNotificationSettings(context, enabled, reminderDaysBefore, reminderNotifyTimeMinutes);
+            return getSettings(context);
+        }, callback, errorCallback);
+    }
+
+    public static void setNotificationSettings(AppDatabase database, boolean enabled, int reminderDaysBefore, int reminderNotifyTimeMinutes) {
+        UserSettingsEntity settings = getOrCreateSettings(database);
+        settings.notificationEnabled = enabled;
+        settings.reminderDaysBefore = normalizeReminderDaysBefore(reminderDaysBefore);
+        settings.reminderNotifyTimeMinutes = normalizeReminderNotifyTimeMinutes(reminderNotifyTimeMinutes);
+        settings.updatedAt = System.currentTimeMillis();
+        database.userSettingsDao().insert(settings);
+    }
+
     public static void setNotificationsEnabled(AppDatabase database, boolean enabled) {
         UserSettingsEntity settings = getOrCreateSettings(database);
         settings.notificationEnabled = enabled;
@@ -171,10 +214,14 @@ public final class SettingsRepository {
         return getSettings(context).getReminderDaysBefore();
     }
 
+    public static int getReminderNotifyTimeMinutes(Context context) {
+        return getSettings(context).getReminderNotifyTimeMinutes();
+    }
+
     public static void setReminderDaysBefore(Context context, int days) {
         AppDatabase database = AppDatabase.getInstance(context);
         UserSettingsEntity settings = getOrCreateSettings(context, database);
-        settings.reminderDaysBefore = Math.max(0, days);
+        settings.reminderDaysBefore = normalizeReminderDaysBefore(days);
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
         UserDataSyncRepository.syncSettingsAsync(context, database);
@@ -189,7 +236,30 @@ public final class SettingsRepository {
 
     public static void setReminderDaysBefore(AppDatabase database, int days) {
         UserSettingsEntity settings = getOrCreateSettings(database);
-        settings.reminderDaysBefore = Math.max(0, days);
+        settings.reminderDaysBefore = normalizeReminderDaysBefore(days);
+        settings.updatedAt = System.currentTimeMillis();
+        database.userSettingsDao().insert(settings);
+    }
+
+    public static void setReminderNotifyTimeMinutes(Context context, int minutesAfterMidnight) {
+        AppDatabase database = AppDatabase.getInstance(context);
+        UserSettingsEntity settings = getOrCreateSettings(context, database);
+        settings.reminderNotifyTimeMinutes = normalizeReminderNotifyTimeMinutes(minutesAfterMidnight);
+        settings.updatedAt = System.currentTimeMillis();
+        database.userSettingsDao().insert(settings);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
+    }
+
+    public static void setReminderNotifyTimeMinutesAsync(Context context, int minutesAfterMidnight, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
+        execute(() -> {
+            setReminderNotifyTimeMinutes(context, minutesAfterMidnight);
+            return getSettings(context);
+        }, callback, errorCallback);
+    }
+
+    public static void setReminderNotifyTimeMinutes(AppDatabase database, int minutesAfterMidnight) {
+        UserSettingsEntity settings = getOrCreateSettings(database);
+        settings.reminderNotifyTimeMinutes = normalizeReminderNotifyTimeMinutes(minutesAfterMidnight);
         settings.updatedAt = System.currentTimeMillis();
         database.userSettingsDao().insert(settings);
     }
@@ -342,7 +412,8 @@ public final class SettingsRepository {
         UserSettingsEntity settings = new UserSettingsEntity();
         settings.id = SETTINGS_ID;
         settings.defaultStorageLocationId = LocalDataContract.STORAGE_ROOM_TEMP_ID;
-        settings.reminderDaysBefore = Math.max(0, reminderDaysBefore);
+        settings.reminderDaysBefore = normalizeReminderDaysBefore(reminderDaysBefore);
+        settings.reminderNotifyTimeMinutes = DEFAULT_REMINDER_NOTIFY_TIME_MINUTES;
         settings.notificationEnabled = notificationsEnabled;
         settings.displayName = "Local User";
         settings.darkMode = darkMode;
@@ -369,12 +440,21 @@ public final class SettingsRepository {
         return new SettingsSnapshot(
                 settings.notificationEnabled,
                 settings.reminderDaysBefore,
+                settings.reminderNotifyTimeMinutes,
                 settings.displayName,
                 settings.darkMode,
                 settings.languageTag,
                 settings.defaultStorageLocationId,
                 settings.dietaryPreferences
         );
+    }
+
+    private static int normalizeReminderDaysBefore(int days) {
+        return Math.max(0, Math.min(MAX_REMINDER_DAYS_BEFORE, days));
+    }
+
+    private static int normalizeReminderNotifyTimeMinutes(int minutesAfterMidnight) {
+        return Math.max(0, Math.min((24 * 60) - 1, minutesAfterMidnight));
     }
 
     private static String normalizeDisplayName(String displayName) {

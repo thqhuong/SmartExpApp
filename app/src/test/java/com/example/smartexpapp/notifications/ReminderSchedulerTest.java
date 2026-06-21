@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.Calendar;
 import java.util.List;
 
 @RunWith(RobolectricTestRunner.class)
@@ -35,8 +36,8 @@ public class ReminderSchedulerTest {
     }
 
     @Test
-    public void scheduleDailyEnqueuesUniquePeriodicReminderWork() throws Exception {
-        ReminderScheduler.scheduleDaily(context);
+    public void scheduleDailyEnqueuesUniqueDelayedReminderWork() throws Exception {
+        ReminderScheduler.scheduleDaily(context, 9 * 60);
 
         List<WorkInfo> infos = WorkManager.getInstance(context)
                 .getWorkInfosForUniqueWork(ReminderScheduler.UNIQUE_DAILY_WORK)
@@ -47,8 +48,20 @@ public class ReminderSchedulerTest {
     }
 
     @Test
+    public void runSoonReplacesExistingImmediateReminderWork() throws Exception {
+        ReminderScheduler.runSoon(context);
+        ReminderScheduler.runSoon(context);
+
+        List<WorkInfo> infos = WorkManager.getInstance(context)
+                .getWorkInfosForUniqueWork(ReminderScheduler.UNIQUE_IMMEDIATE_WORK)
+                .get();
+
+        assertEquals(1, infos.size());
+    }
+
+    @Test
     public void cancelClearsScheduledReminderWork() throws Exception {
-        ReminderScheduler.scheduleDaily(context);
+        ReminderScheduler.scheduleDaily(context, 9 * 60);
         ReminderScheduler.cancel(context);
 
         List<WorkInfo> infos = WorkManager.getInstance(context)
@@ -58,5 +71,23 @@ public class ReminderSchedulerTest {
         for (WorkInfo info : infos) {
             assertTrue(info.getState().isFinished());
         }
+    }
+
+    @Test
+    public void nextDelayUsesTodayWhenTimeIsStillAhead() {
+        Calendar now = Calendar.getInstance();
+        now.set(2026, Calendar.JUNE, 21, 8, 30, 0);
+        now.set(Calendar.MILLISECOND, 0);
+
+        assertEquals(30 * 60 * 1000L, ReminderScheduler.nextDelayMillisFor(9 * 60, now.getTimeInMillis()));
+    }
+
+    @Test
+    public void nextDelayUsesTomorrowWhenTimeAlreadyPassed() {
+        Calendar now = Calendar.getInstance();
+        now.set(2026, Calendar.JUNE, 21, 9, 30, 0);
+        now.set(Calendar.MILLISECOND, 0);
+
+        assertEquals((23L * 60L + 30L) * 60L * 1000L, ReminderScheduler.nextDelayMillisFor(9 * 60, now.getTimeInMillis()));
     }
 }

@@ -17,7 +17,7 @@
             android:id="@+id/dialogTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/dialog_text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:textColor="#8E8E93"
+            android:textColor="@color/dialog_text_secondary"
             android:textSize="13sp"
             android:visibility="gone" />
 
@@ -37,8 +37,8 @@
             android:layout_marginTop="16dp"
             android:background="@drawable/bg_dark_input"
             android:gravity="top|start"
-            android:textColorHint="#44FFFFFF"
-            android:textColor="#FFFFFF"
+            android:textColorHint="@color/dialog_text_hint"
+            android:textColor="@color/dialog_text_primary"
             android:textSize="15sp"
             android:inputType="textMultiLine|textCapSentences"
             android:padding="16dp"
@@ -57,7 +57,7 @@
                 android:id="@+id/btnNeutral"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#8C8C8C"
+                android:textColor="@color/dialog_text_secondary"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:padding="12dp"
@@ -77,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/cancel"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/dialog_text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:padding="12dp"

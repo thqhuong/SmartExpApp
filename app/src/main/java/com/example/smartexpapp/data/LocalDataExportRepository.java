@@ -129,6 +129,7 @@ public final class LocalDataExportRepository {
         return new JSONObject()
                 .put("id", settings.id)
                 .put("reminderDaysBefore", settings.reminderDaysBefore)
+                .put("reminderNotifyTimeMinutes", settings.reminderNotifyTimeMinutes)
                 .put("dietaryPreferences", settings.dietaryPreferences)
                 .put("displayName", settings.displayName)
                 .put("darkMode", settings.darkMode)

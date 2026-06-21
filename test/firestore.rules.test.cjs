@@ -97,6 +97,7 @@ describe("firestore.rules", function () {
       ownerUserId: "user-a",
       displayName: "Kitchen Team",
       reminderDaysBefore: 3,
+      reminderNotifyTimeMinutes: 540,
       dietaryPreferences: "vegetarian",
       darkMode: true,
       languageTag: "en",

@@ -42,11 +42,11 @@ public class AppDatabaseMigrationTest {
     }
 
     @Test
-    public void migrationFrom2To6AddsDisplayNameDarkModeLanguageCategoriesAndPreservesSettings() {
+    public void migrationFrom2To7AddsDisplayNameDarkModeLanguageCategoriesNotifyTimeAndPreservesSettings() {
         createVersion2Database();
 
         AppDatabase database = Room.databaseBuilder(context, AppDatabase.class, DB_NAME)
-                .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
+                .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7)
                 .allowMainThreadQueries()
                 .build();
 
@@ -54,6 +54,7 @@ public class AppDatabaseMigrationTest {
 
         assertNotNull(settings);
         assertEquals(5, settings.reminderDaysBefore);
+        assertEquals(540, settings.reminderNotifyTimeMinutes);
         assertEquals(false, settings.notificationEnabled);
         assertEquals("Local User", settings.displayName);
         assertEquals(false, settings.darkMode);

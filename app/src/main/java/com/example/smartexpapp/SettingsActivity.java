@@ -25,6 +25,9 @@ import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.SettingItem;
 import com.example.smartexpapp.util.ViewUtils;
 
+import java.text.DateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 public class SettingsActivity extends BaseActivity {
@@ -40,6 +43,7 @@ public class SettingsActivity extends BaseActivity {
             startActivity(intent);
             overridePendingTransition(0, 0);
         });
+        findViewById(R.id.notificationSummaryCard).setOnClickListener(v -> openSetting(SettingItem.KEY_NOTIFICATIONS));
 
         // signOutButton is dynamically bound in onResume
     }
@@ -126,13 +130,38 @@ public class SettingsActivity extends BaseActivity {
     }
 
     private void bindSettings() {
-        LinearLayout list = findViewById(R.id.settingsList);
-        if (list != null) {
-            list.removeAllViews();
-        }
-        LayoutInflater inflater = LayoutInflater.from(this);
-        List<SettingItem> settings = SampleData.settings(this);
+        bindNotificationSummary();
+        bindSettingsGroup(findViewById(R.id.inventoryPreferencesList), Arrays.asList(
+                setting(SettingItem.KEY_STORAGE),
+                setting(SettingItem.KEY_DIETARY)
+        ));
+        bindSettingsGroup(findViewById(R.id.appPreferencesList), Arrays.asList(
+                setting(SettingItem.KEY_LANGUAGE),
+                setting(SettingItem.KEY_DARK_MODE)
+        ));
+        bindSettingsGroup(findViewById(R.id.supportList), Arrays.asList(
+                setting(SettingItem.KEY_HELP)
+        ));
+        bindSettingsGroup(findViewById(R.id.accountList), Arrays.asList(
+                setting(SettingItem.KEY_PROFILE)
+        ));
+    }
 
+    private SettingItem setting(String key) {
+        for (SettingItem item : SampleData.settings(this)) {
+            if (item.getKey().equals(key)) {
+                return item;
+            }
+        }
+        throw new IllegalArgumentException("Unknown setting key: " + key);
+    }
+
+    private void bindSettingsGroup(LinearLayout list, List<SettingItem> settings) {
+        if (list == null) {
+            return;
+        }
+        list.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(this);
         for (int i = 0; i < settings.size(); i++) {
             SettingItem item = settings.get(i);
             View row = inflater.inflate(R.layout.item_setting_row, list, false);
@@ -175,6 +204,55 @@ public class SettingsActivity extends BaseActivity {
             row.findViewById(R.id.settingDivider).setVisibility(i == settings.size() - 1 ? View.GONE : View.VISIBLE);
             list.addView(row);
         }
+    }
+
+    private void bindNotificationSummary() {
+        TextView status = findViewById(R.id.settingsNotificationStatusText);
+        TextView detail = findViewById(R.id.settingsNotificationDetailText);
+        SettingsRepository.getSettingsAsync(this, settings -> {
+            if (status != null) {
+                status.setText(settings.areNotificationsEnabled()
+                        ? R.string.settings_notifications_enabled_summary
+                        : R.string.settings_notifications_disabled_summary);
+            }
+            if (detail != null) {
+                if (settings.areNotificationsEnabled()) {
+                    detail.setText(getString(
+                            R.string.settings_notification_summary_format,
+                            reminderWindowLabel(settings.getReminderDaysBefore()),
+                            formatNotifyTime(settings.getReminderNotifyTimeMinutes())
+                    ));
+                } else {
+                    detail.setText(R.string.settings_notification_summary_off);
+                }
+            }
+        }, error -> {
+            if (status != null) {
+                status.setText(R.string.settings_notifications_disabled_summary);
+            }
+            if (detail != null) {
+                detail.setText(R.string.settings_notification_desc);
+            }
+        });
+    }
+
+    private String reminderWindowLabel(int days) {
+        if (days == 0) {
+            return getString(R.string.reminder_today);
+        }
+        if (days == 1) {
+            return getString(R.string.reminder_1_day);
+        }
+        return getString(R.string.reminder_days_format, days);
+    }
+
+    private String formatNotifyTime(int minutesAfterMidnight) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, minutesAfterMidnight / 60);
+        calendar.set(Calendar.MINUTE, minutesAfterMidnight % 60);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return DateFormat.getTimeInstance(DateFormat.SHORT).format(calendar.getTime());
     }
 
     private void openSetting(String key) {
@@ -240,7 +318,7 @@ public class SettingsActivity extends BaseActivity {
                 RadioButton radioButton = new RadioButton(this);
                 radioButton.setText(labels[i]);
                 radioButton.setId(i);
-                radioButton.setTextColor(Color.WHITE);
+                radioButton.setTextColor(getColor(R.color.dialog_text_primary));
                 radioButton.setTextSize(16);
                 radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12));
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
@@ -353,7 +431,7 @@ public class SettingsActivity extends BaseActivity {
                 RadioButton radioButton = new RadioButton(this);
                 radioButton.setText(labels[i]);
                 radioButton.setId(i);
-                radioButton.setTextColor(Color.WHITE);
+                radioButton.setTextColor(getColor(R.color.dialog_text_primary));
                 radioButton.setTextSize(16);
                 radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12));
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {

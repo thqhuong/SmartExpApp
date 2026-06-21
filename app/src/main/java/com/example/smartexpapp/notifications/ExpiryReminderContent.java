@@ -41,13 +41,21 @@ final class ExpiryReminderContent {
         Product first = expiring.get(0);
         if (expiring.size() == 1) {
             return new Message(
-                    first.getName() + " expires " + first.getExpiryStatus(),
-                    "Open SmartExpApp for recipe ideas and actions."
+                    first.getName() + " is about to expire!",
+                    "Make sure to use it soon!"
             );
         }
+        if (expiring.size() == 2) {
+            Product second = expiring.get(1);
+            return new Message(
+                    "Some products are about to expire!",
+                    first.getName() + " and " + second.getName() + " are about to expire, make sure to use them soon!"
+            );
+        }
+        Product second = expiring.get(1);
         return new Message(
-                expiring.size() + " items need attention",
-                first.getName() + " is first: " + first.getExpiryStatus() + ". Open SmartExpApp to review."
+                "Some products are about to expire!",
+                first.getName() + ", " + second.getName() + " and more are about to expire, make sure to use them soon!"
         );
     }
 

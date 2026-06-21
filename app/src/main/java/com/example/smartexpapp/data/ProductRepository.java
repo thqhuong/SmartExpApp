@@ -788,6 +788,7 @@ public final class ProductRepository {
         settings.id = "default";
         settings.defaultStorageLocationId = LocalDataContract.STORAGE_ROOM_TEMP_ID;
         settings.reminderDaysBefore = 3;
+        settings.reminderNotifyTimeMinutes = 540;
         settings.notificationEnabled = true;
         settings.createdAt = now;
         settings.updatedAt = now;

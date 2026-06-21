@@ -64,6 +64,7 @@ service cloud.firestore {
         'ownerUserId',
         'displayName',
         'reminderDaysBefore',
+        'reminderNotifyTimeMinutes',
         'dietaryPreferences',
         'darkMode',
         'languageTag',
@@ -78,6 +79,7 @@ service cloud.firestore {
       return onlyAllowedSettingsFields()
         && ownerFieldMatches(userId)
         && request.resource.data.reminderDaysBefore is number
+        && request.resource.data.reminderNotifyTimeMinutes is number
         && request.resource.data.darkMode is bool
         && request.resource.data.languageTag is string
         && request.resource.data.defaultStorageLocationId is string

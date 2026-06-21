@@ -64,4 +64,31 @@
     <!-- Urgent Badge Colors (Dark Mode) -->
     <color name="urgent_triangle_color">#352219</color>
     <color name="urgent_count_text">#FFFFFF</color>
+
+    <!-- Dialog & Sign-In Adaptive Theme Colors (Dark Mode) -->
+    <color name="dialog_bg">#16161A</color>
+    <color name="dialog_border">#1AFFFFFF</color>
+    <color name="dialog_input_bg">#0D0D0F</color>
+    <color name="dialog_input_bg_focused">#000000</color>
+    <color name="dialog_input_border">#2A2A2D</color>
+    <color name="dialog_input_border_focused">#FF8C00</color>
+    <color name="dialog_text_primary">#FFFFFF</color>
+    <color name="dialog_text_secondary">#8E8E93</color>
+    <color name="dialog_text_hint">#44FFFFFF</color>
+    <color name="dialog_divider">#0AFFFFFF</color>
+
+    <color name="signin_bg_start">#0E0E11</color>
+    <color name="signin_bg_center">#1A1410</color>
+    <color name="signin_bg_end">#05070A</color>
+    <color name="signin_overlay">#C90E0E11</color>
+    <color name="signin_header_text">#CCFFB77D</color>
+    <color name="signin_panel_bg">#B31E1E20</color>
+    <color name="signin_panel_border">#14FFFFFF</color>
+    <color name="signin_title">#E4E1E6</color>
+    <color name="signin_subtitle">#DDC1AE</color>
+    <color name="signin_label">#DDC1AE</color>
+    <color name="signin_input_bg">#18181B</color>
+    <color name="signin_input_border">#353438</color>
+    <color name="signin_btn_sec_bg">#2A2A2D</color>
+    <color name="signin_btn_sec_stroke">#564334</color>
 </resources>

@@ -69,17 +69,26 @@ public class ExpiryReminderContentTest {
         ExpiryReminderContent.Message message =
                 ExpiryReminderContent.messageFor(Collections.singletonList(product("Milk", 1)));
 
-        assertEquals("Milk expires 1 Ngày", message.title);
-        assertEquals("Open SmartExpApp for recipe ideas and actions.", message.text);
+        assertEquals("Milk is about to expire!", message.title);
+        assertEquals("Make sure to use it soon!", message.text);
     }
 
     @Test
-    public void messageForMultipleProductsSummarizesFirstItem() {
+    public void messageForTwoProductsNamesBothProducts() {
         ExpiryReminderContent.Message message =
                 ExpiryReminderContent.messageFor(Arrays.asList(product("Milk", 1), product("Spinach", 2)));
 
-        assertEquals("2 items need attention", message.title);
-        assertTrue(message.text.contains("Milk is first"));
+        assertEquals("Some products are about to expire!", message.title);
+        assertEquals("Milk and Spinach are about to expire, make sure to use them soon!", message.text);
+    }
+
+    @Test
+    public void messageForThreeOrMoreProductsNamesFirstTwoProductsAndMore() {
+        ExpiryReminderContent.Message message =
+                ExpiryReminderContent.messageFor(Arrays.asList(product("Milk", 1), product("Spinach", 2), product("Yogurt", 3)));
+
+        assertEquals("Some products are about to expire!", message.title);
+        assertEquals("Milk, Spinach and more are about to expire, make sure to use them soon!", message.text);
     }
 
     @Test
