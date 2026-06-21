@@ -300,7 +300,7 @@ public class InventoryActivity extends BaseActivity {
             if (ids.contains(p.getId())) affectedProducts.add(p);
         }
 
-        String message = getString(R.string.batch_status_format, ids.size()) + " • " + label;
+        String message = getString(R.string.batch_status_format, ids.size()) + " - " + label;
 
         int[] completed = {0};
         ProductRepository.Callback<Boolean> callback = result -> {
@@ -423,12 +423,13 @@ public class InventoryActivity extends BaseActivity {
             public void onSelected(int index, String label) {
                 String filter;
                 switch (index) {
-                    case 1: filter = "StillGood"; break;
-                    case 2: filter = "Expired"; break;
+                    case 1: filter = FILTER_EXPIRING_SOON; break;
+                    case 2: filter = "StillGood"; break;
+                    case 3: filter = "Expired"; break;
                     default: filter = "All"; break;
                 }
                 expiryFilterValue.setText(label);
-                finishMultiSelect();
+                finishMultiSelectIfActive();
                 viewModel.setExpiryFilter(filter);
                 toggleDropdown(expiryFilterDropdown, expiryFilterChevron);
             }
@@ -439,7 +440,7 @@ public class InventoryActivity extends BaseActivity {
             public void onSelected(int index, String label) {
                 String storage = (index >= 0 && index < STORAGE_KEYS.length) ? STORAGE_KEYS[index] : "All";
                 storageFilterValue.setText(label);
-                finishMultiSelect();
+                finishMultiSelectIfActive();
                 viewModel.setStorageFilter(storage);
                 toggleDropdown(storageFilterDropdown, storageFilterChevron);
             }
@@ -455,7 +456,7 @@ public class InventoryActivity extends BaseActivity {
                     default: sort = "oldest"; break;
                 }
                 sortFilterValue.setText(label);
-                finishMultiSelect();
+                finishMultiSelectIfActive();
                 viewModel.setSortOrder(sort);
                 toggleDropdown(sortFilterDropdown, sortFilterChevron);
             }
@@ -534,6 +535,12 @@ public class InventoryActivity extends BaseActivity {
         }
     }
 
+    private void finishMultiSelectIfActive() {
+        if (multiSelectBar != null && multiSelectBar.getVisibility() == View.VISIBLE) {
+            finishMultiSelect();
+        }
+    }
+
     interface DropdownCallback {
         void onSelected(int index, String label);
     }
@@ -545,6 +552,13 @@ public class InventoryActivity extends BaseActivity {
         }
         if (intent == null || !FILTER_EXPIRING_SOON.equals(intent.getStringExtra(EXTRA_FILTER))) {
             return;
+        }
+        String[] expiryOptions = getResources().getStringArray(R.array.expiry_filter_options);
+        if (expiryOptions.length > 1) {
+            expiryFilterValue.setText(expiryOptions[1]);
+            updateRadioSelection(expiryFilterDropdown, 1);
+        } else {
+            expiryFilterValue.setText(R.string.filter_expiring);
         }
         viewModel.applyLaunchFilter(FILTER_EXPIRING_SOON);
         Toast.makeText(this, R.string.reminder_filter_toast, Toast.LENGTH_SHORT).show();
@@ -563,6 +577,9 @@ public class InventoryActivity extends BaseActivity {
         updateRadioSelection(expiryFilterDropdown, 0);
         updateRadioSelection(storageFilterDropdown, 0);
         updateRadioSelection(sortFilterDropdown, 0);
+        closeDropdown(expiryFilterDropdown, expiryFilterChevron);
+        closeDropdown(storageFilterDropdown, storageFilterChevron);
+        closeDropdown(sortFilterDropdown, sortFilterChevron);
         viewModel.resetFilters();
     }
 

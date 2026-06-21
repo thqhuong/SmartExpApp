@@ -76,6 +76,7 @@
 
     <string-array name="expiry_filter_options">
         <item>Tất cả</item>
+        <item>Sắp hết hạn</item>
         <item>Còn dùng được</item>
         <item>Đã hết hạn</item>
     </string-array>
@@ -428,7 +429,7 @@
     <string name="restore_confirm">Khôi phục</string>
     <string name="restored_format">Đã khôi phục %1$s vào kho</string>
     <string name="history_empty">Chưa có lịch sử</string>
-    <string name="history_empty_desc">Các sản phẩm bạn đánh dấu đã dùng, lãng phí hoặc đã quyên góp sẽ xuất hiện tại đây.</string>
+    <string name="history_empty_desc">Các sản phẩm bạn xóa hoặc đánh dấu đã dùng, lãng phí, hay đã quyên góp sẽ xuất hiện tại đây.</string>
     <string name="badge_consumed">Đã dùng</string>
     <string name="badge_wasted">Lãng phí</string>
     <string name="badge_donated">Đã quyên góp</string>
@@ -437,10 +438,10 @@
     <string name="restore_error">Không thể khôi phục sản phẩm. Vui lòng thử lại.</string>
     <string name="mark_status_confirm">Xác nhận</string>
     <string name="mark_status_note_hint">Thêm ghi chú (tùy chọn)</string>
-    <string name="mark_status_snackbar_format">Đã đánh dấu \"%1$s\" là %2$s</string>
+    <string name="mark_status_snackbar_format">Đã chuyển \"%1$s\" vào lịch sử dưới dạng %2$s</string>
     <string name="mark_undo">Hoàn tác</string>
     <string name="mark_undone_format">Đã chuyển \"%1$s\" về trạng thái đang dùng</string>
-    <string name="undo_delete_format">Đã xóa %1$s</string>
+    <string name="undo_delete_format">Đã chuyển \"%1$s\" vào lịch sử</string>
     <string name="mark_wasted_confirm_text">Sản phẩm này sẽ được đánh dấu là lãng phí.</string>
 
     <!-- Authentication Strings -->
@@ -472,10 +473,10 @@
     <string name="action_wasted">Bỏ đi</string>
     <string name="action_donated">Đã tặng</string>
     <string name="selected_count_format">Đã chọn %1$d</string>
-    <string name="batch_consumed_format">Đã đánh dấu %1$d sản phẩm đã dùng</string>
-    <string name="batch_wasted_format">Đã đánh dấu %1$d sản phẩm bỏ đi</string>
-    <string name="batch_donated_format">Đã đánh dấu %1$d sản phẩm đã tặng</string>
-    <string name="batch_deleted_format">Đã xóa %1$d sản phẩm</string>
+    <string name="batch_consumed_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng đã dùng</string>
+    <string name="batch_wasted_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng lãng phí</string>
+    <string name="batch_donated_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng đã tặng</string>
+    <string name="batch_deleted_format">Đã chuyển %1$d sản phẩm vào lịch sử</string>
     <string name="batch_status_format">Đã cập nhật %1$d sản phẩm</string>
-    <string name="batch_undone_format">Đã hoàn tác %1$d sản phẩm</string>
+    <string name="batch_undone_format">Đã khôi phục %1$d sản phẩm</string>
 </resources>
