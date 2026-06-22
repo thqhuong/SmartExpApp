@@ -553,4 +553,14 @@
     <string name="recipe_status_dietary_pref"> Tùy chọn ăn uống: %1$s.</string>
     <string name="recipe_status_local_empty_inventory">Kho cục bộ đang trống. Đây là các gợi ý chung; bạn cũng có thể nhập món muốn nấu.</string>
     <string name="recipe_status_local_active">Đang dùng gợi ý cục bộ từ kho đã lưu và yêu cầu của bạn.</string>
+
+    <!-- Category Management -->
+    <string name="category_add_success_format">Đã thêm \"%1$s\"</string>
+    <string name="category_rename_success_format">Đã đổi tên thành \"%1$s\"</string>
+    <string name="category_undo_deleted_format">Đã khôi phục \"%1$s\"</string>
+    <string name="category_delete_blocked_title">Không thể xóa danh mục này</string>
+    <string name="category_delete_blocked_message_format">Danh mục này có %1$d sản phẩm. Hãy xóa hết sản phẩm trước khi xóa danh mục.</string>
+    <string name="got_it">Đã hiểu</string>
+    <string name="undo_delete_label">HOÀN TÁC</string>
+    <string name="category_delete_success_format">Đã xóa \"%1$s\"</string>
 </resources>

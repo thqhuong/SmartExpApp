@@ -6,7 +6,7 @@
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingStart="16dp"
-    android:paddingEnd="4dp">
+    android:paddingEnd="8dp">
 
     <View
         android:id="@+id/categoryDot"
@@ -21,29 +21,18 @@
         android:layout_weight="1"
         android:paddingStart="12dp"
         android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:textColor="@color/smart_on_surface" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnEditCategory"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:backgroundTint="@android:color/transparent"
-        android:visibility="gone"
-        app:icon="@android:drawable/ic_menu_edit"
-        app:iconTint="@color/smart_primary_container"
-        app:cornerRadius="20dp"
-        app:strokeWidth="0dp" />
+    <ImageButton
+        android:id="@+id/btnGear"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="10dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_nav_settings_gear"
+        app:tint="@color/smart_muted"
+        android:contentDescription="@string/manage_label" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnDeleteCategory"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:backgroundTint="@android:color/transparent"
-        android:visibility="gone"
-        app:icon="@android:drawable/ic_menu_delete"
-        app:iconTint="@color/smart_error"
-        app:cornerRadius="20dp"
-        app:strokeWidth="0dp" />
 </LinearLayout>

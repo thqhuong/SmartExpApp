@@ -553,4 +553,14 @@
     <string name="recipe_status_dietary_pref"> Dietary preferences: %1$s.</string>
     <string name="recipe_status_local_empty_inventory">Your local inventory is empty. These are generic fallback ideas; you can also type a recipe request.</string>
     <string name="recipe_status_local_active">Using local fallback suggestions from your saved inventory and request.</string>
+
+    <!-- Category Management -->
+    <string name="category_add_success_format">\"%1$s\" added</string>
+    <string name="category_rename_success_format">\"%1$s\" renamed successfully</string>
+    <string name="category_undo_deleted_format">Restored \"%1$s\"</string>
+    <string name="category_delete_blocked_title">Cannot delete this category</string>
+    <string name="category_delete_blocked_message_format">This category has %1$d product(s). Remove all products from this category before deleting.</string>
+    <string name="got_it">Got it</string>
+    <string name="undo_delete_label">UNDO</string>
+    <string name="category_delete_success_format">\"%1$s\" deleted</string>
 </resources>
