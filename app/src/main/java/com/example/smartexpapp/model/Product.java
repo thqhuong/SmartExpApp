@@ -42,7 +42,8 @@ public class Product {
         this(name, category, amount, storage, daysUntilExpiry, iconRes, null);
     }
 
-    public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes, String imageUrl) {
+    public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes,
+            String imageUrl) {
         this(
                 newId(),
                 name,
@@ -61,15 +62,16 @@ public class Product {
                 null,
                 null,
                 SYNC_STATUS_LOCAL,
-                null
-        );
+                null);
     }
 
-    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis, int iconRes) {
+    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis,
+            int iconRes) {
         this(name, category, quantity, unit, storage, expiryDateMillis, iconRes, null);
     }
 
-    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis, int iconRes, String imageUrl) {
+    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis,
+            int iconRes, String imageUrl) {
         this(
                 newId(),
                 name,
@@ -88,8 +90,7 @@ public class Product {
                 null,
                 null,
                 SYNC_STATUS_LOCAL,
-                null
-        );
+                null);
     }
 
     public Product(
@@ -110,9 +111,9 @@ public class Product {
             String cloudId,
             String ownerUserId,
             String syncStatus,
-            Long lastSyncedAt
-    ) {
-        this(id, name, category, quantity, unit, storage, storageLocationId, expiryDateMillis, barcode, status, iconRes, imageUrl, createdAt, updatedAt, cloudId, ownerUserId, syncStatus, lastSyncedAt, null);
+            Long lastSyncedAt) {
+        this(id, name, category, quantity, unit, storage, storageLocationId, expiryDateMillis, barcode, status, iconRes,
+                imageUrl, createdAt, updatedAt, cloudId, ownerUserId, syncStatus, lastSyncedAt, null);
     }
 
     public Product(
@@ -134,8 +135,7 @@ public class Product {
             String ownerUserId,
             String syncStatus,
             Long lastSyncedAt,
-            String note
-    ) {
+            String note) {
         this.id = valueOrDefault(id, newId());
         this.name = valueOrDefault(name, "Unnamed Product");
         this.category = valueOrDefault(category, "General");
@@ -177,8 +177,7 @@ public class Product {
                 ownerUserId,
                 syncStatus,
                 lastSyncedAt,
-                note
-        );
+                note);
     }
 
     public Product withOwnerUserId(String newOwnerUserId, long updatedAt) {
@@ -201,8 +200,7 @@ public class Product {
                 newOwnerUserId,
                 syncStatus,
                 lastSyncedAt,
-                note
-        );
+                note);
     }
 
     public Product withSyncMetadata(String newCloudId, String newSyncStatus, Long newLastSyncedAt, long updatedAt) {
@@ -225,8 +223,7 @@ public class Product {
                 ownerUserId,
                 newSyncStatus,
                 newLastSyncedAt,
-                note
-        );
+                note);
     }
 
     public Product withNote(String newNote) {
@@ -249,8 +246,7 @@ public class Product {
                 ownerUserId,
                 syncStatus,
                 lastSyncedAt,
-                newNote
-        );
+                newNote);
     }
 
     public String getId() {
@@ -440,10 +436,13 @@ public class Product {
     }
 
     public String getGroup(int expiringSoonDays) {
-        if (isExpired()) return "Expired";
+        if (isExpired())
+            return "Expired";
         int days = getDaysUntilExpiry();
-        if (days <= 1) return "Urgent";
-        if (days <= expiringSoonDays) return "Soon";
+        if (days <= 1)
+            return "Urgent";
+        if (days <= expiringSoonDays)
+            return "Soon";
         return "Safe";
     }
 
@@ -474,9 +473,9 @@ public class Product {
         String safeAmount = valueOrDefault(amount, "1 pcs").trim();
         int firstSpace = safeAmount.indexOf(' ');
         if (firstSpace < 0) {
-            return new String[]{safeAmount, ""};
+            return new String[] { safeAmount, "" };
         }
-        return new String[]{
+        return new String[] {
                 safeAmount.substring(0, firstSpace).trim(),
                 safeAmount.substring(firstSpace + 1).trim()
         };

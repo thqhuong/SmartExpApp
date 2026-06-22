@@ -4,10 +4,8 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_glass_screen"
-    android:orientation="vertical"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:background="@color/smart_background"
+    android:orientation="vertical">
 
     <include layout="@layout/include_top_bar" />
 
@@ -26,11 +24,9 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <!-- Profile Hero Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_glass_panel"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:padding="24dp">

@@ -40,7 +40,7 @@ public class SettingsActivity extends BaseActivity {
         setContentView(R.layout.activity_settings);
         setupChrome(R.id.nav_settings);
         bindLocalProfile();
-        
+
         findViewById(R.id.btnEditProfile).setOnClickListener(v -> {
             Intent intent = new Intent(this, AccountDetailsActivity.class);
             startActivity(intent);
@@ -61,7 +61,8 @@ public class SettingsActivity extends BaseActivity {
 
     private void bindSignOutButton() {
         com.google.android.material.button.MaterialButton signOutBtn = findViewById(R.id.signOutButton);
-        if (signOutBtn == null) return;
+        if (signOutBtn == null)
+            return;
 
         AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
         if (authState.isSignedIn()) {
@@ -165,18 +166,14 @@ public class SettingsActivity extends BaseActivity {
         bindSettingsGroup(findViewById(R.id.inventoryPreferencesList), Arrays.asList(
                 setting(SettingItem.KEY_STORAGE),
                 setting(SettingItem.KEY_DIETARY),
-                setting(SettingItem.KEY_EXPIRING_SOON)
-        ));
+                setting(SettingItem.KEY_EXPIRING_SOON)));
         bindSettingsGroup(findViewById(R.id.appPreferencesList), Arrays.asList(
                 setting(SettingItem.KEY_LANGUAGE),
-                setting(SettingItem.KEY_DARK_MODE)
-        ));
+                setting(SettingItem.KEY_DARK_MODE)));
         bindSettingsGroup(findViewById(R.id.supportList), Arrays.asList(
-                setting(SettingItem.KEY_HELP)
-        ));
+                setting(SettingItem.KEY_HELP)));
         bindSettingsGroup(findViewById(R.id.accountList), Arrays.asList(
-                setting(SettingItem.KEY_PROFILE)
-        ));
+                setting(SettingItem.KEY_PROFILE)));
     }
 
     private SettingItem setting(String key) {
@@ -217,9 +214,8 @@ public class SettingsActivity extends BaseActivity {
                                 switchBtn.setEnabled(true);
                                 switchBtn.setOnCheckedChangeListener((retryButton, checked) -> {
                                     if (checked != SettingsRepository.getCachedDarkMode(this)) {
-                                        applyDarkMode(checked, retryError ->
-                                                showErrorNotification(getString(R.string.theme_save_error))
-                                        );
+                                        applyDarkMode(checked, retryError -> showErrorNotification(
+                                                getString(R.string.theme_save_error)));
                                     }
                                 });
                                 showErrorNotification(getString(R.string.theme_save_error));
@@ -232,7 +228,8 @@ public class SettingsActivity extends BaseActivity {
                 row.setOnClickListener(v -> openSetting(item.getKey()));
             }
 
-            ((ImageView) row.findViewById(R.id.settingChevron)).setVisibility(item.isSwitchRow() ? View.GONE : View.VISIBLE);
+            ((ImageView) row.findViewById(R.id.settingChevron))
+                    .setVisibility(item.isSwitchRow() ? View.GONE : View.VISIBLE);
             row.findViewById(R.id.settingDivider).setVisibility(i == settings.size() - 1 ? View.GONE : View.VISIBLE);
             list.addView(row);
         }
@@ -252,8 +249,7 @@ public class SettingsActivity extends BaseActivity {
                     detail.setText(getString(
                             R.string.settings_notification_summary_format,
                             reminderWindowLabel(settings.getReminderDaysBefore()),
-                            formatNotifyTime(settings.getReminderNotifyTimeMinutes())
-                    ));
+                            formatNotifyTime(settings.getReminderNotifyTimeMinutes())));
                 } else {
                     detail.setText(R.string.settings_notification_summary_off);
                 }
@@ -313,9 +309,9 @@ public class SettingsActivity extends BaseActivity {
 
     private void showStoragePreferencesDialog() {
         String[] labels = {
-                LocalDataContract.STORAGE_ROOM_TEMP_NAME,
-                LocalDataContract.STORAGE_REFRIGERATOR_NAME,
-                LocalDataContract.STORAGE_FREEZE_NAME
+                getString(R.string.storage_room_temp),
+                getString(R.string.storage_cool),
+                getString(R.string.storage_frozen)
         };
         String[] ids = {
                 LocalDataContract.STORAGE_ROOM_TEMP_ID,
@@ -332,7 +328,7 @@ public class SettingsActivity extends BaseActivity {
                 }
             }
 
-            final int[] selected = {checked};
+            final int[] selected = { checked };
             View dialogView = getLayoutInflater().inflate(R.layout.dialog_single_choice, null);
             AlertDialog dialog = new AlertDialog.Builder(this)
                     .setView(dialogView)
@@ -340,7 +336,8 @@ public class SettingsActivity extends BaseActivity {
 
             if (dialog.getWindow() != null) {
                 dialog.getWindow().setDimAmount(0.8f);
-                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+                dialog.getWindow()
+                        .setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
             }
 
             TextView title = dialogView.findViewById(R.id.dialogTitle);
@@ -354,9 +351,11 @@ public class SettingsActivity extends BaseActivity {
                 radioButton.setId(i);
                 radioButton.setTextColor(getColor(R.color.dialog_text_primary));
                 radioButton.setTextSize(16);
-                radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12));
+                radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12),
+                        ViewUtils.dp(this, 12));
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    radioButton.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8C00")));
+                    radioButton
+                            .setButtonTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8C00")));
                 }
                 radioGroup.addView(radioButton);
                 if (i == checked) {
@@ -372,9 +371,9 @@ public class SettingsActivity extends BaseActivity {
                 SettingsRepository.setDefaultStorageLocationAsync(
                         this,
                         ids[selected[0]],
-                        updated -> showSuccessNotification(getString(R.string.default_storage_saved_format, updated.getDefaultStorageName())),
-                        error -> showErrorNotification(getString(R.string.default_storage_save_error))
-                );
+                        updated -> showSuccessNotification(
+                                getString(R.string.default_storage_saved_format, labels[selected[0]])),
+                        error -> showErrorNotification(getString(R.string.default_storage_save_error)));
             });
 
             dialog.show();
@@ -390,7 +389,8 @@ public class SettingsActivity extends BaseActivity {
 
             if (dialog.getWindow() != null) {
                 dialog.getWindow().setDimAmount(0.8f);
-                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+                dialog.getWindow()
+                        .setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
             }
 
             TextView title = dialogView.findViewById(R.id.dialogTitle);
@@ -416,8 +416,7 @@ public class SettingsActivity extends BaseActivity {
                         this,
                         "",
                         updated -> showSuccessNotification(getString(R.string.dietary_preferences_cleared)),
-                        error -> showErrorNotification(getString(R.string.dietary_preferences_clear_error))
-                );
+                        error -> showErrorNotification(getString(R.string.dietary_preferences_clear_error)));
             });
 
             dialogView.findViewById(R.id.btnNegative).setOnClickListener(v -> dialog.dismiss());
@@ -427,8 +426,7 @@ public class SettingsActivity extends BaseActivity {
                         this,
                         input.getText().toString(),
                         updated -> showSuccessNotification(getString(R.string.dietary_preferences_saved)),
-                        error -> showErrorNotification(getString(R.string.dietary_preferences_save_error))
-                );
+                        error -> showErrorNotification(getString(R.string.dietary_preferences_save_error)));
             });
 
             dialog.show();
@@ -446,7 +444,7 @@ public class SettingsActivity extends BaseActivity {
                 getString(R.string.expiring_soon_1_month),
                 getString(R.string.expiring_soon_custom)
         };
-        int[] values = {1, 3, 7, 14, 30, -1};
+        int[] values = { 1, 3, 7, 14, 30, -1 };
 
         int checked = values.length - 1;
         for (int i = 0; i < values.length - 1; i++) {
@@ -459,8 +457,8 @@ public class SettingsActivity extends BaseActivity {
             labels[values.length - 1] = getString(R.string.expiring_soon_custom_format, currentDays);
         }
 
-        final int[] selected = {checked};
-        final int[] customValue = {currentDays};
+        final int[] selected = { checked };
+        final int[] customValue = { currentDays };
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_single_choice, null);
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
@@ -482,7 +480,8 @@ public class SettingsActivity extends BaseActivity {
             radioButton.setId(i);
             radioButton.setTextColor(getColor(R.color.dialog_text_primary));
             radioButton.setTextSize(16);
-            radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12));
+            radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12),
+                    ViewUtils.dp(this, 12));
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 radioButton.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8C00")));
             }
@@ -551,7 +550,8 @@ public class SettingsActivity extends BaseActivity {
                 }
                 dialog.dismiss();
                 SettingsRepository.setExpiringSoonDays(this, days);
-                showSuccessNotification(getString(R.string.expiring_soon_saved_format, getString(R.string.expiring_soon_custom_format, days)));
+                showSuccessNotification(getString(R.string.expiring_soon_saved_format,
+                        getString(R.string.expiring_soon_custom_format, days)));
             } catch (NumberFormatException e) {
                 showErrorNotification(getString(R.string.expiring_soon_custom_invalid));
             }
@@ -565,11 +565,11 @@ public class SettingsActivity extends BaseActivity {
                 getString(R.string.language_english),
                 getString(R.string.language_vietnamese)
         };
-        String[] tags = {"en", "vi"};
+        String[] tags = { "en", "vi" };
 
         SettingsRepository.getSettingsAsync(this, settings -> {
             int checked = "vi".equals(settings.getLanguageTag()) ? 1 : 0;
-            final int[] selected = {checked};
+            final int[] selected = { checked };
 
             View dialogView = getLayoutInflater().inflate(R.layout.dialog_single_choice, null);
             AlertDialog dialog = new AlertDialog.Builder(this)
@@ -578,7 +578,8 @@ public class SettingsActivity extends BaseActivity {
 
             if (dialog.getWindow() != null) {
                 dialog.getWindow().setDimAmount(0.8f);
-                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+                dialog.getWindow()
+                        .setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
             }
 
             TextView title = dialogView.findViewById(R.id.dialogTitle);
@@ -592,9 +593,11 @@ public class SettingsActivity extends BaseActivity {
                 radioButton.setId(i);
                 radioButton.setTextColor(getColor(R.color.dialog_text_primary));
                 radioButton.setTextSize(16);
-                radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12));
+                radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12),
+                        ViewUtils.dp(this, 12));
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    radioButton.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8C00")));
+                    radioButton
+                            .setButtonTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8C00")));
                 }
                 radioGroup.addView(radioButton);
                 if (i == checked) {
@@ -612,11 +615,11 @@ public class SettingsActivity extends BaseActivity {
                         this,
                         languageTag,
                         updated -> {
-                            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(updated.getLanguageTag()));
+                            AppCompatDelegate
+                                    .setApplicationLocales(LocaleListCompat.forLanguageTags(updated.getLanguageTag()));
                             showSuccessNotification(getString(R.string.language_saved));
                         },
-                        error -> showErrorNotification(getString(R.string.language_save_error))
-                );
+                        error -> showErrorNotification(getString(R.string.language_save_error)));
             });
 
             dialog.show();

@@ -41,8 +41,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     private Uri pendingPhotoCaptureUri;
     private View statusBarScrim;
 
-    private final ActivityResultLauncher<String> productPhotoPicker =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+    private final ActivityResultLauncher<String> productPhotoPicker = registerForActivityResult(
+            new ActivityResultContracts.GetContent(), uri -> {
                 Consumer<Uri> callback = productPhotoCallback;
                 productPhotoCallback = null;
                 if (callback != null) {
@@ -50,8 +50,8 @@ public abstract class BaseActivity extends AppCompatActivity {
                 }
             });
 
-    private final ActivityResultLauncher<Uri> productPhotoCamera =
-            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+    private final ActivityResultLauncher<Uri> productPhotoCamera = registerForActivityResult(
+            new ActivityResultContracts.TakePicture(), success -> {
                 Uri captured = pendingPhotoCaptureUri;
                 pendingPhotoCaptureUri = null;
                 Consumer<Uri> callback = productPhotoCallback;
@@ -110,16 +110,17 @@ public abstract class BaseActivity extends AppCompatActivity {
      * Android 15+ (targetSdk 36) forces edge-to-edge, so content otherwise spills
      * under the status bar.
      *
-     * <p>Two things happen here:
+     * <p>
+     * Two things happen here:
      * <ul>
-     *   <li>The status-bar inset is added as top padding on the screen's root view,
-     *       so the actual content (top bar, forms, lists) is pushed below the status
-     *       bar. The root's own background still fills the whole window (padding
-     *       doesn't clip it), so the decorative gradient stays full-bleed.</li>
-     *   <li>An opaque scrim is drawn on top of everything, exactly covering the
-     *       status-bar region. Some screens disable child clipping on their scroll
-     *       containers, which lets scrolled content bleed up into the status-bar
-     *       area; the scrim guarantees that content is always covered there.</li>
+     * <li>The status-bar inset is added as top padding on the screen's root view,
+     * so the actual content (top bar, forms, lists) is pushed below the status
+     * bar. The root's own background still fills the whole window (padding
+     * doesn't clip it), so the decorative gradient stays full-bleed.</li>
+     * <li>An opaque scrim is drawn on top of everything, exactly covering the
+     * status-bar region. Some screens disable child clipping on their scroll
+     * containers, which lets scrolled content bleed up into the status-bar
+     * area; the scrim guarantees that content is always covered there.</li>
      * </ul>
      *
      * On pre-edge-to-edge devices the status-bar inset is 0, so nothing changes.
@@ -193,26 +194,30 @@ public abstract class BaseActivity extends AppCompatActivity {
                 sunBg,
                 moonBg,
                 sunIcon,
-                moonIcon
-        );
+                moonIcon);
         View.OnClickListener toggleThemeListener = v -> {
             boolean nextNightMode = !SettingsRepository.getCachedDarkMode(this);
-            if (btnToggleLightMode != null) btnToggleLightMode.setEnabled(false);
-            if (btnToggleDarkMode != null) btnToggleDarkMode.setEnabled(false);
-            if (themeTogglePill != null) themeTogglePill.setEnabled(false);
+            if (btnToggleLightMode != null)
+                btnToggleLightMode.setEnabled(false);
+            if (btnToggleDarkMode != null)
+                btnToggleDarkMode.setEnabled(false);
+            if (themeTogglePill != null)
+                themeTogglePill.setEnabled(false);
             bindThemeToggleVisuals(nextNightMode, sunBg, moonBg, sunIcon, moonIcon);
 
             applyDarkMode(nextNightMode, error -> {
-                if (btnToggleLightMode != null) btnToggleLightMode.setEnabled(true);
-                if (btnToggleDarkMode != null) btnToggleDarkMode.setEnabled(true);
-                if (themeTogglePill != null) themeTogglePill.setEnabled(true);
+                if (btnToggleLightMode != null)
+                    btnToggleLightMode.setEnabled(true);
+                if (btnToggleDarkMode != null)
+                    btnToggleDarkMode.setEnabled(true);
+                if (themeTogglePill != null)
+                    themeTogglePill.setEnabled(true);
                 bindThemeToggleVisuals(
                         SettingsRepository.getCachedDarkMode(this),
                         sunBg,
                         moonBg,
                         sunIcon,
-                        moonIcon
-                );
+                        moonIcon);
                 Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show();
             });
         };
@@ -228,7 +233,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (themeTogglePill != null) {
             themeTogglePill.setOnClickListener(toggleThemeListener);
         }
-
         if (bottomNavigation == null) {
             return;
         }
@@ -252,8 +256,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         SettingsRepository.setDarkModeAsync(this, darkMode, settings -> {
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             AppCompatDelegate.setDefaultNightMode(
-                    settings.isDarkMode() ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
-            );
+                    settings.isDarkMode() ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
         }, errorCallback);
     }
 
@@ -262,8 +265,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             View sunBg,
             View moonBg,
             ImageView sunIcon,
-            ImageView moonIcon
-    ) {
+            ImageView moonIcon) {
         if (sunBg == null || moonBg == null || sunIcon == null || moonIcon == null) {
             return;
         }
@@ -378,7 +380,8 @@ public abstract class BaseActivity extends AppCompatActivity {
             try (InputStream in = resolver.openInputStream(sourceUri)) {
                 bitmap = BitmapFactory.decodeStream(in);
             }
-            if (bitmap == null) return null;
+            if (bitmap == null)
+                return null;
             try (FileOutputStream out = new FileOutputStream(file)) {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
             }

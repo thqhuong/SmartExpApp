@@ -155,9 +155,12 @@ public class InventoryActivity extends BaseActivity {
 
         findViewById(R.id.btnCloseMultiSelect).setOnClickListener(v -> finishMultiSelect());
         findViewById(R.id.btnSelectAll).setOnClickListener(v -> adapter.selectAll());
-        findViewById(R.id.btnBatchConsumed).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.CONSUMED));
-        findViewById(R.id.btnBatchWasted).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.WASTED));
-        findViewById(R.id.btnBatchDonated).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.DONATED));
+        findViewById(R.id.btnBatchConsumed)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.CONSUMED));
+        findViewById(R.id.btnBatchWasted)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.WASTED));
+        findViewById(R.id.btnBatchDonated)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.DONATED));
         findViewById(R.id.btnBatchDelete).setOnClickListener(v -> batchDelete(adapter.getSelectedIds()));
 
         AppContainer appContainer = ((SmartExpAppApplication) getApplicationContext()).appContainer;
@@ -211,8 +214,7 @@ public class InventoryActivity extends BaseActivity {
                 error -> {
                     Log.w(TAG, "Initial product sync failed; loading local inventory cache.", error);
                     viewModel.loadProducts();
-                }
-        );
+                });
     }
 
     @Override
@@ -320,12 +322,13 @@ public class InventoryActivity extends BaseActivity {
 
         List<Product> affectedProducts = new ArrayList<>();
         for (Product p : latestProducts) {
-            if (ids.contains(p.getId())) affectedProducts.add(p);
+            if (ids.contains(p.getId()))
+                affectedProducts.add(p);
         }
 
         String message = getString(R.string.batch_status_format, ids.size()) + " - " + label;
 
-        int[] completed = {0};
+        int[] completed = { 0 };
         ProductRepository.Callback<Boolean> callback = result -> {
             synchronized (completed) {
                 completed[0]++;
@@ -333,7 +336,8 @@ public class InventoryActivity extends BaseActivity {
                     runOnUiThread(() -> {
                         finishMultiSelect();
                         viewModel.loadProducts();
-                        InAppNotificationManager.showUndo(InventoryActivity.this, message, iconRes, iconBgRes, iconTintRes,
+                        InAppNotificationManager.showUndo(InventoryActivity.this, message, iconRes, iconBgRes,
+                                iconTintRes,
                                 () -> batchUndo(affectedProducts));
                     });
                 }
@@ -354,13 +358,14 @@ public class InventoryActivity extends BaseActivity {
     private void batchDelete(Set<String> ids) {
         List<Product> affectedProducts = new ArrayList<>();
         for (Product p : latestProducts) {
-            if (ids.contains(p.getId())) affectedProducts.add(p);
+            if (ids.contains(p.getId()))
+                affectedProducts.add(p);
         }
 
         String note = "Batch deleted from inventory";
         String message = getString(R.string.batch_deleted_format, ids.size());
 
-        int[] completed = {0};
+        int[] completed = { 0 };
         ProductRepository.Callback<Boolean> callback = result -> {
             synchronized (completed) {
                 completed[0]++;
@@ -382,7 +387,7 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void batchUndo(List<Product> products) {
-        int[] completed = {0};
+        int[] completed = { 0 };
         int total = products.size();
         ProductRepository.Callback<Boolean> callback = result -> {
             synchronized (completed) {
@@ -396,8 +401,7 @@ public class InventoryActivity extends BaseActivity {
                 }
             }
         };
-        ProductRepository.ErrorCallback errorCallback = e ->
-                Log.e(TAG, "Batch undo failed", e);
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch undo failed", e);
         for (Product product : products) {
             viewModel.revertStatus(product.getId(), "Batch undo", callback, errorCallback);
         }
@@ -443,10 +447,18 @@ public class InventoryActivity extends BaseActivity {
             public void onSelected(int index, String label) {
                 String filter;
                 switch (index) {
-                    case 1: filter = FILTER_EXPIRING_SOON; break;
-                    case 2: filter = "StillGood"; break;
-                    case 3: filter = "Expired"; break;
-                    default: filter = "All"; break;
+                    case 1:
+                        filter = FILTER_EXPIRING_SOON;
+                        break;
+                    case 2:
+                        filter = "StillGood";
+                        break;
+                    case 3:
+                        filter = "Expired";
+                        break;
+                    default:
+                        filter = "All";
+                        break;
                 }
                 expiryFilterValue.setText(label);
                 finishMultiSelectIfActive();
@@ -471,9 +483,15 @@ public class InventoryActivity extends BaseActivity {
             public void onSelected(int index, String label) {
                 String sort;
                 switch (index) {
-                    case 1: sort = "name"; break;
-                    case 2: sort = "newest"; break;
-                    default: sort = "oldest"; break;
+                    case 1:
+                        sort = "name";
+                        break;
+                    case 2:
+                        sort = "newest";
+                        break;
+                    default:
+                        sort = "oldest";
+                        break;
                 }
                 sortFilterValue.setText(label);
                 finishMultiSelectIfActive();
@@ -807,7 +825,7 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void onMarkSuccess(Boolean updated, Product product,
-                               int iconRes, int iconBgRes, int iconTintRes, String statusLabel) {
+            int iconRes, int iconBgRes, int iconTintRes, String statusLabel) {
         if (Boolean.TRUE.equals(updated)) {
             ReminderScheduler.runSoon(this);
             viewModel.loadProducts();
@@ -826,8 +844,6 @@ public class InventoryActivity extends BaseActivity {
                     }
                 }, this::onStatusUpdateFailed);
     }
-
-
 
     private void openEditDialog(Product product) {
         new EditProductDialog(product, viewModel::loadProducts, latestProducts).show(this);

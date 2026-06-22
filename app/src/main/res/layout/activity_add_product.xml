@@ -4,10 +4,8 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_glass_screen"
-    android:orientation="vertical"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:background="@color/smart_background"
+    android:orientation="vertical">
 
     <include layout="@layout/include_top_bar" />
 
@@ -146,9 +144,18 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_glass_panel"
-                android:orientation="vertical"
-                android:padding="20dp">
+                app:cardBackgroundColor="@color/smart_surface"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="@color/smart_surface_variant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -340,17 +347,17 @@
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
-                <LinearLayout
-                    android:id="@+id/storageGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="112dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="20dp"
-                    android:background="@drawable/bg_toggle_group"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:padding="8dp"
-                    android:baselineAligned="false">
+                    <LinearLayout
+                        android:id="@+id/storageGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="112dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/bg_toggle_group"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:padding="8dp"
+                        android:baselineAligned="false">
 
                     <LinearLayout
                         android:id="@+id/storageRoom"
@@ -462,12 +469,12 @@
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                     <FrameLayout
                         android:id="@+id/photoPreview"
@@ -487,12 +494,12 @@
                             android:scaleType="centerCrop"
                             android:visibility="gone" />
 
-                        <LinearLayout
-                            android:id="@+id/photoPlaceholder"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center"
-                            android:orientation="vertical">
+                            <LinearLayout
+                                android:id="@+id/photoPlaceholder"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:orientation="vertical">
 
                             <ImageView
                                 android:layout_width="28dp"
@@ -542,6 +549,7 @@
                         app:icon="@android:drawable/ic_menu_delete"
                         app:iconGravity="textStart"
                         app:iconTint="@color/smart_error" />
+                </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
