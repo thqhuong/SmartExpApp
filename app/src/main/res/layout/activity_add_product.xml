@@ -12,6 +12,7 @@
     <include layout="@layout/include_top_bar" />
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/addProductScroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
