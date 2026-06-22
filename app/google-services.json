@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "314090682738",
+    "project_id": "smartexpapp-uit",
+    "storage_bucket": "smartexpapp-uit.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314090682738:android:5056dc059124f03df285eb",
+        "android_client_info": {
+          "package_name": "com.example.smartexpapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "314090682738-54qmusghfupgvob209ptaekhnnr1j359.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartexpapp",
+            "certificate_hash": "278a34f5f6bfe4106c2a25c0b45741974b4d3efc"
+          }
+        },
+        {
+          "client_id": "314090682738-p8g9hj64nldpeg1cjjfildotfqujgnns.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartexpapp",
+            "certificate_hash": "766d36dfc55ab0c2ca0819b194bdb31229fc82a1"
+          }
+        },
+        {
+          "client_id": "314090682738-rpfvu8rr7vtbf2se73vriq07hqalap72.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartexpapp",
+            "certificate_hash": "0c84a9362e6d8a1778d1ae9def781a7368060f65"
+          }
+        },
+        {
+          "client_id": "314090682738-9k6da0q3so93i2ajb4lad66vf5tf2lpg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUjVBIqVSurYyEkWewN6hGNnSdsUX9G-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314090682738-9k6da0q3so93i2ajb4lad66vf5tf2lpg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
