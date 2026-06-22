@@ -287,6 +287,7 @@ public class EditProductDialog {
         MaterialButton btnAdd = content.findViewById(R.id.btnAddCategory);
 
         LayoutInflater inflater = LayoutInflater.from(activity);
+        Collections.sort(allCats);
         for (String cat : allCats) {
             String canonicalCat = canonicalCategory(activity, cat);
             boolean builtin = CategoryColorHelper.isBuiltInCanonical(canonicalCat);
@@ -298,6 +299,11 @@ public class EditProductDialog {
             TextView name = row.findViewById(R.id.categoryName);
             name.setText(cat);
             name.setTextColor(activity.getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
+
+            int usedCount = countProductsForCategory(activity, canonicalCat);
+            TextView countView = row.findViewById(R.id.categoryCount);
+            countView.setText(activity.getString(R.string.category_product_count_format, usedCount));
+            countView.setVisibility(usedCount > 0 ? View.VISIBLE : View.GONE);
 
             ImageButton gear = row.findViewById(R.id.btnGear);
             gear.setOnClickListener(v -> showCategoryActionDialog(activity, canonicalCat));
@@ -329,6 +335,11 @@ public class EditProductDialog {
 
         actionView.findViewById(R.id.actionEdit).setOnClickListener(v -> {
             actionDialog.dismiss();
+            if (usedCount > 0) {
+                String displayEdit = CategoryColorHelper.getLocalizedCategory(activity, canonicalCat);
+                showCannotRenameDialog(activity, displayEdit, canonicalCat, usedCount);
+                return;
+            }
             showRenameCategoryDialog(activity, canonicalCat, () -> {
                 if (manageDialog != null) manageDialog.dismiss();
                 showManageCategoriesDialog(activity);
@@ -479,6 +490,31 @@ public class EditProductDialog {
         ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(R.string.category_delete_blocked_title);
         ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
                 activity.getString(R.string.category_delete_blocked_message_format, count));
+
+        Button confirmBtn = confirmView.findViewById(R.id.dialogConfirm);
+        confirmBtn.setText(R.string.got_it);
+        confirmBtn.setOnClickListener(v -> dlg.dismiss());
+        confirmView.findViewById(R.id.dialogCancel).setVisibility(View.GONE);
+    }
+
+    private void showCannotRenameDialog(BaseActivity activity, String displayName, String canonicalCat, int count) {
+        View confirmView = LayoutInflater.from(activity).inflate(R.layout.dialog_delete_confirm, null);
+        android.app.Dialog dlg = new android.app.Dialog(activity, android.R.style.Theme_Translucent_NoTitleBar);
+        dlg.setContentView(confirmView);
+        dlg.show();
+        if (dlg.getWindow() != null) {
+            android.view.WindowManager.LayoutParams p = dlg.getWindow().getAttributes();
+            p.gravity = android.view.Gravity.CENTER;
+            p.dimAmount = 0.5f;
+            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dlg.getWindow().setAttributes(p);
+            dlg.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(R.string.category_rename_blocked_title);
+        ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
+                activity.getString(R.string.category_rename_blocked_message_format, count));
 
         Button confirmBtn = confirmView.findViewById(R.id.dialogConfirm);
         confirmBtn.setText(R.string.got_it);

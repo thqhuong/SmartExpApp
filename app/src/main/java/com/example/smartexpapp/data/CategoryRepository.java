@@ -12,6 +12,7 @@ import com.example.smartexpapp.data.local.AppDatabase;
 import com.example.smartexpapp.data.local.CategoryEntity;
 import com.example.smartexpapp.data.local.ProductEntity;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.model.ProductStatus;
 import com.example.smartexpapp.util.CategoryColorHelper;
 
 import java.util.ArrayList;
@@ -278,7 +279,7 @@ public final class CategoryRepository {
 
     private static boolean isCategoryUsed(AppDatabase database, String canonicalName) {
         for (ProductEntity product : database.productDao().getAllProductsSortedByExpiry()) {
-            if (canonicalName.equals(product.category)) {
+            if (canonicalName.equals(product.category) && ProductStatus.ACTIVE.equals(product.status)) {
                 return true;
             }
         }
