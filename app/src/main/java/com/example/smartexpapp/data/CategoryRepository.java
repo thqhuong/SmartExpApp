@@ -12,6 +12,7 @@ import com.example.smartexpapp.data.local.AppDatabase;
 import com.example.smartexpapp.data.local.CategoryEntity;
 import com.example.smartexpapp.data.local.ProductEntity;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.model.ProductStatus;
 import com.example.smartexpapp.util.CategoryColorHelper;
 
 import java.util.ArrayList;
@@ -167,6 +168,7 @@ public final class CategoryRepository {
         });
         syncCategories(context, database);
         ProductSyncRepository.syncProductsAsync(context, database);
+        CategoryColorHelper.transferColorMapping(context, oldCanonical, newCanonical);
         return true;
     }
 
@@ -249,20 +251,6 @@ public final class CategoryRepository {
 
     private static void importExistingCategoryState(Context context, AppDatabase database) {
         long now = System.currentTimeMillis();
-        // Clean up duplicates: find any category whose canonical name matches a built-in category
-        // but was inserted as a custom category (e.g. name is "Thịt", "Sữa", etc.)
-        for (CategoryEntity cat : database.categoryDao().getActiveCategories()) {
-            if (!cat.builtIn) {
-                String canonical = canonicalName(context, cat.name);
-                if (isBuiltInCanonical(canonical)) {
-                    cat.active = false;
-                    cat.deletedAt = now;
-                    cat.updatedAt = now;
-                    database.categoryDao().update(cat);
-                    database.productDao().renameCategory(cat.name, canonical, now, syncStatusForWrite(context));
-                }
-            }
-        }
         Set<String> inactiveBuiltIns = new HashSet<>(legacyCustomizedBuiltIns(context));
         for (String builtIn : inactiveBuiltIns) {
             CategoryEntity category = database.categoryDao().getByName(canonicalName(context, builtIn));
@@ -291,7 +279,7 @@ public final class CategoryRepository {
 
     private static boolean isCategoryUsed(AppDatabase database, String canonicalName) {
         for (ProductEntity product : database.productDao().getAllProductsSortedByExpiry()) {
-            if (canonicalName.equals(product.category)) {
+            if (canonicalName.equals(product.category) && ProductStatus.ACTIVE.equals(product.status)) {
                 return true;
             }
         }

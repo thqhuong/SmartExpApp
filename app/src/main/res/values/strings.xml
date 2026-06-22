@@ -563,7 +563,10 @@
     <string name="category_undo_deleted_format">Restored \"%1$s\"</string>
     <string name="category_delete_blocked_title">Cannot delete this category</string>
     <string name="category_delete_blocked_message_format">This category has %1$d product(s). Remove all products from this category before deleting.</string>
+    <string name="category_rename_blocked_title">Cannot rename this category</string>
+    <string name="category_rename_blocked_message_format">This category has %1$d product(s). Remove all products from this category before renaming.</string>
     <string name="got_it">Got it</string>
     <string name="undo_delete_label">UNDO</string>
+    <string name="category_product_count_format">%1$d product(s)</string>
     <string name="category_delete_success_format">\"%1$s\" deleted</string>
 </resources>

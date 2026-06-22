@@ -23,6 +23,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
@@ -80,6 +81,20 @@ public class CategoryRepositoryTest {
         assertEquals("Milk Stuff", updated.getCategory());
         assertFalse(CategoryRepository.isCategoryActive(context, database, "Dairy"));
         assertTrue(CategoryRepository.isCategoryActive(context, database, "Milk Stuff"));
+    }
+
+    @Test
+    public void renameCustomCategoryUpdatesProducts() {
+        assertTrue(CategoryRepository.addCategory(context, database, "Snacks"));
+        productRepository.addProduct(product("snack-id", "Chips", "Snacks"));
+
+        assertTrue(CategoryRepository.renameCategory(context, database, "Snacks", "Snackies"));
+
+        Product updated = productRepository.getProductById("snack-id");
+        assertNotNull(updated);
+        assertEquals("Snackies", updated.getCategory());
+        assertTrue(CategoryRepository.isCategoryActive(context, database, "Snackies"));
+        assertNull(database.categoryDao().getByName("Snacks"));
     }
 
     @Test

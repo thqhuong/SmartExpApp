@@ -278,7 +278,7 @@ public class EditProductDialog {
     private void showManageCategoriesDialog(BaseActivity activity) {
         CategoryRepository.getDisplayCategoriesAsync(activity,
                 allCats -> showManageCategoriesDialog(activity, allCats),
-                error -> activity.showErrorNotification(activity.getString(R.string.category_load_error)));
+                error -> Toast.makeText(activity, R.string.category_load_error, Toast.LENGTH_SHORT).show());
     }
 
     private void showManageCategoriesDialog(BaseActivity activity, List<String> allCats) {
@@ -287,6 +287,7 @@ public class EditProductDialog {
         MaterialButton btnAdd = content.findViewById(R.id.btnAddCategory);
 
         LayoutInflater inflater = LayoutInflater.from(activity);
+        Collections.sort(allCats);
         for (String cat : allCats) {
             String canonicalCat = canonicalCategory(activity, cat);
             boolean builtin = CategoryColorHelper.isBuiltInCanonical(canonicalCat);
@@ -296,81 +297,30 @@ public class EditProductDialog {
             dot.getBackground().setTint(activity.getColor(CategoryColorHelper.getColor(activity, cat)));
 
             TextView name = row.findViewById(R.id.categoryName);
-            if (builtin) {
-                String defaultTag = activity.getString(R.string.category_default_tag);
-                String fullText = cat + defaultTag;
-                android.text.SpannableString spannable = new android.text.SpannableString(fullText);
-                int start = cat.length();
-                int end = fullText.length();
-                spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.ITALIC), start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                name.setText(spannable);
-                name.setTextColor(activity.getColor(R.color.smart_secondary));
-            } else {
-                name.setText(cat);
-                name.setTextColor(activity.getColor(R.color.smart_on_surface));
-            }
+            name.setText(cat);
+            name.setTextColor(activity.getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
 
-            ImageButton editBtn = row.findViewById(R.id.btnEditCategory);
-            ImageButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
-            editBtn.setOnClickListener(v -> showRenameCategoryDialog(activity, canonicalCat, () -> {
-                if (manageDialog != null) manageDialog.dismiss();
-                showManageCategoriesDialog(activity);
-            }));
-            deleteBtn.setOnClickListener(v -> showDeleteCategoryDialog(
-                    activity,
-                    canonicalCat,
-                    countProductsForCategory(activity, canonicalCat),
-                    () -> {
-                        if (manageDialog != null) manageDialog.dismiss();
-                        showManageCategoriesDialog(activity);
-                    }));
+            int usedCount = countProductsForCategory(activity, canonicalCat);
+            TextView countView = row.findViewById(R.id.categoryCount);
+            countView.setText(activity.getString(R.string.category_product_count_format, usedCount));
+            countView.setVisibility(usedCount > 0 ? View.VISIBLE : View.GONE);
+
+            ImageButton gear = row.findViewById(R.id.btnGear);
+            gear.setOnClickListener(v -> showCategoryActionDialog(activity, canonicalCat));
 
             categoryList.addView(row);
         }
 
-        btnAdd.setOnClickListener(v -> {
-            View inputLayout = inflater.inflate(R.layout.dialog_edit_text, null);
-            EditText input = inputLayout.findViewById(android.R.id.edit);
-            new MaterialAlertDialogBuilder(activity)
-                    .setTitle(R.string.category_add_title)
-                    .setView(inputLayout)
-                    .setPositiveButton(R.string.add_label, (d, w) -> {
-                        String newCat = input.getText().toString().trim();
-                        String canonicalNew = canonicalCategory(activity, newCat);
-                        if (!newCat.isEmpty()) {
-                            CategoryRepository.addCategoryAsync(activity, canonicalNew, added -> {
-                                if (!added) {
-                                    activity.showWarningNotification(activity.getString(R.string.category_already_exists_format, newCat));
-                                    showManageCategoriesDialog(activity);
-                                    return;
-                                }
-                                selectedCategory = canonicalNew;
-                                refreshCategorySpinner(activity);
-                                showManageCategoriesDialog(activity);
-                                showCategorySnackbar(activity, activity.getString(R.string.category_add_success_format, newCat),
-                                        android.R.drawable.ic_menu_add, R.color.smart_primary_container);
-                            }, error -> activity.showErrorNotification(activity.getString(R.string.category_load_error)));
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
-        });
+        btnAdd.setOnClickListener(v -> showAddCategoryDialog(activity));
 
         if (manageDialog != null && manageDialog.isShowing()) {
             manageDialog.dismiss();
         }
-        AlertDialog dialog = new AlertDialog.Builder(activity)
+        manageDialog = new MaterialAlertDialogBuilder(activity)
+                .setTitle(R.string.manage_categories_title)
                 .setView(content)
-                .create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setDimAmount(0.6f);
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
-                    android.graphics.Color.TRANSPARENT));
-        }
-        manageDialog = dialog;
-        dialog.show();
-
-        content.findViewById(R.id.dialogClose).setOnClickListener(v -> dialog.dismiss());
+                .setPositiveButton(R.string.close_label, null)
+                .show();
     }
 
     private void showCategoryActionDialog(BaseActivity activity, String canonicalCat) {
@@ -385,6 +335,11 @@ public class EditProductDialog {
 
         actionView.findViewById(R.id.actionEdit).setOnClickListener(v -> {
             actionDialog.dismiss();
+            if (usedCount > 0) {
+                String displayEdit = CategoryColorHelper.getLocalizedCategory(activity, canonicalCat);
+                showCannotRenameDialog(activity, displayEdit, canonicalCat, usedCount);
+                return;
+            }
             showRenameCategoryDialog(activity, canonicalCat, () -> {
                 if (manageDialog != null) manageDialog.dismiss();
                 showManageCategoriesDialog(activity);
@@ -399,47 +354,62 @@ public class EditProductDialog {
         });
     }
 
-    private void showRenameCategoryDialog(BaseActivity activity, String oldName, Runnable onDone) {
-        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_rename_category, null);
-        android.app.Dialog dialog = new android.app.Dialog(activity, android.R.style.Theme_Translucent_NoTitleBar);
-        dialog.setContentView(dialogView);
-        dialog.show();
-        if (dialog.getWindow() != null) {
-            android.view.WindowManager.LayoutParams p = dialog.getWindow().getAttributes();
-            p.gravity = android.view.Gravity.CENTER;
-            p.dimAmount = 0.5f;
-            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
-            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
-            dialog.getWindow().setAttributes(p);
-            dialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-        }
+    private void showAddCategoryDialog(BaseActivity activity) {
+        View inputLayout = LayoutInflater.from(activity).inflate(R.layout.dialog_edit_text, null);
+        EditText input = inputLayout.findViewById(android.R.id.edit);
+        new MaterialAlertDialogBuilder(activity)
+                .setTitle(R.string.category_add_title)
+                .setView(inputLayout)
+                .setPositiveButton(R.string.add_label, (d, w) -> {
+                    String newCat = input.getText().toString().trim();
+                    String canonicalNew = canonicalCategory(activity, newCat);
+                    if (!newCat.isEmpty()) {
+                        CategoryRepository.addCategoryAsync(activity, canonicalNew, added -> {
+                            if (!added) {
+                                Toast.makeText(activity, activity.getString(R.string.category_already_exists_format, newCat), Toast.LENGTH_SHORT).show();
+                                showManageCategoriesDialog(activity);
+                                return;
+                            }
+                            selectedCategory = canonicalNew;
+                            refreshCategorySpinner(activity);
+                            showManageCategoriesDialog(activity);
+                            showCategorySnackbar(activity, activity.getString(R.string.category_add_success_format, newCat),
+                                    android.R.drawable.ic_menu_add, R.color.smart_primary_container);
+                        }, error -> Toast.makeText(activity, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
 
-        EditText input = dialogView.findViewById(R.id.dialogEditText);
+    private void showRenameCategoryDialog(BaseActivity activity, String oldName, Runnable onDone) {
+        View inputLayout = LayoutInflater.from(activity).inflate(R.layout.dialog_edit_text, null);
+        EditText input = inputLayout.findViewById(android.R.id.edit);
         String displayOld = CategoryColorHelper.getLocalizedCategory(activity, oldName);
         input.setText(displayOld);
         input.setSelection(displayOld.length());
-
-        dialogView.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
-            String newName = input.getText().toString().trim();
-            String canonicalNew = canonicalCategory(activity, newName);
-            if (newName.isEmpty() || canonicalNew.equals(oldName)) {
-                dialog.dismiss();
-                return;
-            }
-            dialog.dismiss();
-            CategoryRepository.renameCategoryAsync(activity, oldName, canonicalNew, ignored -> {
-                if (canonicalCategory(activity, selectedCategory).equals(oldName)) selectedCategory = canonicalNew;
-                refreshCategorySpinner(activity);
-                onDone.run();
-                showCategorySnackbar(activity, activity.getString(R.string.category_rename_success_format, newName),
-                        R.drawable.ic_edit, R.color.smart_primary_container);
-            }, error -> {
-                activity.showErrorNotification(activity.getString(R.string.category_rename_error));
-                onDone.run();
-            });
-        });
-
-        dialogView.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
+        new MaterialAlertDialogBuilder(activity)
+                .setTitle(R.string.rename_category_title)
+                .setView(inputLayout)
+                .setPositiveButton(R.string.rename_label, (d, w) -> {
+                    String newName = input.getText().toString().trim();
+                    String canonicalNew = canonicalCategory(activity, newName);
+                    if (newName.isEmpty() || canonicalNew.equals(oldName)) {
+                        return;
+                    }
+                    CategoryRepository.renameCategoryAsync(activity, oldName, canonicalNew, ignored -> {
+                        if (canonicalCategory(activity, selectedCategory).equals(oldName)) selectedCategory = canonicalNew;
+                        refreshCategorySpinner(activity);
+                        onDone.run();
+                        showCategorySnackbar(activity, activity.getString(R.string.category_rename_success_format, newName),
+                                R.drawable.ic_edit, R.color.smart_primary_container);
+                    }, error -> {
+                        Toast.makeText(activity, R.string.category_rename_error, Toast.LENGTH_SHORT).show();
+                        onDone.run();
+                    });
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     private void showDeleteCategoryDialog(BaseActivity activity, String catToDelete, int productCount, Runnable onDone) {
@@ -471,7 +441,7 @@ public class EditProductDialog {
             dlg.dismiss();
             CategoryRepository.deleteCategoryAsync(activity, catToDelete, success -> {
                 if (!success) {
-                    activity.showErrorNotification(activity.getString(R.string.category_delete_blocked_title));
+                    Toast.makeText(activity, R.string.category_delete_blocked_title, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 CategoryRepository.getDisplayCategoriesAsync(activity, active -> {
@@ -481,23 +451,23 @@ public class EditProductDialog {
                     refreshCategorySpinner(activity);
                     onDone.run();
 
-                    InAppNotificationManager.showUndo(activity,
+                    Snackbar snackbar = Snackbar.make(activity.findViewById(R.id.root),
                             activity.getString(R.string.category_delete_success_format, displayDelete),
-                            R.drawable.ic_delete,
-                            R.drawable.bg_action_icon_circle_delete,
-                            R.color.smart_error,
-                            () -> {
-                                CategoryRepository.addCategoryAsync(activity, catToDelete, unused -> {
-                                    selectedCategory = catToDelete;
-                                    refreshCategorySpinner(activity);
-                                    activity.showSuccessNotification(activity.getString(R.string.category_undo_deleted_format, displayDelete));
-                                }, error -> {});
-                            });
+                            Snackbar.LENGTH_SHORT);
+                    snackbar.getView().setBackgroundResource(R.drawable.bg_undo_bar);
+                    snackbar.setActionTextColor(activity.getColor(R.color.smart_primary));
+                    snackbar.setAction(R.string.undo_delete_label, v2 -> {
+                        CategoryRepository.addCategoryAsync(activity, catToDelete, unused -> {
+                            selectedCategory = catToDelete;
+                            refreshCategorySpinner(activity);
+                        }, error -> {});
+                    });
+                    snackbar.show();
                 }, error -> {
                     refreshCategorySpinner(activity);
                     onDone.run();
                 });
-            }, error -> activity.showErrorNotification(activity.getString(R.string.category_load_error)));
+            }, error -> Toast.makeText(activity, R.string.category_load_error, Toast.LENGTH_SHORT).show());
         });
         confirmView.findViewById(R.id.dialogCancel).setOnClickListener(v -> dlg.dismiss());
     }
@@ -527,6 +497,31 @@ public class EditProductDialog {
         confirmView.findViewById(R.id.dialogCancel).setVisibility(View.GONE);
     }
 
+    private void showCannotRenameDialog(BaseActivity activity, String displayName, String canonicalCat, int count) {
+        View confirmView = LayoutInflater.from(activity).inflate(R.layout.dialog_delete_confirm, null);
+        android.app.Dialog dlg = new android.app.Dialog(activity, android.R.style.Theme_Translucent_NoTitleBar);
+        dlg.setContentView(confirmView);
+        dlg.show();
+        if (dlg.getWindow() != null) {
+            android.view.WindowManager.LayoutParams p = dlg.getWindow().getAttributes();
+            p.gravity = android.view.Gravity.CENTER;
+            p.dimAmount = 0.5f;
+            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dlg.getWindow().setAttributes(p);
+            dlg.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(R.string.category_rename_blocked_title);
+        ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
+                activity.getString(R.string.category_rename_blocked_message_format, count));
+
+        Button confirmBtn = confirmView.findViewById(R.id.dialogConfirm);
+        confirmBtn.setText(R.string.got_it);
+        confirmBtn.setOnClickListener(v -> dlg.dismiss());
+        confirmView.findViewById(R.id.dialogCancel).setVisibility(View.GONE);
+    }
+
     private int countProductsForCategory(BaseActivity activity, String canonicalCat) {
         int count = 0;
         for (Product p : productsSnapshot) {
@@ -536,7 +531,9 @@ public class EditProductDialog {
     }
 
     private void showCategorySnackbar(BaseActivity activity, String message, int iconRes, int tintRes) {
-        activity.showSuccessNotification(message);
+        Snackbar snackbar = Snackbar.make(activity.findViewById(R.id.root), message, Snackbar.LENGTH_SHORT);
+        snackbar.getView().setBackgroundResource(R.drawable.bg_undo_bar);
+        snackbar.show();
     }
 
     private int dpToPx(BaseActivity activity, int dp) {
