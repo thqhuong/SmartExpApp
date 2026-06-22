@@ -234,7 +234,7 @@ public class RecipesActivity extends BaseActivity {
         if (safePrompt.isEmpty()) {
             safePrompt = "Suggest recipes from my expiring items";
         }
-        Toast.makeText(this, R.string.recipes_checking_inventory, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.recipes_checking_inventory));
         setRecipeState(getString(R.string.recipes_loading), false);
         String finalPrompt = safePrompt;
         executor.execute(() -> {
@@ -242,7 +242,7 @@ public class RecipesActivity extends BaseActivity {
                 String answer = AgentRepository.answerInventoryQuestion(this, finalPrompt);
                 RecipeSuggestionResult result = AgentRepository.getRecipeSuggestionResult(this, finalPrompt);
                 mainHandler.post(() -> {
-                    Toast.makeText(this, answer, Toast.LENGTH_LONG).show();
+                    showInfoNotification(answer);
                     speak(answer);
                     defaultSessionRecipeResult = result;
                     saveRecipeResultToPrefs(result);
@@ -293,7 +293,7 @@ public class RecipesActivity extends BaseActivity {
 
     private void triggerRecipeGeneration(boolean showLoadingFeedback) {
         if (showLoadingFeedback) {
-            Toast.makeText(this, R.string.recipes_checking_inventory, Toast.LENGTH_SHORT).show();
+            showInfoNotification(getString(R.string.recipes_checking_inventory));
             setRecipeState(getString(R.string.recipes_loading), false);
         }
         executor.execute(() -> {

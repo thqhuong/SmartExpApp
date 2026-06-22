@@ -218,7 +218,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                         moonBg,
                         sunIcon,
                         moonIcon);
-                Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show();
+                showErrorNotification(getString(R.string.theme_save_error));
             });
         };
 
@@ -423,7 +423,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         } catch (Exception error) {
             pendingPhotoCaptureUri = null;
             productPhotoCallback = null;
-            Toast.makeText(this, R.string.ocr_camera_error, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.ocr_camera_error));
         }
     }
 

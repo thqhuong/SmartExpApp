@@ -232,6 +232,26 @@ public class InventoryActivity extends BaseActivity {
         viewModel.setExpiringSoonDays(expiringSoonDays);
         adapter.setExpiringSoonDays(expiringSoonDays);
         viewModel.loadProducts();
+        showIntentNotification();
+    }
+
+    private void showIntentNotification() {
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("extra_notification_message")) {
+            String message = intent.getStringExtra("extra_notification_message");
+            String type = intent.getStringExtra("extra_notification_type");
+            intent.removeExtra("extra_notification_message");
+            intent.removeExtra("extra_notification_type");
+            if ("success".equals(type)) {
+                showSuccessNotification(message);
+            } else if ("error".equals(type)) {
+                showErrorNotification(message);
+            } else if ("warning".equals(type)) {
+                showWarningNotification(message);
+            } else {
+                showInfoNotification(message);
+            }
+        }
     }
 
     @Override

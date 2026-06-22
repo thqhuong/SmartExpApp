@@ -15,7 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.model.Product;
-import com.google.android.material.snackbar.Snackbar;
+import com.example.smartexpapp.model.ProductStatus;
+import com.example.smartexpapp.util.InAppNotificationManager;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class ProductHistoryActivity extends BaseActivity {
     private LinearLayout emptyState;
     private TextView statsText;
     private View loadingIndicator;
+    private ProductRepository repository;
 
     private Button filterAll;
     private Button filterConsumed;
@@ -70,7 +72,7 @@ public class ProductHistoryActivity extends BaseActivity {
         filterWasted.setOnClickListener(v -> setActiveFilter("WASTED", filterWasted));
         filterDonated.setOnClickListener(v -> setActiveFilter("DONATED", filterDonated));
 
-        ProductRepository repository = ((SmartExpAppApplication) getApplicationContext()).appContainer.getProductRepository();
+        repository = ((SmartExpAppApplication) getApplicationContext()).appContainer.getProductRepository();
         ProductHistoryViewModelFactory factory = new ProductHistoryViewModelFactory(repository);
         viewModel = new ViewModelProvider(this, factory).get(ProductHistoryViewModel.class);
 
@@ -139,6 +141,18 @@ public class ProductHistoryActivity extends BaseActivity {
         statsText.setText(getString(R.string.stats_format, c, w, d));
     }
 
+    private String getLocalizedStatusLabel(String status) {
+        if (ProductStatus.CONSUMED.equals(status)) {
+            return getString(R.string.action_mark_consumed);
+        } else if (ProductStatus.WASTED.equals(status)) {
+            return getString(R.string.action_mark_wasted);
+        } else if (ProductStatus.DONATED.equals(status)) {
+            return getString(R.string.action_mark_donated);
+        } else {
+            return getString(R.string.badge_deleted);
+        }
+    }
+
     private void onRestoreClick(Product product) {
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
                 .setView(R.layout.dialog_restore_confirm)
@@ -161,18 +175,43 @@ public class ProductHistoryActivity extends BaseActivity {
                     success -> {
                         if (success) {
                             runOnUiThread(() -> {
-                                Snackbar.make(productList,
+                                String prevStatus = product.getStatus();
+                                InAppNotificationManager.showUndo(this,
                                         getString(R.string.restored_format, product.getName()),
-                                        Snackbar.LENGTH_LONG).show();
+                                        R.drawable.ic_check_circle,
+                                        R.drawable.bg_action_icon_circle,
+                                        R.color.smart_primary,
+                                        () -> {
+                                            ProductRepository.Callback<Boolean> callback = result -> {
+                                                if (result) {
+                                                    runOnUiThread(() -> {
+                                                        showSuccessNotification(getString(R.string.mark_status_snackbar_format, product.getName(), getLocalizedStatusLabel(prevStatus)));
+                                                        viewModel.loadHistory();
+                                                    });
+                                                }
+                                            };
+                                            ProductRepository.ErrorCallback err = e -> {
+                                                runOnUiThread(() -> {
+                                                    showErrorNotification(getString(R.string.error_load));
+                                                });
+                                            };
+                                            if (ProductStatus.CONSUMED.equals(prevStatus)) {
+                                                repository.markConsumedAsync(product.getId(), "Undo restore", callback, err);
+                                            } else if (ProductStatus.WASTED.equals(prevStatus)) {
+                                                repository.markWastedAsync(product.getId(), "Undo restore", callback, err);
+                                            } else if (ProductStatus.DONATED.equals(prevStatus)) {
+                                                repository.markDonatedAsync(product.getId(), "Undo restore", callback, err);
+                                            } else if (ProductStatus.DELETED.equals(prevStatus)) {
+                                                repository.markDeletedAsync(product.getId(), "Undo restore", callback, err);
+                                            }
+                                        });
                                 viewModel.loadHistory();
                             });
                         }
                     },
                     error -> {
                         runOnUiThread(() -> {
-                            Snackbar.make(productList,
-                                    getString(R.string.restore_error),
-                                    Snackbar.LENGTH_LONG).show();
+                            showErrorNotification(getString(R.string.restore_error));
                         });
                     });
         });
