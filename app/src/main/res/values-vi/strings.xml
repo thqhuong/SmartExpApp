@@ -553,4 +553,5 @@
     <string name="recipe_status_dietary_pref"> Tùy chọn ăn uống: %1$s.</string>
     <string name="recipe_status_local_empty_inventory">Kho cục bộ đang trống. Đây là các gợi ý chung; bạn cũng có thể nhập món muốn nấu.</string>
     <string name="recipe_status_local_active">Đang dùng gợi ý cục bộ từ kho đã lưu và yêu cầu của bạn.</string>
+    <string name="history_note_format">Ghi chú: %s</string>
 </resources>

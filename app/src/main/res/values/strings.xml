@@ -553,4 +553,5 @@
     <string name="recipe_status_dietary_pref"> Dietary preferences: %1$s.</string>
     <string name="recipe_status_local_empty_inventory">Your local inventory is empty. These are generic fallback ideas; you can also type a recipe request.</string>
     <string name="recipe_status_local_active">Using local fallback suggestions from your saved inventory and request.</string>
+    <string name="history_note_format">Note: %s</string>
 </resources>

@@ -250,12 +250,23 @@ public class AccountDetailsActivity extends BaseActivity {
         if (profileAvatarPath == null || profileAvatarPath.trim().isEmpty()) {
             return;
         }
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.remove_avatar_title)
-                .setMessage(R.string.remove_avatar_message)
-                .setPositiveButton(R.string.remove_label, (dialog, which) -> removeAvatar())
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(R.layout.dialog_remove_avatar_confirm)
+                .create();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        dialog.show();
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            removeAvatar();
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void removeAvatar() {

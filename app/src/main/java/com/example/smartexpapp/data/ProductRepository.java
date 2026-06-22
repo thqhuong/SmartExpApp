@@ -303,13 +303,47 @@ public final class ProductRepository {
     public List<Product> filter(String status, String storageLocationId) {
         ensureLocalDefaults(database);
         AccountInventoryScope scope = activeScope();
+        List<Product> products;
         if (scope.isOwner()) {
-            return mapProducts(database.productDao().filterForOwner(scope.ownerUserId, status, storageLocationId));
+            products = mapProducts(database.productDao().filterForOwner(scope.ownerUserId, status, storageLocationId));
+        } else if (scope.isLocal()) {
+            products = mapProducts(database.productDao().filterLocal(status, storageLocationId));
+        } else {
+            products = new ArrayList<>();
         }
-        if (scope.isLocal()) {
-            return mapProducts(database.productDao().filterLocal(status, storageLocationId));
+
+        List<String> inactiveProductIds = new ArrayList<>();
+        for (Product p : products) {
+            String pStatus = p.getStatus();
+            if (ProductStatus.CONSUMED.equals(pStatus)
+                    || ProductStatus.WASTED.equals(pStatus)
+                    || ProductStatus.DONATED.equals(pStatus)
+                    || ProductStatus.DELETED.equals(pStatus)) {
+                inactiveProductIds.add(p.getId());
+            }
         }
-        return new ArrayList<>();
+
+        if (!inactiveProductIds.isEmpty()) {
+            List<InventoryActionEntity> actions = database.inventoryActionDao().getActionsForProducts(inactiveProductIds);
+            java.util.Map<String, String> notesMap = new java.util.HashMap<>();
+            for (InventoryActionEntity action : actions) {
+                if (!notesMap.containsKey(action.productId)) {
+                    notesMap.put(action.productId, action.note);
+                }
+            }
+
+            List<Product> productsWithNotes = new ArrayList<>();
+            for (Product p : products) {
+                if (notesMap.containsKey(p.getId())) {
+                    productsWithNotes.add(p.withNote(notesMap.get(p.getId())));
+                } else {
+                    productsWithNotes.add(p);
+                }
+            }
+            products = productsWithNotes;
+        }
+
+        return products;
     }
 
     public void getAllProductsAsync(Callback<List<Product>> callback, ErrorCallback errorCallback) {

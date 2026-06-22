@@ -12,6 +12,9 @@ public interface InventoryActionDao {
     @Query("SELECT * FROM inventory_actions WHERE product_id = :productId ORDER BY action_at DESC")
     List<InventoryActionEntity> getForProduct(String productId);
 
+    @Query("SELECT * FROM inventory_actions WHERE product_id IN (:productIds) ORDER BY action_at DESC")
+    List<InventoryActionEntity> getActionsForProducts(List<String> productIds);
+
     @Query("SELECT * FROM inventory_actions ORDER BY action_at DESC")
     List<InventoryActionEntity> getAll();
 
