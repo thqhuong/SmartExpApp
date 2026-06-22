@@ -18,6 +18,9 @@ import android.widget.TextView;
 
 import androidx.annotation.ColorRes;
 import androidx.annotation.DrawableRes;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.smartexpapp.R;
 
@@ -223,6 +226,31 @@ public class InAppNotificationManager {
         } else {
             root.addView(notificationView);
         }
+
+        // Apply bottom insets if bottom navigation is not visible or doesn't exist
+        final ViewGroup finalRoot = root;
+        final int initialPaddingBottom = notificationView.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(notificationView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars());
+            View bNav = finalRoot.findViewById(R.id.bottomNavigation);
+            if (bNav == null || bNav.getVisibility() == View.GONE) {
+                v.setPaddingRelative(
+                        v.getPaddingStart(),
+                        v.getPaddingTop(),
+                        v.getPaddingEnd(),
+                        initialPaddingBottom + systemBars.bottom
+                );
+            } else {
+                v.setPaddingRelative(
+                        v.getPaddingStart(),
+                        v.getPaddingTop(),
+                        v.getPaddingEnd(),
+                        initialPaddingBottom
+                );
+            }
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(notificationView);
 
         // Prevent parent clipping so translation downward looks clean
         root.setClipChildren(false);
