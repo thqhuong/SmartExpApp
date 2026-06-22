@@ -23,8 +23,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:scaleType="centerCrop"
-                app:tint="@color/smart_secondary" />
+                android:contentDescription="@string/product_image_desc"
+                android:scaleType="centerCrop" />
         </FrameLayout>
 
         <LinearLayout

@@ -28,95 +28,256 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingTop="16dp"
-                android:paddingBottom="16dp">
+                android:padding="24dp">
 
-                <ImageView
-                    android:id="@+id/profileImage"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp"
-                    android:background="@drawable/bg_avatar"
-                    android:clipToOutline="true"
-                    android:contentDescription="Alex Johnson"
-                    android:scaleType="centerCrop"
-                    android:src="@android:drawable/ic_menu_myplaces"
-                    app:tint="@color/smart_primary" />
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/profileImage"
+                        android:layout_width="96dp"
+                        android:layout_height="96dp"
+                        android:background="@drawable/bg_avatar"
+                        android:clipToOutline="true"
+                        android:contentDescription="@string/profile_local_user"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_nav_profile"
+                        app:tint="@color/smart_primary" />
+
+                    <FrameLayout
+                        android:id="@+id/btnEditProfile"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="bottom|end"
+                        android:layout_marginEnd="2dp"
+                        android:layout_marginBottom="2dp"
+                        android:background="@drawable/bg_edit_profile_avatar"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:elevation="4dp"
+                        android:contentDescription="@string/edit_profile">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_edit"
+                            app:tint="@color/edit_profile_avatar_icon"
+                            android:importantForAccessibility="no" />
+                    </FrameLayout>
+                </FrameLayout>
 
                 <TextView
+                    android:id="@+id/settingsDisplayNameText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:gravity="center"
-                    android:text="Alex Johnson"
+                    android:text="@string/profile_local_user"
                     android:textColor="@color/smart_on_surface"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/settingsProfileSubtitleText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="alex.johnson@example.com"
+                    android:text="@string/profile_stored_device"
                     android:textColor="@color/smart_secondary"
                     android:textSize="14sp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="16dp"
-                    android:text="Edit Profile"
-                    android:textAllCaps="false"
-                    android:textColor="@color/smart_on_surface"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/smart_surface_container_low"
-                    app:cornerRadius="24dp"
-                    app:strokeColor="@color/smart_surface_variant"
-                    app:strokeWidth="1dp" />
             </LinearLayout>
 
-            <com.google.android.material.card.MaterialCardView
+            <!-- Notification Summary -->
+            <LinearLayout
+                android:id="@+id/notificationSummaryCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:layout_marginBottom="22dp"
-                app:cardBackgroundColor="@color/smart_surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardUseCompatPadding="true"
-                app:strokeColor="@color/smart_surface_variant"
-                app:strokeWidth="1dp">
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_glass_panel"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="20dp">
+
+                <FrameLayout
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_primary_soft_badge">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_notification_bell"
+                        app:tint="@color/smart_primary_container" />
+                </FrameLayout>
 
                 <LinearLayout
-                    android:id="@+id/settingsList"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/settingsNotificationStatusText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingStart="20dp"
-                        android:paddingTop="16dp"
-                        android:paddingEnd="20dp"
-                        android:paddingBottom="12dp"
-                        android:text="PREFERENCES"
-                        android:textColor="@color/smart_secondary"
-                        android:textSize="12sp"
+                        android:text="@string/settings_notifications_enabled_summary"
+                        android:textColor="@color/smart_on_surface"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
+                    <TextView
+                        android:id="@+id/settingsNotificationDetailText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="@string/settings_notification_desc"
+                        android:textColor="@color/smart_secondary"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:importantForAccessibility="no"
+                    android:src="@android:drawable/ic_media_next"
+                    app:tint="@color/smart_secondary" />
+            </LinearLayout>
+
+            <!-- Inventory Preferences -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_glass_panel"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="12dp"
+                    android:text="@string/settings_section_inventory"
+                    android:textColor="@color/smart_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/inventoryPreferencesList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <!-- App Preferences -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_glass_panel"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="12dp"
+                    android:text="@string/settings_section_app"
+                    android:textColor="@color/smart_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/appPreferencesList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <!-- Support -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_glass_panel"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="12dp"
+                    android:text="@string/settings_section_support"
+                    android:textColor="@color/smart_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/supportList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <!-- Account -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="20dp"
+                android:background="@drawable/bg_glass_panel"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="12dp"
+                    android:text="@string/settings_section_account"
+                    android:textColor="@color/smart_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/accountList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <!-- Local Mode Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/signOutButton"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:text="Sign Out"
+                android:text="@string/settings_local_mode"
                 android:textAllCaps="false"
                 android:textColor="@color/smart_error"
                 android:textStyle="bold"
-                app:backgroundTint="@color/smart_surface"
-                app:cornerRadius="8dp"
-                app:icon="@android:drawable/ic_menu_revert"
+                app:backgroundTint="@color/smart_glass_surface"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_info"
                 app:iconGravity="textStart"
                 app:iconTint="@color/smart_error"
                 app:strokeColor="@color/smart_error"

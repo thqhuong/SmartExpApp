@@ -1,95 +1,411 @@
 package com.example.smartexpapp;
 
-import android.app.AlertDialog;
-import android.net.Uri;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.content.res.AppCompatResources;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.smartexpapp.AppContainer;
+import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.data.ProductRepository;
+import com.example.smartexpapp.data.SettingsRepository;
+import com.example.smartexpapp.data.firestore.ProductSyncRepository;
+import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
+import com.example.smartexpapp.model.ProductStatus;
+import com.example.smartexpapp.notifications.ReminderScheduler;
+import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
-import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class InventoryActivity extends BaseActivity {
-    private LinearLayout productList;
+    private static final String[] STORAGE_KEYS = {
+            "All",
+            LocalDataContract.STORAGE_ROOM_TEMP_NAME,
+            LocalDataContract.STORAGE_REFRIGERATOR_NAME,
+            LocalDataContract.STORAGE_FREEZE_NAME
+    };
+    private static final String TAG = "InventoryActivity";
+    public static final String EXTRA_FILTER = "com.example.smartexpapp.extra.FILTER";
+    public static final String EXTRA_RESET_FILTERS = "com.example.smartexpapp.extra.RESET_FILTERS";
+    public static final String FILTER_EXPIRING_SOON = "ExpiringSoon";
+
+    private RecyclerView productList;
+    private InventoryAdapter adapter;
     private LinearLayout emptyState;
     private TextView emptyTitle;
     private TextView emptyDesc;
     private TextView errorState;
     private ProgressBar loadingIndicator;
     private EditText searchInput;
-    private ChipGroup expiryFilterGroup;
-    private ChipGroup categoryFilterGroup;
-    private Chip sortDate;
-    private Chip sortName;
-    private Chip sortNewest;
+    private TextView expiryFilterValue;
+    private TextView storageFilterValue;
+    private TextView sortFilterValue;
+    private LinearLayout expiryFilterDropdown;
+    private LinearLayout storageFilterDropdown;
+    private LinearLayout sortFilterDropdown;
+    private ImageView expiryFilterChevron;
+    private ImageView storageFilterChevron;
+    private ImageView sortFilterChevron;
 
-    private String currentSearch = "";
-    private String currentFilter = "All";
-    private String currentCategory = "All";
-    private String currentSort = "date";
+    private List<Product> latestProducts = new ArrayList<>();
+    private InventoryViewModel viewModel;
+    private View undoBarView;
+    private Handler undoHandler;
 
-    private final Handler searchHandler = new Handler(Looper.getMainLooper());
-    private EditProductDialog currentEditDialog;
-
-    private final ActivityResultLauncher<String> pickPhotoLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onPhotoPicked);
-    private Runnable searchRunnable;
+    private View multiSelectBar;
+    private View searchFilterContainer;
+    private TextView multiSelectTitle;
+    private View multiSelectActions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (!authState.isSignedIn() && !authState.isGuest()) {
+            Intent intent = new Intent(this, SignInActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_inventory);
         setupChrome(R.id.nav_inventory);
 
+        View archiveButton = findViewById(R.id.topActionArchive);
+        if (archiveButton != null) {
+            archiveButton.setVisibility(View.VISIBLE);
+            archiveButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ProductHistoryActivity.class);
+                startActivity(intent);
+            });
+        }
+
         productList = findViewById(R.id.productList);
+        productList.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new InventoryAdapter(new InventoryAdapter.OnProductClickListener() {
+            @Override
+            public void onProductClick(Product product) {
+                showProductActions(product);
+            }
+
+            @Override
+            public void onDeleteClick(Product product) {
+                confirmDelete(product);
+            }
+        });
+        adapter.setOnProductLongClickListener(product -> {
+            enterMultiSelect(product);
+            return true;
+        });
+        adapter.setOnSelectionChangedListener(ids -> {
+            int count = ids.size();
+            multiSelectTitle.setText(getString(R.string.selected_count_format, count));
+            multiSelectActions.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
+        });
+        productList.setAdapter(adapter);
+
         emptyState = findViewById(R.id.emptyState);
         emptyTitle = findViewById(R.id.emptyTitle);
         emptyDesc = findViewById(R.id.emptyDesc);
         errorState = findViewById(R.id.errorState);
         loadingIndicator = findViewById(R.id.loadingIndicator);
         searchInput = findViewById(R.id.searchInput);
-        expiryFilterGroup = findViewById(R.id.expiryFilterGroup);
-        categoryFilterGroup = findViewById(R.id.categoryFilterGroup);
-        sortDate = findViewById(R.id.sortDate);
-        sortName = findViewById(R.id.sortName);
-        sortNewest = findViewById(R.id.sortNewest);
+        expiryFilterValue = findViewById(R.id.expiryFilterValue);
+        storageFilterValue = findViewById(R.id.storageFilterValue);
+        sortFilterValue = findViewById(R.id.sortFilterValue);
+        expiryFilterDropdown = findViewById(R.id.expiryFilterDropdown);
+        storageFilterDropdown = findViewById(R.id.storageFilterDropdown);
+        sortFilterDropdown = findViewById(R.id.sortFilterDropdown);
+        expiryFilterChevron = findViewById(R.id.expiryFilterChevron);
+        storageFilterChevron = findViewById(R.id.storageFilterChevron);
+        sortFilterChevron = findViewById(R.id.sortFilterChevron);
+        searchFilterContainer = findViewById(R.id.searchFilterContainer);
+        multiSelectBar = findViewById(R.id.multiSelectBar);
+        multiSelectTitle = findViewById(R.id.multiSelectTitle);
+        multiSelectActions = findViewById(R.id.multiSelectActions);
+
+        findViewById(R.id.btnCloseMultiSelect).setOnClickListener(v -> finishMultiSelect());
+        findViewById(R.id.btnSelectAll).setOnClickListener(v -> adapter.selectAll());
+        findViewById(R.id.btnBatchConsumed)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.CONSUMED));
+        findViewById(R.id.btnBatchWasted)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.WASTED));
+        findViewById(R.id.btnBatchDonated)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.DONATED));
+        findViewById(R.id.btnBatchDelete).setOnClickListener(v -> batchDelete(adapter.getSelectedIds()));
+
+        AppContainer appContainer = ((SmartExpAppApplication) getApplicationContext()).appContainer;
+        InventoryViewModelFactory factory = new InventoryViewModelFactory(appContainer.getProductRepository());
+        viewModel = new ViewModelProvider(this, factory).get(InventoryViewModel.class);
 
         setupSearch();
         setupFilters();
-        setupCategoryFilter();
-        setupSort();
+        applyLaunchFilter(getIntent());
 
-        showLoading();
-        renderProducts();
+        setupObservers();
+
+        loadProductsWithInitialSync(appContainer);
+    }
+
+    private void setupObservers() {
+        viewModel.getProducts().observe(this, products -> {
+            latestProducts = products;
+            bindProducts(products);
+        });
+
+        viewModel.getIsLoading().observe(this, isLoading -> {
+            if (Boolean.TRUE.equals(isLoading)) {
+                showLoading();
+            } else {
+                hideLoading();
+            }
+        });
+
+        viewModel.getIsError().observe(this, isError -> {
+            if (Boolean.TRUE.equals(isError)) {
+                hideLoading();
+                productList.setVisibility(View.GONE);
+                emptyState.setVisibility(View.GONE);
+                errorState.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void loadProductsWithInitialSync(AppContainer appContainer) {
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (!authState.isSignedIn()) {
+            viewModel.loadProducts();
+            return;
+        }
+
+        ProductSyncRepository.initialSyncAsync(
+                this,
+                appContainer.getDatabase(),
+                ignored -> viewModel.loadProducts(),
+                error -> {
+                    Log.w(TAG, "Initial product sync failed; loading local inventory cache.", error);
+                    viewModel.loadProducts();
+                });
+    }
+
+    @Override
+    protected void onNewIntent(@NonNull Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyLaunchFilter(intent);
+        viewModel.loadProducts();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        renderProducts();
+        int expiringSoonDays = SettingsRepository.getExpiringSoonDays(this);
+        viewModel.setExpiringSoonDays(expiringSoonDays);
+        adapter.setExpiringSoonDays(expiringSoonDays);
+        viewModel.loadProducts();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View focused = getCurrentFocus();
+            if (focused instanceof EditText) {
+                int[] pos = new int[2];
+                focused.getLocationOnScreen(pos);
+                float x = event.getRawX();
+                float y = event.getRawY();
+                if (x < pos[0] || x > pos[0] + focused.getWidth()
+                        || y < pos[1] || y > pos[1] + focused.getHeight()) {
+                    focused.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (multiSelectBar.getVisibility() == View.VISIBLE) {
+            finishMultiSelect();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    private void enterMultiSelect(Product product) {
+        Set<String> ids = new HashSet<>();
+        ids.add(product.getId());
+        adapter.setSelectedIds(ids);
+        showMultiSelectBar();
+    }
+
+    private void showMultiSelectBar() {
+        searchFilterContainer.setVisibility(View.GONE);
+        multiSelectBar.setVisibility(View.VISIBLE);
+        multiSelectBar.setTranslationY(-multiSelectBar.getHeight());
+        multiSelectBar.setAlpha(0f);
+        multiSelectBar.animate()
+                .translationY(0)
+                .alpha(1f)
+                .setDuration(200)
+                .start();
+    }
+
+    private void finishMultiSelect() {
+        multiSelectBar.animate()
+                .translationY(-multiSelectBar.getHeight())
+                .alpha(0f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    multiSelectBar.setVisibility(View.GONE);
+                    adapter.setSelectedIds(null);
+                    searchFilterContainer.setVisibility(View.VISIBLE);
+                })
+                .start();
+    }
+
+    private void batchMarkStatus(Set<String> ids, String status) {
+        String note = "Batch action from multi-select";
+        String label;
+        int iconRes;
+        int iconBgRes;
+        int iconTintRes;
+        if (ProductStatus.CONSUMED.equals(status)) {
+            label = getString(R.string.action_consumed);
+            iconRes = R.drawable.ic_check_circle;
+            iconBgRes = R.drawable.bg_action_icon_circle;
+            iconTintRes = R.color.smart_primary;
+        } else if (ProductStatus.WASTED.equals(status)) {
+            label = getString(R.string.action_wasted);
+            iconRes = R.drawable.ic_close;
+            iconBgRes = R.drawable.bg_action_icon_circle_delete;
+            iconTintRes = R.color.smart_error;
+        } else {
+            label = getString(R.string.action_donated);
+            iconRes = R.drawable.ic_favorite_filled;
+            iconBgRes = R.drawable.bg_action_icon_circle;
+            iconTintRes = R.color.smart_notification_red;
+        }
+
+        List<Product> affectedProducts = new ArrayList<>();
+        for (Product p : latestProducts) {
+            if (ids.contains(p.getId()))
+                affectedProducts.add(p);
+        }
+
+        String message = getString(R.string.batch_status_format, ids.size()) + " - " + label;
+
+        int[] completed = { 0 };
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == ids.size()) {
+                    runOnUiThread(() -> {
+                        finishMultiSelect();
+                        viewModel.loadProducts();
+                        showUndoBar(null, iconRes, iconBgRes, iconTintRes, message,
+                                () -> batchUndo(affectedProducts));
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch mark failed", e);
+        for (String id : ids) {
+            if (ProductStatus.CONSUMED.equals(status)) {
+                viewModel.markConsumed(id, note, callback, errorCallback);
+            } else if (ProductStatus.WASTED.equals(status)) {
+                viewModel.markWasted(id, note, callback, errorCallback);
+            } else if (ProductStatus.DONATED.equals(status)) {
+                viewModel.markDonated(id, note, callback, errorCallback);
+            }
+        }
+    }
+
+    private void batchDelete(Set<String> ids) {
+        List<Product> affectedProducts = new ArrayList<>();
+        for (Product p : latestProducts) {
+            if (ids.contains(p.getId()))
+                affectedProducts.add(p);
+        }
+
+        String note = "Batch deleted from inventory";
+        String message = getString(R.string.batch_deleted_format, ids.size());
+
+        int[] completed = { 0 };
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == ids.size()) {
+                    runOnUiThread(() -> {
+                        finishMultiSelect();
+                        viewModel.loadProducts();
+                        showUndoBar(null,
+                                R.drawable.ic_delete, R.drawable.bg_action_icon_circle_delete,
+                                R.color.smart_error, message,
+                                () -> batchUndo(affectedProducts));
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch delete failed", e);
+        for (String id : ids) {
+            viewModel.softDeleteProduct(id, note, callback, errorCallback);
+        }
+    }
+
+    private void batchUndo(List<Product> products) {
+        int[] completed = { 0 };
+        int total = products.size();
+        ProductRepository.Callback<Boolean> callback = result -> {
+            synchronized (completed) {
+                completed[0]++;
+                if (completed[0] == total) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this,
+                                getString(R.string.batch_undone_format, total),
+                                Toast.LENGTH_SHORT).show();
+                        ReminderScheduler.runSoon(this);
+                        viewModel.loadProducts();
+                    });
+                }
+            }
+        };
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch undo failed", e);
+        for (Product product : products) {
+            viewModel.revertStatus(product.getId(), "Batch undo", callback, errorCallback);
+        }
     }
 
     private void setupSearch() {
@@ -100,14 +416,8 @@ public class InventoryActivity extends BaseActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (searchRunnable != null) {
-                    searchHandler.removeCallbacks(searchRunnable);
-                }
-                searchRunnable = () -> {
-                    currentSearch = s.toString();
-                    renderProducts();
-                };
-                searchHandler.postDelayed(searchRunnable, 300);
+                finishMultiSelect();
+                viewModel.setSearchQuery(s.toString());
             }
 
             @Override
@@ -117,68 +427,199 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void setupFilters() {
-        expiryFilterGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            int checkedId = checkedIds.isEmpty() ? R.id.filterAll : checkedIds.get(0);
-            if (checkedId == R.id.filterAll) {
-                currentFilter = "All";
-            } else if (checkedId == R.id.filterExpiring) {
-                currentFilter = "Expiring";
-            } else if (checkedId == R.id.filterExpired) {
-                currentFilter = "Expired";
-            } else if (checkedId == R.id.filterRoom) {
-                currentFilter = "Room Temp";
-            } else if (checkedId == R.id.filterCool) {
-                currentFilter = "Cool";
-            } else if (checkedId == R.id.filterFrozen) {
-                currentFilter = "Frozen";
-            }
-            renderProducts();
+        findViewById(R.id.expiryFilterRow).setOnClickListener(v -> {
+            closeDropdown(storageFilterDropdown, storageFilterChevron);
+            closeDropdown(sortFilterDropdown, sortFilterChevron);
+            toggleDropdown(expiryFilterDropdown, expiryFilterChevron);
         });
+        findViewById(R.id.storageFilterRow).setOnClickListener(v -> {
+            closeDropdown(expiryFilterDropdown, expiryFilterChevron);
+            closeDropdown(sortFilterDropdown, sortFilterChevron);
+            toggleDropdown(storageFilterDropdown, storageFilterChevron);
+        });
+        findViewById(R.id.sortFilterRow).setOnClickListener(v -> {
+            closeDropdown(expiryFilterDropdown, expiryFilterChevron);
+            closeDropdown(storageFilterDropdown, storageFilterChevron);
+            toggleDropdown(sortFilterDropdown, sortFilterChevron);
+        });
+
+        populateDropdown(expiryFilterDropdown, R.array.expiry_filter_options, new DropdownCallback() {
+            @Override
+            public void onSelected(int index, String label) {
+                String filter;
+                switch (index) {
+                    case 1:
+                        filter = FILTER_EXPIRING_SOON;
+                        break;
+                    case 2:
+                        filter = "StillGood";
+                        break;
+                    case 3:
+                        filter = "Expired";
+                        break;
+                    default:
+                        filter = "All";
+                        break;
+                }
+                expiryFilterValue.setText(label);
+                finishMultiSelectIfActive();
+                viewModel.setExpiryFilter(filter);
+                toggleDropdown(expiryFilterDropdown, expiryFilterChevron);
+            }
+        });
+
+        populateDropdown(storageFilterDropdown, R.array.storage_filter_options, new DropdownCallback() {
+            @Override
+            public void onSelected(int index, String label) {
+                String storage = (index >= 0 && index < STORAGE_KEYS.length) ? STORAGE_KEYS[index] : "All";
+                storageFilterValue.setText(label);
+                finishMultiSelectIfActive();
+                viewModel.setStorageFilter(storage);
+                toggleDropdown(storageFilterDropdown, storageFilterChevron);
+            }
+        });
+
+        populateDropdown(sortFilterDropdown, R.array.sort_options, new DropdownCallback() {
+            @Override
+            public void onSelected(int index, String label) {
+                String sort;
+                switch (index) {
+                    case 1:
+                        sort = "name";
+                        break;
+                    case 2:
+                        sort = "newest";
+                        break;
+                    default:
+                        sort = "oldest";
+                        break;
+                }
+                sortFilterValue.setText(label);
+                finishMultiSelectIfActive();
+                viewModel.setSortOrder(sort);
+                toggleDropdown(sortFilterDropdown, sortFilterChevron);
+            }
+        });
+
+        expiryFilterValue.setText(getResources().getStringArray(R.array.expiry_filter_options)[0]);
+        storageFilterValue.setText(getResources().getStringArray(R.array.storage_filter_options)[0]);
+        sortFilterValue.setText(getResources().getStringArray(R.array.sort_options)[0]);
     }
 
-    private void setupCategoryFilter() {
-        categoryFilterGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            int checkedId = checkedIds.isEmpty() ? R.id.filterCatAll : checkedIds.get(0);
-            if (checkedId == R.id.filterCatAll) {
-                currentCategory = "All";
-            } else if (checkedId == R.id.filterCatDairy) {
-                currentCategory = "Dairy";
-            } else if (checkedId == R.id.filterCatProduce) {
-                currentCategory = "Produce";
-            } else if (checkedId == R.id.filterCatPantry) {
-                currentCategory = "Pantry";
-            } else if (checkedId == R.id.filterCatVegetables) {
-                currentCategory = "Vegetables";
-            } else if (checkedId == R.id.filterCatGeneral) {
-                currentCategory = "General";
-            }
-            renderProducts();
-        });
+    private void toggleDropdown(LinearLayout dropdown, ImageView chevron) {
+        boolean isOpen = dropdown.getVisibility() == View.VISIBLE;
+        if (isOpen) {
+            hideDropdown(dropdown, chevron);
+        } else {
+            showDropdown(dropdown, chevron);
+        }
     }
 
-    private void setupSort() {
-        View.OnClickListener sortListener = v -> {
-            if (v == sortDate) {
-                currentSort = "date";
-                sortDate.setChecked(true);
-                sortName.setChecked(false);
-                sortNewest.setChecked(false);
-            } else if (v == sortName) {
-                currentSort = "name";
-                sortDate.setChecked(false);
-                sortName.setChecked(true);
-                sortNewest.setChecked(false);
-            } else if (v == sortNewest) {
-                currentSort = "newest";
-                sortDate.setChecked(false);
-                sortName.setChecked(false);
-                sortNewest.setChecked(true);
-            }
-            renderProducts();
-        };
-        sortDate.setOnClickListener(sortListener);
-        sortName.setOnClickListener(sortListener);
-        sortNewest.setOnClickListener(sortListener);
+    private void showDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.setAlpha(0f);
+        dropdown.setTranslationY(-8f);
+        dropdown.setVisibility(View.VISIBLE);
+        dropdown.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(200)
+                .start();
+        chevron.animate().rotation(180f).setDuration(200).start();
+    }
+
+    private void hideDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.animate()
+                .alpha(0f)
+                .translationY(-8f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    dropdown.setVisibility(View.GONE);
+                    dropdown.setTranslationY(0f);
+                })
+                .start();
+        chevron.animate().rotation(0f).setDuration(200).start();
+    }
+
+    private void closeDropdown(LinearLayout dropdown, ImageView chevron) {
+        if (dropdown.getVisibility() == View.VISIBLE) {
+            hideDropdown(dropdown, chevron);
+        }
+    }
+
+    private void populateDropdown(LinearLayout container, int arrayResId, DropdownCallback callback) {
+        String[] options = getResources().getStringArray(arrayResId);
+        container.removeAllViews();
+        for (int i = 0; i < options.length; i++) {
+            View option = getLayoutInflater().inflate(R.layout.item_filter_option, container, false);
+            TextView label = option.findViewById(R.id.filterOptionLabel);
+            ImageView radio = option.findViewById(R.id.filterOptionRadio);
+            label.setText(options[i]);
+            final int pos = i;
+            option.setOnClickListener(v -> {
+                updateRadioSelection(container, pos);
+                callback.onSelected(pos, options[pos]);
+            });
+            container.addView(option);
+        }
+        updateRadioSelection(container, 0);
+    }
+
+    private void updateRadioSelection(LinearLayout container, int selectedIndex) {
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View option = container.getChildAt(i);
+            ImageView radio = option.findViewById(R.id.filterOptionRadio);
+            radio.setImageResource(i == selectedIndex
+                    ? R.drawable.ic_radio_button_checked
+                    : R.drawable.ic_radio_button_unchecked);
+        }
+    }
+
+    private void finishMultiSelectIfActive() {
+        if (multiSelectBar != null && multiSelectBar.getVisibility() == View.VISIBLE) {
+            finishMultiSelect();
+        }
+    }
+
+    interface DropdownCallback {
+        void onSelected(int index, String label);
+    }
+
+    private void applyLaunchFilter(Intent intent) {
+        if (intent != null && intent.getBooleanExtra(EXTRA_RESET_FILTERS, false)) {
+            resetInventoryFilters();
+            return;
+        }
+        if (intent == null || !FILTER_EXPIRING_SOON.equals(intent.getStringExtra(EXTRA_FILTER))) {
+            return;
+        }
+        String[] expiryOptions = getResources().getStringArray(R.array.expiry_filter_options);
+        if (expiryOptions.length > 1) {
+            expiryFilterValue.setText(expiryOptions[1]);
+            updateRadioSelection(expiryFilterDropdown, 1);
+        } else {
+            expiryFilterValue.setText(R.string.filter_expiring);
+        }
+        viewModel.applyLaunchFilter(FILTER_EXPIRING_SOON);
+        Toast.makeText(this, R.string.reminder_filter_toast, Toast.LENGTH_SHORT).show();
+    }
+
+    private void resetInventoryFilters() {
+        if (searchInput != null && searchInput.length() > 0) {
+            searchInput.setText("");
+        }
+        String[] expiryOptions = getResources().getStringArray(R.array.expiry_filter_options);
+        String[] storageOptions = getResources().getStringArray(R.array.storage_filter_options);
+        String[] sortOptions = getResources().getStringArray(R.array.sort_options);
+        expiryFilterValue.setText(expiryOptions[0]);
+        storageFilterValue.setText(storageOptions[0]);
+        sortFilterValue.setText(sortOptions[0]);
+        updateRadioSelection(expiryFilterDropdown, 0);
+        updateRadioSelection(storageFilterDropdown, 0);
+        updateRadioSelection(sortFilterDropdown, 0);
+        closeDropdown(expiryFilterDropdown, expiryFilterChevron);
+        closeDropdown(storageFilterDropdown, storageFilterChevron);
+        closeDropdown(sortFilterDropdown, sortFilterChevron);
+        viewModel.resetFilters();
     }
 
     private void showLoading() {
@@ -190,169 +631,330 @@ public class InventoryActivity extends BaseActivity {
 
     private void hideLoading() {
         loadingIndicator.setVisibility(View.GONE);
-        productList.setVisibility(View.VISIBLE);
-    }
-
-    private void renderProducts() {
-        try {
-            List<Product> products = ProductRepository.search(this, currentSearch);
-            products = filterProducts(products);
-            products = sortProducts(products);
-            bindProducts(products);
-            hideLoading();
-        } catch (Exception e) {
-            hideLoading();
-            productList.setVisibility(View.GONE);
-            emptyState.setVisibility(View.GONE);
-            errorState.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private List<Product> filterProducts(List<Product> products) {
-        List<Product> filtered = new ArrayList<>();
-        for (Product product : products) {
-            if (matchesFilter(product) && matchesCategory(product)) {
-                filtered.add(product);
-            }
-        }
-        return filtered;
-    }
-
-    private boolean matchesCategory(Product product) {
-        return "All".equals(currentCategory) || currentCategory.equals(product.getCategory());
-    }
-
-    private boolean matchesFilter(Product product) {
-        if ("All".equals(currentFilter)) {
-            return true;
-        }
-        switch (currentFilter) {
-            case "Expiring":
-                return product.isExpiringSoon();
-            case "Expired":
-                return product.isExpired();
-            case "Room Temp":
-                return "Room Temp".equals(product.getStorage());
-            case "Cool":
-                return "Refrigerator".equals(product.getStorage());
-            case "Frozen":
-                return "Freeze".equals(product.getStorage());
-            default:
-                return true;
-        }
-    }
-
-    private List<Product> sortProducts(List<Product> products) {
-        List<Product> sorted = new ArrayList<>(products);
-        switch (currentSort) {
-            case "name":
-                Collections.sort(sorted, Comparator.comparing(Product::getName, String.CASE_INSENSITIVE_ORDER));
-                break;
-            case "newest":
-                Collections.sort(sorted, (a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
-                break;
-            default:
-                Collections.sort(sorted, Comparator.comparingInt(Product::getDaysUntilExpiry));
-                break;
-        }
-        return sorted;
     }
 
     private void bindProducts(List<Product> products) {
-        productList.removeAllViews();
-
         if (products.isEmpty()) {
             productList.setVisibility(View.GONE);
             errorState.setVisibility(View.GONE);
             emptyState.setVisibility(View.VISIBLE);
 
+            String currentSearch = viewModel.getCurrentSearch();
+            String currentFilter = viewModel.getCurrentFilter();
+
             if (!currentSearch.isEmpty()) {
                 emptyTitle.setText(R.string.empty_search);
                 emptyDesc.setText(R.string.empty_search_desc);
+            } else if (FILTER_EXPIRING_SOON.equals(currentFilter)) {
+                emptyTitle.setText(R.string.empty_expiring_soon);
+                emptyDesc.setText(R.string.empty_expiring_soon_desc);
             } else {
                 emptyTitle.setText(R.string.empty_inventory);
                 emptyDesc.setText(R.string.empty_inventory_desc);
             }
-            return;
+        } else {
+            productList.setVisibility(View.VISIBLE);
+            emptyState.setVisibility(View.GONE);
+            errorState.setVisibility(View.GONE);
         }
 
-        productList.setVisibility(View.VISIBLE);
-        emptyState.setVisibility(View.GONE);
-        errorState.setVisibility(View.GONE);
+        adapter.submitList(products);
+    }
 
-        LayoutInflater inflater = LayoutInflater.from(this);
-        for (Product product : products) {
-            View item = inflater.inflate(R.layout.item_inventory_product, productList, false);
-            bindProductCard(item, product);
-            ViewUtils.setBottomMargin(item, 12);
-            productList.addView(item);
+    private void showProductActions(Product product) {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_product_actions,
+                findViewById(android.R.id.content), false);
+        dialog.setContentView(view);
+
+        TextView name = view.findViewById(R.id.bsProductName);
+        name.setText(product.getName());
+
+        TextView meta = view.findViewById(R.id.bsProductMeta);
+        meta.setText(getString(R.string.product_meta_format, product.getStorage(), product.getAmount()));
+
+        ImageView icon = view.findViewById(R.id.bsProductImage);
+        ImageView placeholder = view.findViewById(R.id.bsProductPlaceholder);
+        String imgUrl = product.getImageUrl();
+        if (imgUrl != null && !imgUrl.isEmpty()) {
+            placeholder.setVisibility(View.GONE);
+            icon.setVisibility(View.VISIBLE);
+            icon.setImageTintList(null);
+            ImageLoader.load(icon, imgUrl);
+        } else {
+            icon.setVisibility(View.GONE);
+            placeholder.setVisibility(View.VISIBLE);
+            int tintColor = CategoryColorHelper.getColor(this, product.getCategory());
+            placeholder.setImageTintList(android.content.res.ColorStateList.valueOf(
+                    getColor(tintColor)));
+            ViewUtils.setIcon(placeholder, product.getIconRes(), tintColor);
+        }
+
+        view.findViewById(R.id.bsActionEdit).setOnClickListener(v -> {
+            dialog.dismiss();
+            openEditDialog(product);
+        });
+        view.findViewById(R.id.bsActionConsumed).setOnClickListener(v -> {
+            dialog.dismiss();
+            showMarkDialog(product, "consumed");
+        });
+        view.findViewById(R.id.bsActionWasted).setOnClickListener(v -> {
+            dialog.dismiss();
+            showMarkDialog(product, "wasted");
+        });
+        view.findViewById(R.id.bsActionDonated).setOnClickListener(v -> {
+            dialog.dismiss();
+            showMarkDialog(product, "donated");
+        });
+        view.findViewById(R.id.bsActionDelete).setOnClickListener(v -> {
+            dialog.dismiss();
+            confirmDelete(product);
+        });
+
+        dialog.show();
+    }
+
+    private void showMarkDialog(Product product, String action) {
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_mark_status)
+                .create();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogProductName)).setText(product.getName());
+
+        int iconRes;
+        int iconTintRes;
+        String upperLabel;
+        boolean showWarning = false;
+
+        switch (action) {
+            case "wasted":
+                iconRes = R.drawable.ic_close;
+                iconTintRes = R.color.smart_error;
+                upperLabel = "MARK WASTED";
+                showWarning = true;
+                break;
+            case "donated":
+                iconRes = R.drawable.ic_favorite_filled;
+                iconTintRes = R.color.smart_notification_red;
+                upperLabel = "MARK DONATED";
+                break;
+            default:
+                iconRes = R.drawable.ic_check_circle;
+                iconTintRes = R.color.smart_primary;
+                upperLabel = "MARK CONSUMED";
+                break;
+        }
+
+        ((TextView) dialog.findViewById(R.id.dialogActionLabelUpper)).setText(upperLabel);
+        ImageView icon = dialog.findViewById(R.id.dialogActionIcon);
+        icon.setImageResource(iconRes);
+        icon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                getColor(iconTintRes)));
+
+        if (showWarning) {
+            dialog.findViewById(R.id.dialogWarningContainer).setVisibility(View.VISIBLE);
+            ((TextView) dialog.findViewById(R.id.dialogWarning)).setText(R.string.mark_wasted_confirm_text);
+        } else {
+            dialog.findViewById(R.id.dialogWarningContainer).setVisibility(View.GONE);
+        }
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            EditText noteInput = dialog.findViewById(R.id.dialogNoteInput);
+            String note = noteInput.getText().toString().trim();
+            executeMarkAction(product, action, note);
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
+    }
+
+    private void executeMarkAction(Product product, String action, String note) {
+        int iconRes;
+        int iconBgRes;
+        int iconTintRes;
+        String statusLabel;
+
+        switch (action) {
+            case "wasted":
+                iconRes = R.drawable.ic_close;
+                iconBgRes = R.drawable.bg_action_icon_circle_delete;
+                iconTintRes = R.color.smart_error;
+                statusLabel = getString(R.string.action_mark_wasted);
+                break;
+            case "donated":
+                iconRes = R.drawable.ic_favorite_filled;
+                iconBgRes = R.drawable.bg_action_icon_circle;
+                iconTintRes = R.color.smart_notification_red;
+                statusLabel = getString(R.string.action_mark_donated);
+                break;
+            default:
+                iconRes = R.drawable.ic_check_circle;
+                iconBgRes = R.drawable.bg_action_icon_circle;
+                iconTintRes = R.color.smart_primary;
+                statusLabel = getString(R.string.action_mark_consumed);
+                break;
+        }
+
+        switch (action) {
+            case "wasted":
+                viewModel.markWasted(product.getId(), note,
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
+                        this::onStatusUpdateFailed);
+                break;
+            case "donated":
+                viewModel.markDonated(product.getId(), note,
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
+                        this::onStatusUpdateFailed);
+                break;
+            default:
+                viewModel.markConsumed(product.getId(), note,
+                        updated -> onMarkSuccess(updated, product, iconRes, iconBgRes, iconTintRes, statusLabel),
+                        this::onStatusUpdateFailed);
+                break;
         }
     }
 
-    private void bindProductCard(View item, Product product) {
-        MaterialCardView card = item.findViewById(R.id.productCard);
-        TextView urgentBadge = item.findViewById(R.id.urgentBadge);
-        TextView expiryStatus = item.findViewById(R.id.expiryStatus);
-        ProgressBar progress = item.findViewById(R.id.expiryProgress);
-        View deleteBtn = item.findViewById(R.id.btnDelete);
+    private void onMarkSuccess(Boolean updated, Product product,
+            int iconRes, int iconBgRes, int iconTintRes, String statusLabel) {
+        if (Boolean.TRUE.equals(updated)) {
+            ReminderScheduler.runSoon(this);
+            viewModel.loadProducts();
+            String message = getString(R.string.mark_status_snackbar_format, product.getName(), statusLabel);
+            showUndoBar(product, iconRes, iconBgRes, iconTintRes, message, () -> undoMark(product));
+        }
+    }
 
-        ViewUtils.setIcon(item.findViewById(R.id.productIcon), product.getIconRes(),
-                product.isExpiringSoon() || product.isExpired() ? R.color.smart_primary_container : R.color.smart_secondary);
-        ImageLoader.load(item.findViewById(R.id.productIcon), product.getImageUrl());
-        ((TextView) item.findViewById(R.id.productName)).setText(product.getName());
-        ((TextView) item.findViewById(R.id.productMeta)).setText(product.getCategory() + " \u2022 " + product.getAmount());
-        expiryStatus.setText(product.getExpiryStatus());
-        progress.setProgress(product.getExpiryProgress());
+    private void undoMark(Product product) {
+        viewModel.revertStatus(product.getId(), "Reverted from undo bar",
+                reverted -> {
+                    if (Boolean.TRUE.equals(reverted)) {
+                        Toast.makeText(this,
+                                getString(R.string.mark_undone_format, product.getName()),
+                                Toast.LENGTH_SHORT).show();
+                        ReminderScheduler.runSoon(this);
+                        viewModel.loadProducts();
+                    }
+                }, this::onStatusUpdateFailed);
+    }
 
-        if (product.isExpired()) {
-            card.setStrokeColor(getColor(R.color.smart_error));
-            urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_error_badge);
-            urgentBadge.setText("EXPIRED");
-            urgentBadge.setTextColor(getColor(R.color.smart_error));
-            expiryStatus.setTextColor(getColor(R.color.smart_error));
-            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
-        } else if (product.isExpiringSoon()) {
-            card.setStrokeColor(getColor(R.color.smart_primary_container));
-            urgentBadge.setVisibility(View.VISIBLE);
-            urgentBadge.setBackgroundResource(R.drawable.bg_primary_badge);
-            urgentBadge.setText("EXPIRING SOON");
-            urgentBadge.setTextColor(getColor(R.color.smart_on_primary));
-            expiryStatus.setTextColor(getColor(R.color.smart_primary_container));
-            progress.setProgressDrawable(AppCompatResources.getDrawable(this, R.drawable.progress_orange));
+    private void showUndoBar(Product product, int iconRes, int iconBgRes, int iconTintRes,
+            String message, Runnable undoAction) {
+        ViewGroup root = findViewById(R.id.root);
+        if (root == null)
+            return;
+
+        if (undoBarView != null) {
+            root.removeView(undoBarView);
+            undoBarView = null;
+        }
+        if (undoHandler != null) {
+            undoHandler.removeCallbacksAndMessages(null);
         }
 
-        card.setOnClickListener(v -> openEditDialog(product));
+        undoBarView = LayoutInflater.from(this).inflate(R.layout.dialog_undo_delete, root, false);
 
-        deleteBtn.setOnClickListener(v -> confirmDelete(product));
+        FrameLayout iconContainer = undoBarView.findViewById(R.id.undoIconContainer);
+        iconContainer.setBackgroundResource(iconBgRes);
+
+        ImageView icon = undoBarView.findViewById(R.id.undoIcon);
+        icon.setImageResource(iconRes);
+        icon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                getColor(iconTintRes)));
+
+        ((TextView) undoBarView.findViewById(R.id.undoMessage)).setText(message);
+
+        undoBarView.findViewById(R.id.undoAction).setOnClickListener(v -> {
+            dismissUndoBar();
+            undoAction.run();
+        });
+
+        root.addView(undoBarView, root.getChildCount() - 1);
+
+        undoBarView.setTranslationY(200f);
+        undoBarView.setAlpha(0f);
+        undoBarView.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(350)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .start();
+
+        undoHandler = new Handler(Looper.getMainLooper());
+        undoHandler.postDelayed(this::dismissUndoBar, 5000);
+    }
+
+    private void dismissUndoBar() {
+        if (undoHandler != null) {
+            undoHandler.removeCallbacksAndMessages(null);
+        }
+        if (undoBarView != null) {
+            undoBarView.animate()
+                    .translationY(200f)
+                    .alpha(0f)
+                    .setDuration(250)
+                    .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                    .withEndAction(() -> {
+                        ViewGroup root = findViewById(R.id.root);
+                        if (root != null && undoBarView != null) {
+                            root.removeView(undoBarView);
+                        }
+                        undoBarView = null;
+                    })
+                    .start();
+        }
     }
 
     private void openEditDialog(Product product) {
-        currentEditDialog = new EditProductDialog(product,
-                this::renderProducts,
-                () -> pickPhotoLauncher.launch("image/*")
-        );
-        currentEditDialog.show(this);
+        new EditProductDialog(product, viewModel::loadProducts, latestProducts).show(this);
     }
 
     private void confirmDelete(Product product) {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.delete_title)
-                .setMessage(getString(R.string.delete_message, product.getName()))
-                .setPositiveButton(R.string.delete_confirm, (dialog, which) -> {
-                    ProductRepository.deleteProduct(this, product.getId());
-                    Toast.makeText(this, R.string.product_deleted, Toast.LENGTH_SHORT).show();
-                    renderProducts();
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_delete_confirm)
+                .create();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogTitle)).setText(R.string.delete_title);
+        ((TextView) dialog.findViewById(R.id.dialogMessage)).setText(
+                getString(R.string.delete_message, product.getName()));
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
+                if (Boolean.TRUE.equals(deleted)) {
+                    ReminderScheduler.runSoon(this);
+                    viewModel.loadProducts();
+                    showUndoBar(product,
+                            R.drawable.ic_delete,
+                            R.drawable.bg_action_icon_circle_delete,
+                            R.color.smart_error,
+                            getString(R.string.undo_delete_format, product.getName()),
+                            () -> undoMark(product));
+                }
+            }, error -> {
+                Log.e(TAG, "Failed to delete product", error);
+                Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+            });
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
-    private void onPhotoPicked(Uri uri) {
-        if (uri == null || currentEditDialog == null) return;
-        String path = saveImageToInternalStorage(uri);
-        if (path != null) {
-            currentEditDialog.setPhotoPath(path);
-        }
+    private void onStatusUpdateFailed(Exception error) {
+        Log.e(TAG, "Failed to update product status", error);
+        Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
     }
 }

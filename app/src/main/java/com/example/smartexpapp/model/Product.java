@@ -5,8 +5,18 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import android.content.Context;
+import com.example.smartexpapp.R;
+
 public class Product {
+    public static final int DEFAULT_EXPIRING_SOON_DAYS = 7;
+
     public static final String SYNC_STATUS_LOCAL = "LOCAL";
+    public static final String SYNC_STATUS_LOCAL_ONLY = "LOCAL_ONLY";
+    public static final String SYNC_STATUS_PENDING_UPLOAD = "PENDING_UPLOAD";
+    public static final String SYNC_STATUS_PENDING_DELETE = "PENDING_DELETE";
+    public static final String SYNC_STATUS_SYNCED = "SYNCED";
+    public static final String SYNC_STATUS_CONFLICT = "CONFLICT";
 
     private final String id;
     private final String name;
@@ -31,7 +41,8 @@ public class Product {
         this(name, category, amount, storage, daysUntilExpiry, iconRes, null);
     }
 
-    public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes, String imageUrl) {
+    public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes,
+            String imageUrl) {
         this(
                 newId(),
                 name,
@@ -50,15 +61,16 @@ public class Product {
                 null,
                 null,
                 SYNC_STATUS_LOCAL,
-                null
-        );
+                null);
     }
 
-    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis, int iconRes) {
+    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis,
+            int iconRes) {
         this(name, category, quantity, unit, storage, expiryDateMillis, iconRes, null);
     }
 
-    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis, int iconRes, String imageUrl) {
+    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis,
+            int iconRes, String imageUrl) {
         this(
                 newId(),
                 name,
@@ -77,8 +89,7 @@ public class Product {
                 null,
                 null,
                 SYNC_STATUS_LOCAL,
-                null
-        );
+                null);
     }
 
     public Product(
@@ -99,8 +110,7 @@ public class Product {
             String cloudId,
             String ownerUserId,
             String syncStatus,
-            Long lastSyncedAt
-    ) {
+            Long lastSyncedAt) {
         this.id = valueOrDefault(id, newId());
         this.name = valueOrDefault(name, "Unnamed Product");
         this.category = valueOrDefault(category, "General");
@@ -140,8 +150,51 @@ public class Product {
                 cloudId,
                 ownerUserId,
                 syncStatus,
-                lastSyncedAt
-        );
+                lastSyncedAt);
+    }
+
+    public Product withOwnerUserId(String newOwnerUserId, long updatedAt) {
+        return new Product(
+                id,
+                name,
+                category,
+                quantity,
+                unit,
+                storage,
+                storageLocationId,
+                expiryDateMillis,
+                barcode,
+                status,
+                iconRes,
+                imageUrl,
+                createdAt,
+                updatedAt,
+                cloudId,
+                newOwnerUserId,
+                syncStatus,
+                lastSyncedAt);
+    }
+
+    public Product withSyncMetadata(String newCloudId, String newSyncStatus, Long newLastSyncedAt, long updatedAt) {
+        return new Product(
+                id,
+                name,
+                category,
+                quantity,
+                unit,
+                storage,
+                storageLocationId,
+                expiryDateMillis,
+                barcode,
+                status,
+                iconRes,
+                imageUrl,
+                createdAt,
+                updatedAt,
+                newCloudId,
+                ownerUserId,
+                newSyncStatus,
+                newLastSyncedAt);
     }
 
     public String getId() {
@@ -230,8 +283,12 @@ public class Product {
     }
 
     public boolean isExpiringSoon() {
+        return isExpiringSoon(DEFAULT_EXPIRING_SOON_DAYS);
+    }
+
+    public boolean isExpiringSoon(int thresholdDays) {
         int days = getDaysUntilExpiry();
-        return days >= 0 && days <= 3 && !isExpired();
+        return days >= 0 && days <= thresholdDays && !isExpired();
     }
 
     public boolean isExpired() {
@@ -239,34 +296,98 @@ public class Product {
     }
 
     public String getExpiryStatus() {
+        return getExpiryStatus("vi");
+    }
+
+    public String getExpiryStatus(String languageTag) {
+        boolean isVi = languageTag != null && languageTag.trim().toLowerCase().startsWith("vi");
         int daysUntilExpiry = getDaysUntilExpiry();
         if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
-            return "Expired";
+            return isVi ? "Đã hết hạn" : "Expired";
         }
         if (daysUntilExpiry == 0) {
-            return "Today";
+            return isVi ? "Hôm nay" : "Today";
         }
         if (daysUntilExpiry == 1) {
-            return "1 Day";
+            return isVi ? "1 Ngày" : "1 Day";
         }
         if (daysUntilExpiry >= 60) {
-            return Math.max(1, daysUntilExpiry / 30) + " Months";
+            int months = Math.max(1, daysUntilExpiry / 30);
+            return months + (isVi ? " Tháng" : " Months");
         }
-        return daysUntilExpiry + " Days";
+        return daysUntilExpiry + (isVi ? " Ngày" : " Days");
+    }
+
+    public String getExpiryStatus(Context context) {
+        if (context == null) {
+            return getExpiryStatus();
+        }
+        int daysUntilExpiry = getDaysUntilExpiry();
+        if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
+            return context.getString(R.string.expiry_status_expired);
+        }
+        if (daysUntilExpiry == 0) {
+            return context.getString(R.string.expiry_status_today);
+        }
+        if (daysUntilExpiry == 1) {
+            return context.getString(R.string.expiry_status_day_single);
+        }
+        if (daysUntilExpiry >= 60) {
+            int months = Math.max(1, daysUntilExpiry / 30);
+            return context.getString(R.string.expiry_status_months_format, months);
+        }
+        return context.getString(R.string.expiry_status_days_format, daysUntilExpiry);
     }
 
     public String getDashboardBadge() {
+        return getDashboardBadge("vi");
+    }
+
+    public String getDashboardBadge(String languageTag) {
+        boolean isVi = languageTag != null && languageTag.trim().toLowerCase().startsWith("vi");
         int daysUntilExpiry = getDaysUntilExpiry();
         if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
-            return "EXPIRED";
+            return isVi ? "HẾT HẠN" : "EXPIRED";
         }
         if (daysUntilExpiry == 0) {
-            return "TODAY";
+            return isVi ? "HÔM NAY" : "TODAY";
         }
         if (daysUntilExpiry == 1) {
-            return "TOMORROW";
+            return isVi ? "NGÀY MAI" : "TOMORROW";
         }
-        return "IN " + daysUntilExpiry + " DAYS";
+        return isVi ? ("CÒN " + daysUntilExpiry + " NGÀY") : (daysUntilExpiry + " DAYS LEFT");
+    }
+
+    public String getDashboardBadge(Context context) {
+        if (context == null) {
+            return getDashboardBadge();
+        }
+        int daysUntilExpiry = getDaysUntilExpiry();
+        if (ProductStatus.EXPIRED.equals(status) || daysUntilExpiry < 0) {
+            return context.getString(R.string.dashboard_badge_expired);
+        }
+        if (daysUntilExpiry == 0) {
+            return context.getString(R.string.dashboard_badge_today);
+        }
+        if (daysUntilExpiry == 1) {
+            return context.getString(R.string.dashboard_badge_tomorrow);
+        }
+        return context.getString(R.string.dashboard_badge_days_left_format, daysUntilExpiry);
+    }
+
+    public String getGroup() {
+        return getGroup(DEFAULT_EXPIRING_SOON_DAYS);
+    }
+
+    public String getGroup(int expiringSoonDays) {
+        if (isExpired())
+            return "Expired";
+        int days = getDaysUntilExpiry();
+        if (days <= 1)
+            return "Urgent";
+        if (days <= expiringSoonDays)
+            return "Soon";
+        return "Safe";
     }
 
     public int getExpiryProgress() {
@@ -296,9 +417,9 @@ public class Product {
         String safeAmount = valueOrDefault(amount, "1 pcs").trim();
         int firstSpace = safeAmount.indexOf(' ');
         if (firstSpace < 0) {
-            return new String[]{safeAmount, ""};
+            return new String[] { safeAmount, "" };
         }
-        return new String[]{
+        return new String[] {
                 safeAmount.substring(0, firstSpace).trim(),
                 safeAmount.substring(firstSpace + 1).trim()
         };

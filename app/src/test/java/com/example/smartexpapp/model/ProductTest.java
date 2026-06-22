@@ -14,30 +14,30 @@ public class ProductTest {
     public void expiryCalculationsUseExpiryDateMillis() {
         Product expired = productExpiringIn(-1);
         assertEquals(-1, expired.getDaysUntilExpiry());
-        assertEquals("Expired", expired.getExpiryStatus());
-        assertEquals("EXPIRED", expired.getDashboardBadge());
+        assertEquals("Đã hết hạn", expired.getExpiryStatus());
+        assertEquals("HẾT HẠN", expired.getDashboardBadge());
         assertEquals(100, expired.getExpiryProgress());
 
         Product today = productExpiringIn(0);
         assertEquals(0, today.getDaysUntilExpiry());
-        assertEquals("Today", today.getExpiryStatus());
-        assertEquals("TODAY", today.getDashboardBadge());
+        assertEquals("Hôm nay", today.getExpiryStatus());
+        assertEquals("HÔM NAY", today.getDashboardBadge());
         assertEquals(100, today.getExpiryProgress());
 
-        Product soon = productExpiringIn(3);
-        assertEquals(3, soon.getDaysUntilExpiry());
-        assertEquals("3 Days", soon.getExpiryStatus());
+        Product soon = productExpiringIn(1);
+        assertEquals(1, soon.getDaysUntilExpiry());
+        assertEquals("1 Ngày", soon.getExpiryStatus());
         assertTrue(soon.isExpiringSoon());
         assertTrue(soon.getExpiryProgress() > 0);
 
         Product safe = productExpiringIn(10);
         assertEquals(10, safe.getDaysUntilExpiry());
-        assertEquals("10 Days", safe.getExpiryStatus());
+        assertEquals("10 Ngày", safe.getExpiryStatus());
         assertFalse(safe.isExpiringSoon());
 
         Product longRange = productExpiringIn(90);
         assertEquals(90, longRange.getDaysUntilExpiry());
-        assertEquals("3 Months", longRange.getExpiryStatus());
+        assertEquals("3 Tháng", longRange.getExpiryStatus());
         assertFalse(longRange.isExpiringSoon());
         assertEquals(0, longRange.getExpiryProgress());
     }
@@ -47,8 +47,8 @@ public class ProductTest {
         Product product = new Product("Milk", "Dairy", "1 Gal", "Refrigerator", 1, 0);
 
         assertEquals("1 Gal", product.getAmount());
-        assertEquals("1 Day", product.getExpiryStatus());
-        assertEquals("TOMORROW", product.getDashboardBadge());
+        assertEquals("1 Ngày", product.getExpiryStatus());
+        assertEquals("NGÀY MAI", product.getDashboardBadge());
         assertTrue(product.isExpiringSoon());
     }
 
@@ -75,10 +75,57 @@ public class ProductTest {
                 null
         );
 
-        assertEquals("Expired", product.getExpiryStatus());
-        assertEquals("EXPIRED", product.getDashboardBadge());
+        assertEquals("Đã hết hạn", product.getExpiryStatus());
+        assertEquals("HẾT HẠN", product.getDashboardBadge());
     }
 
+    @Test
+    public void testExpiryStatusAndDashboardBadgeWithLanguageTag() {
+        Product expired = productExpiringIn(-1);
+        assertEquals("Expired", expired.getExpiryStatus("en"));
+        assertEquals("Đã hết hạn", expired.getExpiryStatus("vi"));
+        assertEquals("EXPIRED", expired.getDashboardBadge("en"));
+        assertEquals("HẾT HẠN", expired.getDashboardBadge("vi"));
+
+        Product today = productExpiringIn(0);
+        assertEquals("Today", today.getExpiryStatus("en"));
+        assertEquals("Hôm nay", today.getExpiryStatus("vi"));
+        assertEquals("TODAY", today.getDashboardBadge("en"));
+        assertEquals("HÔM NAY", today.getDashboardBadge("vi"));
+
+        Product soon = productExpiringIn(1);
+        assertEquals("1 Day", soon.getExpiryStatus("en"));
+        assertEquals("1 Ngày", soon.getExpiryStatus("vi"));
+        assertEquals("TOMORROW", soon.getDashboardBadge("en"));
+        assertEquals("NGÀY MAI", soon.getDashboardBadge("vi"));
+
+        Product safe = productExpiringIn(10);
+        assertEquals("10 Days", safe.getExpiryStatus("en"));
+        assertEquals("10 Ngày", safe.getExpiryStatus("vi"));
+        assertEquals("10 DAYS LEFT", safe.getDashboardBadge("en"));
+        assertEquals("CÒN 10 NGÀY", safe.getDashboardBadge("vi"));
+
+        Product longRange = productExpiringIn(90);
+        assertEquals("3 Months", longRange.getExpiryStatus("en"));
+        assertEquals("3 Tháng", longRange.getExpiryStatus("vi"));
+    }
+
+    @Test
+    public void testExpiringSoonThreshold() {
+        Product product = productExpiringIn(5);
+        
+        // Default threshold is 7 days
+        assertTrue(product.isExpiringSoon());
+        assertEquals("Soon", product.getGroup());
+        
+        // Custom threshold of 3 days
+        assertFalse(product.isExpiringSoon(3));
+        assertEquals("Safe", product.getGroup(3));
+        
+        // Custom threshold of 10 days
+        assertTrue(product.isExpiringSoon(10));
+        assertEquals("Soon", product.getGroup(10));
+    }
     private Product productExpiringIn(int days) {
         return new Product("Milk", "Dairy", "1", "Gal", "Refrigerator", expiryMillisForOffset(days), 0);
     }

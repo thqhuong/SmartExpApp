@@ -17,18 +17,21 @@
         android:orientation="horizontal"
         android:padding="16dp">
 
-        <FrameLayout
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_surface_high">
+    <FrameLayout
+        android:id="@+id/storageIconContainer"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_glass_shadow"
+        android:padding="8dp">
 
-            <ImageView
-                android:id="@+id/storageIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                app:tint="@color/smart_secondary" />
-        </FrameLayout>
+        <ImageView
+            android:id="@+id/storageIcon"
+            android:importantForAccessibility="no"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            app:tint="@color/smart_secondary" />
+    </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"

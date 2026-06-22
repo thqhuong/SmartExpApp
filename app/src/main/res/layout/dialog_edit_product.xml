@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_glass_panel"
+    android:orientation="vertical">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/editScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="24dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/edit_product"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="20dp"
+        android:text="@string/edit_product_subtitle"
+        android:textColor="@color/smart_secondary"
+        android:textSize="14sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/product_name_label"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/editName"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_glass_input"
+        android:hint="@string/product_name_hint"
+        android:inputType="textCapWords"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:singleLine="true"
+        android:textColor="@color/smart_on_surface"
+        android:textColorHint="@color/smart_secondary"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/quantity_label"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/editQuantity"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_glass_input"
+            android:inputType="numberDecimal"
+            android:hint="@string/quantity_default"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:singleLine="true"
+            android:textColor="@color/smart_on_surface"
+            android:textColorHint="@color/smart_secondary"
+            android:textSize="16sp" />
+
+        <Spinner
+            android:id="@+id/editUnitSpinner"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_glass_input"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/category_label"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Spinner
+            android:id="@+id/editCategorySpinner"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_glass_input"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editBtnManageCategories"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:text="@string/manage_label"
+            android:textColor="@color/smart_primary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/smart_primary_soft"
+            app:cornerRadius="24dp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/storage_method_label"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/editStorageGroup"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_toggle_group"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="6dp"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:id="@+id/editStorageRoom"
+            style="@style/SmartExpAppStorageOption"
+            android:background="@drawable/bg_storage_option_room">
+
+            <ImageView
+                style="@style/SmartExpAppStorageIcon"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_storage_room"
+                app:tint="@color/color_storage_room_tint" />
+
+            <TextView
+                style="@style/SmartExpAppStorageLabel"
+                android:textColor="@color/color_storage_room_tint"
+                android:text="@string/storage_room_temp_upper" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/editStorageFridge"
+            style="@style/SmartExpAppStorageOption"
+            android:background="@drawable/bg_storage_option_fridge">
+
+            <ImageView
+                style="@style/SmartExpAppStorageIcon"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_storage_fridge"
+                app:tint="@color/color_storage_fridge_tint" />
+
+            <TextView
+                style="@style/SmartExpAppStorageLabel"
+                android:textColor="@color/color_storage_fridge_tint"
+                android:text="@string/storage_refrigerator_upper" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/editStorageFreezer"
+            style="@style/SmartExpAppStorageOption"
+            android:background="@drawable/bg_storage_option_freezer">
+
+            <ImageView
+                style="@style/SmartExpAppStorageIcon"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_storage_freeze"
+                app:tint="@color/color_storage_freezer_tint" />
+
+            <TextView
+                style="@style/SmartExpAppStorageLabel"
+                android:textColor="@color/color_storage_freezer_tint"
+                android:text="@string/storage_freeze_upper" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/expiry_date_label"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/editExpiryDate"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_glass_input"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:text="@string/select_expiry_date"
+        android:textColor="@color/smart_secondary"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/photo_optional_label"
+        android:textColor="@color/smart_on_surface"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/editPhotoPreview"
+            android:contentDescription="@string/add_product_photo_desc"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="@drawable/bg_glass_input"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:id="@+id/editProductPhoto"
+                android:importantForAccessibility="no"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/editPhotoPlaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:importantForAccessibility="no"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    app:tint="@color/smart_muted" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/tap_add_photo"
+                    android:textColor="@color/smart_muted"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/editIconOverlay"
+                android:importantForAccessibility="no"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="3dp"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/bg_glass_shadow"
+                android:padding="4dp"
+                android:src="@android:drawable/ic_menu_edit"
+                app:tint="@color/smart_primary_container"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editBtnRemovePhoto"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="@string/remove_photo"
+            android:textAllCaps="false"
+            android:textColor="@color/smart_error"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:backgroundTint="@color/smart_error_container"
+            app:cornerRadius="20dp"
+            app:icon="@android:drawable/ic_menu_delete"
+            app:iconGravity="textStart"
+            app:iconTint="@color/smart_error" />
+    </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        android:id="@+id/editButtonBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:paddingStart="24dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="20dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="@string/cancel"
+            android:textColor="@color/smart_secondary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConfirm"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:text="@string/edit_product"
+            android:textAllCaps="false"
+            android:textColor="@color/smart_on_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/smart_primary_container"
+            app:cornerRadius="24dp" />
+    </LinearLayout>
+</LinearLayout>

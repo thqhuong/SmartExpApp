@@ -15,6 +15,9 @@ public interface AgentMessageDao {
     @Query("SELECT * FROM agent_messages ORDER BY created_at DESC LIMIT :limit")
     List<AgentMessageEntity> getRecent(int limit);
 
+    @Query("DELETE FROM agent_messages")
+    int deleteAll();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(AgentMessageEntity message);
 }

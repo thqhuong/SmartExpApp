@@ -21,7 +21,7 @@
 
     <style name="Theme.SmartExpApp" parent="Base.Theme.SmartExpApp" />
 
-    <style name="SmartExpBottomNavItem">
+    <style name="SmartExpAppBottomNavItem">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">66dp</item>
         <item name="android:layout_weight">1</item>
@@ -36,13 +36,13 @@
         <item name="android:paddingBottom">8dp</item>
     </style>
 
-    <style name="SmartExpBottomNavIcon">
+    <style name="SmartExpAppBottomNavIcon">
         <item name="android:layout_width">26dp</item>
         <item name="android:layout_height">26dp</item>
         <item name="android:duplicateParentState">true</item>
     </style>
 
-    <style name="SmartExpBottomNavLabel">
+    <style name="SmartExpAppBottomNavLabel">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">3dp</item>
@@ -51,9 +51,10 @@
         <item name="android:textColor">@color/bottom_nav_item</item>
         <item name="android:textSize">11sp</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
     </style>
 
-    <style name="SmartExpStorageOption">
+    <style name="SmartExpAppStorageOption">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">1</item>
@@ -68,13 +69,13 @@
         <item name="android:paddingEnd">4dp</item>
     </style>
 
-    <style name="SmartExpStorageIcon">
+    <style name="SmartExpAppStorageIcon">
         <item name="android:layout_width">26dp</item>
         <item name="android:layout_height">26dp</item>
         <item name="android:duplicateParentState">true</item>
     </style>
 
-    <style name="SmartExpStorageLabel">
+    <style name="SmartExpAppStorageLabel">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">8dp</item>

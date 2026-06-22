@@ -287,7 +287,7 @@
         <li>Expiry dashboard with expired, urgent, soon, and safe groups.</li>
         <li>Local reminders before products expire.</li>
         <li>OCR-assisted expiry date scanning with user confirmation.</li>
-        <li>Barcode scanning and product lookup to auto-fill product details.</li>
+
         <li>AI Agent screen with voice chat, suggested prompts, and recipe help based on expiring products.</li>
         <li>Basic stats for saved, wasted, expired, donated, and consumed items.</li>
         <li>Settings for reminders, default storage, and dietary preferences.</li>
@@ -332,14 +332,14 @@
           </tr>
           <tr>
             <td>Teammate 2</td>
-            <td>OCR expiry scan, barcode lookup, and AI Agent integration.</td>
+            <td>OCR expiry scan and AI Agent integration.</td>
             <td>#11, #12, #13</td>
           </tr>
         </tbody>
       </table>
 
       <p>
-        The database contract must be finished early because the inventory, OCR, barcode,
+        The database contract must be finished early because the inventory, OCR,
         Agent, stats, and settings work all depend on the same product model and repository APIs.
       </p>
     </section>
@@ -413,18 +413,14 @@
           <tr>
             <td>Camera</td>
             <td>CameraX</td>
-            <td>Use for OCR and barcode capture with lifecycle-aware camera handling.</td>
+            <td>Use for OCR capture with lifecycle-aware camera handling.</td>
           </tr>
           <tr>
             <td>OCR</td>
             <td>Google ML Kit Text Recognition v2</td>
             <td>On-device text extraction for expiry labels.</td>
           </tr>
-          <tr>
-            <td>Barcode</td>
-            <td>Google ML Kit Barcode Scanning</td>
-            <td>On-device barcode decoding before product API lookup.</td>
-          </tr>
+
           <tr>
             <td>Networking</td>
             <td>Retrofit, OkHttp, Gson converter</td>
@@ -467,7 +463,7 @@
       <h3>Why Local-First</h3>
       <ul>
         <li>The app remains useful offline and during demos without depending on network or sign-in.</li>
-        <li>Inventory, expiry, notifications, OCR, barcode lookup, Agent prompts, and stats all need the same local product data.</li>
+        <li>Inventory, expiry, notifications, OCR, Agent prompts, and stats all need the same local product data.</li>
         <li>The team can build faster because UI features do not need to wait for authentication and cloud security rules.</li>
         <li>Cloud sync can be added behind the repository layer later without rewriting every screen.</li>
       </ul>
@@ -514,16 +510,10 @@ UI -> Repository -> Room local database -> Sync service -> Cloud database</code>
             <td>Manual expiry date entry.</td>
           </tr>
           <tr>
-            <td>Barcode scan</td>
-            <td>Google ML Kit Barcode Scanning</td>
-            <td>Decode barcode locally, then pass the barcode value to product lookup.</td>
-            <td>Manual product name/category entry.</td>
-          </tr>
-          <tr>
             <td>Product lookup</td>
             <td>Open Food Facts Product Opener API</td>
             <td>Fetch product name, brand/category, image, quantity, and nutrition fields when available.</td>
-            <td>Manual product details if the barcode is missing or API data is incomplete.</td>
+            <td>Manual product details.</td>
           </tr>
           <tr>
             <td>AI Agent</td>
@@ -579,7 +569,7 @@ UI -> Repository -> Room local database -> Sync service -> Cloud database</code>
       agent/
   scanner/
     ocr/
-    barcode/
+
     notification/
   model/
     ui/
@@ -597,7 +587,7 @@ UI -> Repository -> Room local database -> Sync service -> Cloud database</code>
         <li>Use repository classes as the boundary between UI, database, and network code.</li>
         <li>Use one source of truth for product data: the local database.</li>
         <li>API responses should be mapped into app models before reaching UI screens.</li>
-        <li>OCR, barcode, and Agent results must be treated as suggestions until the user confirms any inventory-changing action.</li>
+        <li>OCR and Agent results must be treated as suggestions until the user confirms any inventory-changing action.</li>
         <li>Keep sample data only as seed/demo data, not as the main runtime data source.</li>
       </ol>
     </section>
@@ -711,13 +701,6 @@ SettingsRepository
         <li>Never silently save an OCR date without user confirmation.</li>
       </ul>
 
-      <h3>Barcode Lookup</h3>
-      <ul>
-        <li>Use ML Kit Barcode Scanning to decode UPC/EAN values.</li>
-        <li>Use Open Food Facts to fetch product metadata.</li>
-        <li>Auto-fill only fields returned with reasonable confidence.</li>
-        <li>Always let the user edit auto-filled fields before saving.</li>
-      </ul>
 
       <h3>Agent Screen</h3>
       <ul>
@@ -775,7 +758,7 @@ SettingsRepository
           </tr>
           <tr>
             <td>M4: Smart Input and Recipe Features</td>
-            <td>Add OCR, barcode lookup, and Agent features that reduce manual work.</td>
+            <td>Add OCR and Agent features that reduce manual work.</td>
             <td>#11, #12, #13</td>
           </tr>
           <tr>
@@ -808,7 +791,6 @@ SettingsRepository
         <li>Inventory CRUD.</li>
         <li>Expiry dashboard and reminders.</li>
         <li>OCR scan.</li>
-        <li>Barcode lookup.</li>
         <li>Agent screen and recipe API.</li>
         <li>Stats and settings.</li>
         <li>Testing, README, report, slides, and demo.</li>
@@ -832,7 +814,6 @@ SettingsRepository
         <li>Add product manually.</li>
         <li>Edit and delete product.</li>
         <li>Scan expiry date and correct a wrong OCR result.</li>
-        <li>Scan barcode with a found product and with a missing product.</li>
         <li>Use the Agent suggested prompts and test API failure state.</li>
         <li>Use voice input and confirm the app responds with text or spoken output.</li>
         <li>Receive or trigger expiry reminder notification.</li>
@@ -870,7 +851,7 @@ SettingsRepository
           </tr>
           <tr>
             <td>Demo video</td>
-            <td>Show add product, inventory, expiry dashboard, OCR/barcode flow, Agent voice/suggested prompts, recipe suggestions, stats/settings, and final app value.</td>
+            <td>Show add product, inventory, expiry dashboard, OCR flow, Agent voice/suggested prompts, recipe suggestions, stats/settings, and final app value.</td>
           </tr>
           <tr>
             <td>Source code</td>
@@ -886,7 +867,7 @@ SettingsRepository
         <li><a href="https://developer.android.com/topic/architecture">Android Developers: Guide to app architecture</a></li>
         <li><a href="https://developer.android.com/training/data-storage/room">Android Developers: Save data in a local database using Room</a></li>
         <li><a href="https://developers.google.com/ml-kit/vision/text-recognition/v2/android">Google ML Kit: Text Recognition on Android</a></li>
-        <li><a href="https://developers.google.com/ml-kit/vision/barcode-scanning/android">Google ML Kit: Barcode Scanning on Android</a></li>
+
         <li><a href="https://developer.android.com/ai/gemini/live">Android Developers: Gemini Live API</a></li>
         <li><a href="https://ai.google.dev/gemini-api/docs/pricing">Google AI for Developers: Gemini API pricing</a></li>
         <li><a href="https://developer.android.com/media/camera/camerax">Android Developers: CameraX overview</a></li>

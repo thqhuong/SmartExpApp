@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "314090682738",
+    "firebase_url": "https://smartexpapp-uit-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "smartexpapp-uit",
     "storage_bucket": "smartexpapp-uit.firebasestorage.app"
   },
@@ -19,6 +20,14 @@
           "android_info": {
             "package_name": "com.example.smartexpapp",
             "certificate_hash": "278a34f5f6bfe4106c2a25c0b45741974b4d3efc"
+          }
+        },
+        {
+          "client_id": "314090682738-m1gqjuognrjq4dvu2hjcqtp6dpdc9mlt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartexpapp",
+            "certificate_hash": "a70f8c394f505ec0bd15197f8d731ea699393506"
           }
         },
         {

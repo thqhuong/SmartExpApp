@@ -24,8 +24,24 @@ public class UserSettingsEntity {
     @ColumnInfo(name = "reminder_days_before")
     public int reminderDaysBefore = 3;
 
+    @ColumnInfo(name = "reminder_notify_time_minutes", defaultValue = "540")
+    public int reminderNotifyTimeMinutes = 540;
+
     @ColumnInfo(name = "dietary_preferences")
     public String dietaryPreferences;
+
+    @ColumnInfo(name = "display_name")
+    public String displayName = "Local User";
+
+    @ColumnInfo(name = "profile_avatar_path")
+    public String profileAvatarPath;
+
+    @ColumnInfo(name = "dark_mode", defaultValue = "0")
+    public boolean darkMode = false;
+
+    @ColumnInfo(name = "language_tag", defaultValue = "'en'")
+    @NonNull
+    public String languageTag = "en";
 
     @ColumnInfo(name = "default_storage_location_id")
     @NonNull

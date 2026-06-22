@@ -14,7 +14,6 @@ Users should be able to add products quickly, know what needs attention today, a
 2. Expiry dashboard with expired, today, soon, and safe product groups.
 3. Local reminders before products expire.
 4. OCR-assisted expiry date scanning with user confirmation.
-5. Barcode lookup to auto-fill product details where possible.
 6. AI Agent screen with typed prompts, suggested question chips, voice input/output, and recipe help for expiring products.
 7. Basic waste impact stats: saved, wasted, expired, donated, and consumed items.
 8. Settings for reminders, dietary preferences, storage defaults, and app preferences.
@@ -46,7 +45,6 @@ The current `Meals` concept is replaced by `Agent`. Recipe suggestions still exi
 flowchart LR
     User([User])
     OCR([OCR/AI Service])
-    ProductAPI([Barcode/Product API])
     AgentAI([Agent AI Service])
     RecipeAPI([Recipe API])
     Notifications([Android Notification System])
@@ -54,7 +52,6 @@ flowchart LR
 
     User --> AddManual[Add product manually]
     User --> ScanExpiry[Scan expiry date]
-    User --> ScanBarcode[Scan barcode]
     User --> ViewInventory[View and manage inventory]
     User --> ViewDashboard[View expiry dashboard]
     User --> AskAgent[Ask Agent questions]
@@ -64,7 +61,6 @@ flowchart LR
     User --> ConfigureSettings[Configure reminders and preferences]
 
     ScanExpiry --> OCR
-    ScanBarcode --> ProductAPI
     AskAgent --> AgentAI
     UsePrompt --> AgentAI
     VoiceChat --> AgentAI
@@ -99,7 +95,6 @@ flowchart TB
     VM --> Repo
     Repo --> Room
     Scanner --> Camera
-    Scanner --> ProductAPI
     Agent --> Repo
     Agent --> AgentAI
     AgentAI --> RecipeAPI
@@ -196,8 +191,6 @@ flowchart LR
     User[User]
     Camera[Camera input]
     OCR[OCR/date parser]
-    Barcode[Barcode scanner]
-    ProductAPI[Product lookup API]
     Agent[Agent module]
     AgentAI[AI service]
     RecipeAPI[Recipe API]
@@ -209,10 +202,7 @@ flowchart LR
     User -->|manual product details| App
     User --> Camera
     Camera --> OCR
-    Camera --> Barcode
     OCR -->|detected expiry candidates| App
-    Barcode -->|barcode value| ProductAPI
-    ProductAPI -->|product metadata| App
     App -->|confirmed product| DB
     DB -->|inventory context| Agent
     User -->|typed prompt / suggested prompt / voice| Agent
@@ -321,7 +311,7 @@ sequenceDiagram
 | 3 | Inventory: implement CRUD, search, filter, and sort | `03-inventory-crud` |
 | 4 | Expiry: dashboard status groups and local reminders | `04-expiry-reminders` |
 | 5 | OCR: scan and confirm expiry dates from product labels | `05-ocr-expiry-scan` |
-| 6 | Barcode: lookup products and auto-fill metadata | `06-barcode-product-lookup` |
+| 6 | Barcode: lookup products and auto-fill metadata (Cancelled) | `06-barcode-product-lookup` |
 | 7 | Agent: voice/chat assistant with recipe help | `07-agent-assistant` |
 | 8 | Insights: stats, waste impact, and settings | `08-stats-settings` |
 | 9 | QA and submission: tests, README, report, slides, and demo | `09-testing-docs-submission` |
@@ -347,7 +337,7 @@ The active integration branch is `dev`. New work should branch from `dev`, merge
 3. `03-inventory-crud`
 4. `04-expiry-reminders`
 5. `05-ocr-expiry-scan`
-6. `06-barcode-product-lookup`
+6. `06-barcode-product-lookup` (Cancelled)
 7. `07-agent-assistant`
 8. `08-stats-settings`
 9. `09-testing-docs-submission`

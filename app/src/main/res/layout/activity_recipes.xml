@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -20,41 +21,162 @@
             android:paddingStart="20dp"
             android:paddingTop="24dp"
             android:paddingEnd="20dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="24dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- Voice assistant section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:layout_marginBottom="28dp"
+                android:paddingTop="8dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <!-- Pulsing Button Wrapper -->
+                <FrameLayout
+                    android:layout_width="128dp"
+                    android:layout_height="128dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="12dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <!-- Pulse Glow Ring -->
+                    <View
+                        android:id="@+id/voiceAssistantPulseView"
+                        android:layout_width="128dp"
+                        android:layout_height="128dp"
+                        android:background="@drawable/bg_ai_pulse"
+                        android:alpha="0.2" />
+
+                    <!-- Main Glass Button -->
+                    <FrameLayout
+                        android:id="@+id/voiceAssistantButton"
+                        android:layout_width="112dp"
+                        android:layout_height="112dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_ai_button"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/smart_recipe_assistant">
+
+                        <ImageView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_ai_sparkles"
+                            android:importantForAccessibility="no" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <!-- Gradient assistant title -->
+                <TextView
+                    android:id="@+id/voiceAssistantTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/smart_recipe_assistant"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/recipes_intro_desc"
+                    android:textColor="@color/smart_secondary"
+                    android:textSize="15sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/askByTextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/smart_surface_container"
+                    android:text="@string/ask_by_text"
+                    android:textAllCaps="false"
+                    android:textColor="@color/smart_on_surface"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="24dp"
+                    app:icon="@android:drawable/ic_menu_edit"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/smart_on_surface" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/smart_glass_stroke"
+                android:layout_marginBottom="28dp" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Smart Recipes"
+                android:text="@string/smart_recipes_title"
                 android:textColor="@color/smart_on_surface"
                 android:textSize="32sp"
                 android:textStyle="bold" />
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGenerateRecipes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_neutral_badge"
-                android:paddingStart="12dp"
-                android:paddingTop="6dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="6dp"
-                android:text="Use these soon!"
-                android:textColor="@color/smart_primary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="12dp"
+                android:text="@string/btn_generate_recipes"
+                android:textAllCaps="false"
+                android:textColor="@color/smart_primary_container"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:backgroundTint="@color/smart_primary_soft"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/smart_primary_soft_border"
+                app:strokeWidth="1dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="20dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"
                 android:gravity="center"
-                android:text="We've generated these recipes based on items in your inventory that are approaching expiration."
+                android:text="@string/recipes_source_desc"
                 android:textColor="@color/smart_secondary"
-                android:textSize="16sp" />
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/recipeStateText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/bg_glass_input"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="10dp"
+                android:text="@string/recipes_loading"
+                android:textColor="@color/smart_secondary"
+                android:textSize="13sp" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/recipePromptChipGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
+                app:singleLine="false" />
 
             <LinearLayout
                 android:id="@+id/recipeList"

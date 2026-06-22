@@ -14,7 +14,6 @@ Date: 2026-05-25
    - `03-inventory-crud`
    - `04-expiry-reminders`
    - `05-ocr-expiry-scan`
-   - `06-barcode-product-lookup`
    - `07-agent-assistant`
    - `08-stats-settings`
    - `09-testing-docs-submission`
@@ -25,7 +24,6 @@ Date: 2026-05-25
    - `03-inventory-crud`
    - `04-expiry-reminders`
    - `05-ocr-expiry-scan`
-   - `06-barcode-product-lookup`
    - `07-agent-assistant`
    - `08-stats-settings`
    - `09-testing-docs-submission`
@@ -36,7 +34,6 @@ Date: 2026-05-25
    - #9 Inventory: implement CRUD, search, filter, and sort
    - #10 Expiry: dashboard status groups and local reminders
    - #11 OCR: scan and confirm expiry dates from product labels
-   - #12 Barcode: lookup products and auto-fill metadata
    - #13 Agent: voice/chat assistant with recipe help
    - #14 Insights: stats, waste impact, and settings
    - #15 QA and submission: tests, README, report, slides, and demo

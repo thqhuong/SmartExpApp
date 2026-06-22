@@ -14,23 +14,44 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
-        <FrameLayout
-            android:id="@+id/recipeHero"
+    <!-- Hero Image Area with Calories Badge -->
+    <FrameLayout
+        android:id="@+id/recipeHero"
+        android:layout_width="match_parent"
+        android:layout_height="192dp"
+        android:background="@drawable/bg_hero_neutral"
+        android:clipToOutline="true">
+
+        <ImageView
+            android:id="@+id/recipeIcon"
             android:layout_width="match_parent"
-            android:layout_height="192dp"
-            android:background="@drawable/bg_hero_neutral"
-            android:clipToOutline="true">
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:importantForAccessibility="no" />
 
-            <ImageView
-                android:id="@+id/recipeIcon"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:scaleType="centerCrop"
-                app:tint="@color/smart_secondary" />
-        </FrameLayout>
+        <!-- Calories Badge top-left -->
+        <TextView
+            android:id="@+id/recipeCardCalories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="12dp"
+            android:background="@drawable/bg_neutral_badge"
+            android:paddingStart="8dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="4dp"
+            android:text="@string/placeholder_recipe_calories"
+            android:textColor="@color/smart_primary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </FrameLayout>
 
         <TextView
             android:id="@+id/recipeTitle"
@@ -49,31 +70,72 @@
             android:textColor="@color/smart_secondary"
             android:textSize="14sp" />
 
+    <!-- Expiring/Used Ingredients Box -->
+    <LinearLayout
+        android:id="@+id/recipeIngredientsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="12dp"
+        android:visibility="gone">
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:layout_marginBottom="8dp"
-            android:text="EXPIRING INGREDIENTS"
-            android:textColor="@color/smart_secondary"
+            android:text="@string/recipe_expiring_ingredients_used"
+            android:textColor="@color/smart_primary"
             android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
 
-        <LinearLayout
-            android:id="@+id/ingredientList"
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/recipeIngredientsChipGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/recipeAction"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:textAllCaps="false"
-            android:textStyle="bold"
-            app:cornerRadius="8dp"
-            app:icon="@android:drawable/ic_media_play"
-            app:iconGravity="textStart" />
+            app:chipSpacingHorizontal="8dp"
+            app:chipSpacingVertical="8dp"
+            app:singleLine="false" />
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <!-- Divider Line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/smart_glass_stroke" />
+
+    <!-- Footer Info Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_fork_knife"
+            android:importantForAccessibility="no"
+            app:tint="@color/smart_secondary" />
+
+        <TextView
+            android:id="@+id/recipeCardDifficulty"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="@string/placeholder_difficulty"
+            android:textColor="@color/smart_secondary"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/recipeCardPrepTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/placeholder_recipe_prep_time"
+            android:textColor="@color/smart_primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

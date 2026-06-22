@@ -13,3 +13,66 @@
 .externalNativeBuild
 .cxx
 local.properties
+release-signing.properties
+local-signing/
+*.jks
+*.keystore
+/.idea/misc.xml
+
+
+# Ignore Wrangler cache and temporary files
+**/cloudflare-recipe-images/.wrangler/
+
+
+# --- Added NodeJS and Web Ignore Rules ---
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build and Dist output
+dist/
+dist-ssr/
+server.js
+build/
+out/
+.next/
+.nuxt/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# NOTE: .env.example should usually NOT be ignored, so it's not listed here.
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Caches
+.npm/
+.eslintcache
+.stylelintcache
+.tsbuildinfo
+.cache/
+.parcel-cache/
+.vite/
+.wrangler/
+
+# Editor and IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.sln
+*.sw?
+.idea/
+.vs/

@@ -1,17 +1,36 @@
 package com.example.smartexpapp;
 
+import com.example.smartexpapp.data.local.LocalDataContract;
+import com.example.smartexpapp.util.ProductQuantityValidator;
+
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
- */
 public class ExampleUnitTest {
     @Test
-    public void addition_isCorrect() {
-        assertEquals(4, 2 + 2);
+    public void buildConfigUsesExpectedApplicationId() {
+        assertEquals("com.example.smartexpapp", BuildConfig.APPLICATION_ID);
+        assertFalse(BuildConfig.VERSION_NAME.trim().isEmpty());
+    }
+
+    @Test
+    public void finalSubmissionCoreContractsStayStable() {
+        assertEquals(
+                LocalDataContract.STORAGE_FREEZE_ID,
+                LocalDataContract.storageIdForName("freezer")
+        );
+        assertEquals(
+                LocalDataContract.STORAGE_REFRIGERATOR_ID,
+                LocalDataContract.storageIdForName("cool")
+        );
+        assertEquals(
+                LocalDataContract.STORAGE_FREEZE_NAME,
+                LocalDataContract.storageNameForId(LocalDataContract.STORAGE_FREEZE_ID)
+        );
+        assertEquals("1.5", ProductQuantityValidator.normalize("1.50"));
+        assertNull(ProductQuantityValidator.normalize("0"));
     }
 }

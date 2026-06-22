@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="smart_background">#0A0A0C</color>
+    <color name="smart_surface">#0A0A0C</color>
+    <color name="smart_surface_container">#1B1B1E</color>
+    <color name="smart_surface_container_low">#171719</color>
+    <color name="smart_surface_variant">#353438</color>
+    <color name="smart_on_surface">#FFFFFF</color>
+    <color name="smart_secondary">#A0A0A5</color>
+    <color name="smart_muted">#8C8C8C</color>
+    <color name="smart_primary">#FFB77D</color>
+    <color name="smart_primary_container">#FF8C00</color>
+    <color name="smart_primary_soft">#26FF8C00</color>
+    <color name="smart_primary_soft_border">#66FF8C00</color>
+    <color name="smart_on_primary">#4D2600</color>
+    <color name="smart_error">#FFB4AB</color>
+    <color name="smart_notification_red">#EF4444</color>
+    <color name="smart_error_container">#93000A</color>
+    <color name="smart_success">#4CAF50</color>
+
+    <color name="category_dairy">#5DADE2</color>
+    <color name="category_produce">#EB984E</color>
+    <color name="category_pantry">#AF7AC5</color>
+    <color name="category_vegetables">#58D68D</color>
+    <color name="category_meat">#EC7063</color>
+    <color name="category_general">#95A5A6</color>
+
+    <!-- Bottom Nav Add Button Styles -->
+    <color name="bottom_nav_add_border">#0A0A0C</color>
+    <color name="bottom_nav_add_icon">#0A0A0C</color>
+
+    <!-- Glassmorphism and vibrant background colors (Dark Mode) -->
+    <color name="smart_glass_surface">#991B1B1E</color>
+    <color name="smart_glass_surface_strong">#CC0A0A0C</color>
+    <color name="smart_glass_urgent">#26FF8C00</color>
+    <color name="smart_glass_urgent_stroke">#66FF8C00</color>
+    <color name="smart_glass_error">#26EF4444</color>
+    <color name="smart_glass_error_stroke">#66EF4444</color>
+    <color name="smart_glass_stroke">#1AFFFFFF</color>
+    <color name="multi_select_bar_bg">#F22A2A2E</color>
+    <color name="multi_select_bar_stroke">#26FFFFFF</color>
+    <color name="smart_glass_inner_glow">#1AFFFFFF</color>
+    <color name="smart_glass_input_bg">#66000000</color>
+    <color name="smart_glass_input_stroke">#26FFFFFF</color>
+    <color name="smart_ai_purple">#B6C4FF</color>
+    <color name="smart_ai_pink">#FFB7D5</color>
+    <color name="smart_glass_wash_start">#14FF8C00</color>
+    <color name="smart_glass_wash_mid">#0A0A0C</color>
+    <color name="smart_glass_wash_end">#1493000A</color>
+    <color name="smart_glass_glow_mid_left">#1400B5FC</color>
+    <color name="edit_profile_avatar_icon">@color/smart_on_primary</color>
+
+    <!-- Storage Colors (Dark Mode) -->
+    <color name="storage_fridge_icon">#90CAF9</color>
+    <color name="storage_fridge_bg">#0D47A1</color>
+    <color name="storage_fridge_progress">#2196F3</color>
+
+    <color name="storage_room_icon">#FFB77D</color>
+    <color name="storage_room_bg">#4D2600</color>
+    <color name="storage_room_progress">#FF8C00</color>
+
+    <color name="storage_freezer_icon">#E1BEE7</color>
+    <color name="storage_freezer_bg">#4A148C</color>
+    <color name="storage_freezer_progress">#9C27B0</color>
+
+    <!-- Urgent Badge Colors (Dark Mode) -->
+    <color name="urgent_triangle_color">#352219</color>
+    <color name="urgent_count_text">#FFFFFF</color>
+
+    <!-- Dialog & Sign-In Adaptive Theme Colors (Dark Mode) -->
+    <color name="dialog_bg">#16161A</color>
+    <color name="dialog_border">#1AFFFFFF</color>
+    <color name="dialog_input_bg">#0D0D0F</color>
+    <color name="dialog_input_bg_focused">#000000</color>
+    <color name="dialog_input_border">#2A2A2D</color>
+    <color name="dialog_input_border_focused">#FF8C00</color>
+    <color name="dialog_text_primary">#FFFFFF</color>
+    <color name="dialog_text_secondary">#8E8E93</color>
+    <color name="dialog_text_hint">#44FFFFFF</color>
+    <color name="dialog_divider">#0AFFFFFF</color>
+
+    <color name="signin_bg_start">#0E0E11</color>
+    <color name="signin_bg_center">#1A1410</color>
+    <color name="signin_bg_end">#05070A</color>
+    <color name="signin_overlay">#C90E0E11</color>
+    <color name="signin_header_text">#CCFFB77D</color>
+    <color name="signin_panel_bg">#B31E1E20</color>
+    <color name="signin_panel_border">#14FFFFFF</color>
+    <color name="signin_title">#E4E1E6</color>
+    <color name="signin_subtitle">#DDC1AE</color>
+    <color name="signin_label">#DDC1AE</color>
+    <color name="signin_input_bg">#18181B</color>
+    <color name="signin_input_border">#353438</color>
+    <color name="signin_btn_sec_bg">#2A2A2D</color>
+    <color name="signin_btn_sec_stroke">#564334</color>
+</resources>

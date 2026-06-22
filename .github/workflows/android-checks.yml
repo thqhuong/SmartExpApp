@@ -1,0 +1,56 @@
+name: Android checks
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+      - master
+  push:
+    branches:
+      - dev
+      - main
+      - master
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: ./gradlew test
+
+      - name: Assemble debug APK
+        shell: pwsh
+        run: ./scripts/build-placeholder-debug-apk.ps1
+
+      - name: Scan APK for secrets
+        shell: pwsh
+        run: ./scripts/scan-apk-secrets.ps1
+
+      - name: Android lint
+        run: ./gradlew :app:lintDebug
+
+      - name: Firestore rules tests
+        run: npm run test:firestore-rules

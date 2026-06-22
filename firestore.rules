@@ -1,0 +1,186 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsUserDocument(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function ownerFieldMatches(userId) {
+      return request.resource.data.ownerUserId == userId;
+    }
+
+    function onlyAllowedProductFields() {
+      return request.resource.data.keys().hasOnly([
+        'localId',
+        'ownerUserId',
+        'name',
+        'category',
+        'quantity',
+        'unit',
+        'storageLocationId',
+        'expiryDateMillis',
+        'barcode',
+        'imageUri',
+        'status',
+        'createdAt',
+        'updatedAt',
+        'deletedAt'
+      ]);
+    }
+
+    function validProduct(userId) {
+      return onlyAllowedProductFields()
+        && ownerFieldMatches(userId)
+        && request.resource.data.name is string
+        && request.resource.data.category is string
+        && request.resource.data.quantity is string
+        && request.resource.data.unit is string
+        && request.resource.data.storageLocationId is string
+        && request.resource.data.expiryDateMillis is number
+        && request.resource.data.status in ['ACTIVE', 'EXPIRED', 'CONSUMED', 'WASTED', 'DONATED']
+        && request.resource.data.createdAt is number
+        && request.resource.data.updatedAt is number;
+    }
+
+    function validProductTombstone(userId) {
+      return request.resource.data.keys().hasOnly([
+        'localId',
+        'ownerUserId',
+        'updatedAt',
+        'deletedAt'
+      ])
+        && ownerFieldMatches(userId)
+        && request.resource.data.updatedAt is number
+        && request.resource.data.deletedAt is number;
+    }
+
+    function onlyAllowedSettingsFields() {
+      return request.resource.data.keys().hasOnly([
+        'ownerUserId',
+        'displayName',
+        'reminderDaysBefore',
+        'reminderNotifyTimeMinutes',
+        'dietaryPreferences',
+        'darkMode',
+        'languageTag',
+        'defaultStorageLocationId',
+        'notificationEnabled',
+        'createdAt',
+        'updatedAt'
+      ]);
+    }
+
+    function validSettings(userId) {
+      return onlyAllowedSettingsFields()
+        && ownerFieldMatches(userId)
+        && request.resource.data.reminderDaysBefore is number
+        && request.resource.data.reminderNotifyTimeMinutes is number
+        && request.resource.data.darkMode is bool
+        && request.resource.data.languageTag is string
+        && request.resource.data.defaultStorageLocationId is string
+        && request.resource.data.notificationEnabled is bool
+        && request.resource.data.createdAt is number
+        && request.resource.data.updatedAt is number;
+    }
+
+    function onlyAllowedInventoryActionFields() {
+      return request.resource.data.keys().hasOnly([
+        'ownerUserId',
+        'localId',
+        'productLocalId',
+        'productCloudId',
+        'actionType',
+        'quantityChanged',
+        'actionAt',
+        'note',
+        'createdAt',
+        'updatedAt'
+      ]);
+    }
+
+    function validInventoryAction(userId) {
+      return onlyAllowedInventoryActionFields()
+        && ownerFieldMatches(userId)
+        && request.resource.data.actionType in ['EXPIRED', 'CONSUMED', 'WASTED', 'DONATED']
+        && request.resource.data.quantityChanged is number
+        && request.resource.data.actionAt is number
+        && request.resource.data.createdAt is number
+        && request.resource.data.updatedAt is number;
+    }
+
+    function onlyAllowedCategoryFields() {
+      return request.resource.data.keys().hasOnly([
+        'ownerUserId',
+        'localId',
+        'name',
+        'sortOrder',
+        'isBuiltIn',
+        'active',
+        'createdAt',
+        'updatedAt',
+        'deletedAt'
+      ]);
+    }
+
+    function validCategory(userId) {
+      return onlyAllowedCategoryFields()
+        && ownerFieldMatches(userId)
+        && request.resource.data.name is string
+        && request.resource.data.sortOrder is number
+        && request.resource.data.isBuiltIn is bool
+        && request.resource.data.active is bool
+        && request.resource.data.createdAt is number
+        && request.resource.data.updatedAt is number;
+    }
+
+    match /users/{userId} {
+      allow read: if ownsUserDocument(userId);
+      allow create, update: if ownsUserDocument(userId)
+        && request.resource.data.keys().hasOnly(['createdAt', 'updatedAt']);
+      allow delete: if false;
+
+      match /products/{productId} {
+        allow read: if ownsUserDocument(userId);
+        allow create, update: if ownsUserDocument(userId)
+          && (validProduct(userId) || validProductTombstone(userId));
+        allow delete: if ownsUserDocument(userId);
+      }
+
+      match /settings/{settingsId} {
+        allow read: if ownsUserDocument(userId);
+        allow create, update: if ownsUserDocument(userId) && validSettings(userId);
+        allow delete: if false;
+      }
+
+      match /inventoryActions/{actionId} {
+        allow read: if ownsUserDocument(userId);
+        allow create, update: if ownsUserDocument(userId) && validInventoryAction(userId);
+        allow delete: if false;
+      }
+
+      match /categories/{categoryId} {
+        allow read: if ownsUserDocument(userId);
+        allow create, update: if ownsUserDocument(userId) && validCategory(userId);
+        allow delete: if ownsUserDocument(userId);
+      }
+
+      match /storageLocations/{storageLocationId} {
+        allow read: if ownsUserDocument(userId);
+        allow create, update, delete: if false;
+      }
+
+      match /{document=**} {
+        allow read, write: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

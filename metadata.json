@@ -1,5 +1,5 @@
 {
-  "name": "SmartExp",
+  "name": "SmartExpApp",
   "description": "A minimalist inventory tracker that uses AI to prevent food waste by suggesting recipes for expiring products.",
   "requestFramePermissions": [],
   "majorCapabilities": []
