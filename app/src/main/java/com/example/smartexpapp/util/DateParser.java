@@ -62,6 +62,11 @@ public class DateParser {
                     "\\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\s+\\d{1,2},?\\s+\\d{2,4}\\b",
             Pattern.CASE_INSENSITIVE);
 
+    // Compact dates printed without separators, common on food labels (e.g. 290527, 20261227).
+    private static final Pattern COMPACT_DATE_PATTERN = Pattern.compile("\\b(\\d{8}|\\d{6})\\b");
+    private static final String[] COMPACT_FORMATS_8 = { "ddMMyyyy", "yyyyMMdd", "MMddyyyy" };
+    private static final String[] COMPACT_FORMATS_6 = { "ddMMyy", "yyMMdd", "MMddyy" };
+
     public static List<Long> extractDates(String text) {
         List<DateCandidate> candidates = extractDateCandidates(text);
         Set<Long> uniqueDates = new HashSet<>();
@@ -103,6 +108,35 @@ public class DateParser {
                                 candidates.add(new DateCandidate(dateMillis, match, snippet, confidenceFor(match, snippet)));
                             }
                             break;
+                        }
+                    }
+                } catch (ParseException ignored) {
+                }
+            }
+        }
+
+        // Second pass: compact dates with no separators (e.g. 290527, 20261227). These are
+        // ambiguous, so every valid interpretation is added as a separate candidate and the
+        // user picks the right one in the OCR review dialog.
+        Matcher compactMatcher = COMPACT_DATE_PATTERN.matcher(text);
+        while (compactMatcher.find()) {
+            String match = compactMatcher.group();
+            String snippet = snippetAround(text, compactMatcher.start(), compactMatcher.end());
+            String[] formats = match.length() == 8 ? COMPACT_FORMATS_8 : COMPACT_FORMATS_6;
+            for (String format : formats) {
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
+                    sdf.setLenient(false);
+                    Date date = sdf.parse(match);
+                    if (date != null) {
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime(date);
+                        int year = cal.get(Calendar.YEAR);
+                        if (year >= 2000 && year < 2100) {
+                            long dateMillis = date.getTime();
+                            if (uniqueDates.add(dateMillis)) {
+                                candidates.add(new DateCandidate(dateMillis, match, snippet, confidenceFor(match, snippet)));
+                            }
                         }
                     }
                 } catch (ParseException ignored) {
