@@ -38,6 +38,7 @@ import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.example.smartexpapp.util.InAppNotificationManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -76,8 +77,6 @@ public class InventoryActivity extends BaseActivity {
 
     private List<Product> latestProducts = new ArrayList<>();
     private InventoryViewModel viewModel;
-    private View undoBarView;
-    private Handler undoHandler;
 
     private View multiSelectBar;
     private View searchFilterContainer;
@@ -336,7 +335,8 @@ public class InventoryActivity extends BaseActivity {
                     runOnUiThread(() -> {
                         finishMultiSelect();
                         viewModel.loadProducts();
-                        showUndoBar(null, iconRes, iconBgRes, iconTintRes, message,
+                        InAppNotificationManager.showUndo(InventoryActivity.this, message, iconRes, iconBgRes,
+                                iconTintRes,
                                 () -> batchUndo(affectedProducts));
                     });
                 }
@@ -372,10 +372,9 @@ public class InventoryActivity extends BaseActivity {
                     runOnUiThread(() -> {
                         finishMultiSelect();
                         viewModel.loadProducts();
-                        showUndoBar(null,
+                        InAppNotificationManager.showUndo(InventoryActivity.this, message,
                                 R.drawable.ic_delete, R.drawable.bg_action_icon_circle_delete,
-                                R.color.smart_error, message,
-                                () -> batchUndo(affectedProducts));
+                                R.color.smart_error, () -> batchUndo(affectedProducts));
                     });
                 }
             }
@@ -394,9 +393,7 @@ public class InventoryActivity extends BaseActivity {
                 completed[0]++;
                 if (completed[0] == total) {
                     runOnUiThread(() -> {
-                        Toast.makeText(this,
-                                getString(R.string.batch_undone_format, total),
-                                Toast.LENGTH_SHORT).show();
+                        showSuccessNotification(getString(R.string.batch_undone_format, total));
                         ReminderScheduler.runSoon(this);
                         viewModel.loadProducts();
                     });
@@ -601,7 +598,7 @@ public class InventoryActivity extends BaseActivity {
             expiryFilterValue.setText(R.string.filter_expiring);
         }
         viewModel.applyLaunchFilter(FILTER_EXPIRING_SOON);
-        Toast.makeText(this, R.string.reminder_filter_toast, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.reminder_filter_toast));
     }
 
     private void resetInventoryFilters() {
@@ -828,7 +825,7 @@ public class InventoryActivity extends BaseActivity {
             ReminderScheduler.runSoon(this);
             viewModel.loadProducts();
             String message = getString(R.string.mark_status_snackbar_format, product.getName(), statusLabel);
-            showUndoBar(product, iconRes, iconBgRes, iconTintRes, message, () -> undoMark(product));
+            InAppNotificationManager.showUndo(this, message, iconRes, iconBgRes, iconTintRes, () -> undoMark(product));
         }
     }
 
@@ -836,80 +833,11 @@ public class InventoryActivity extends BaseActivity {
         viewModel.revertStatus(product.getId(), "Reverted from undo bar",
                 reverted -> {
                     if (Boolean.TRUE.equals(reverted)) {
-                        Toast.makeText(this,
-                                getString(R.string.mark_undone_format, product.getName()),
-                                Toast.LENGTH_SHORT).show();
+                        showSuccessNotification(getString(R.string.mark_undone_format, product.getName()));
                         ReminderScheduler.runSoon(this);
                         viewModel.loadProducts();
                     }
                 }, this::onStatusUpdateFailed);
-    }
-
-    private void showUndoBar(Product product, int iconRes, int iconBgRes, int iconTintRes,
-            String message, Runnable undoAction) {
-        ViewGroup root = findViewById(R.id.root);
-        if (root == null)
-            return;
-
-        if (undoBarView != null) {
-            root.removeView(undoBarView);
-            undoBarView = null;
-        }
-        if (undoHandler != null) {
-            undoHandler.removeCallbacksAndMessages(null);
-        }
-
-        undoBarView = LayoutInflater.from(this).inflate(R.layout.dialog_undo_delete, root, false);
-
-        FrameLayout iconContainer = undoBarView.findViewById(R.id.undoIconContainer);
-        iconContainer.setBackgroundResource(iconBgRes);
-
-        ImageView icon = undoBarView.findViewById(R.id.undoIcon);
-        icon.setImageResource(iconRes);
-        icon.setImageTintList(android.content.res.ColorStateList.valueOf(
-                getColor(iconTintRes)));
-
-        ((TextView) undoBarView.findViewById(R.id.undoMessage)).setText(message);
-
-        undoBarView.findViewById(R.id.undoAction).setOnClickListener(v -> {
-            dismissUndoBar();
-            undoAction.run();
-        });
-
-        root.addView(undoBarView, root.getChildCount() - 1);
-
-        undoBarView.setTranslationY(200f);
-        undoBarView.setAlpha(0f);
-        undoBarView.animate()
-                .translationY(0f)
-                .alpha(1f)
-                .setDuration(350)
-                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
-                .start();
-
-        undoHandler = new Handler(Looper.getMainLooper());
-        undoHandler.postDelayed(this::dismissUndoBar, 5000);
-    }
-
-    private void dismissUndoBar() {
-        if (undoHandler != null) {
-            undoHandler.removeCallbacksAndMessages(null);
-        }
-        if (undoBarView != null) {
-            undoBarView.animate()
-                    .translationY(200f)
-                    .alpha(0f)
-                    .setDuration(250)
-                    .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
-                    .withEndAction(() -> {
-                        ViewGroup root = findViewById(R.id.root);
-                        if (root != null && undoBarView != null) {
-                            root.removeView(undoBarView);
-                        }
-                        undoBarView = null;
-                    })
-                    .start();
-        }
     }
 
     private void openEditDialog(Product product) {
@@ -938,16 +866,16 @@ public class InventoryActivity extends BaseActivity {
                 if (Boolean.TRUE.equals(deleted)) {
                     ReminderScheduler.runSoon(this);
                     viewModel.loadProducts();
-                    showUndoBar(product,
+                    InAppNotificationManager.showUndo(InventoryActivity.this,
+                            getString(R.string.undo_delete_format, product.getName()),
                             R.drawable.ic_delete,
                             R.drawable.bg_action_icon_circle_delete,
                             R.color.smart_error,
-                            getString(R.string.undo_delete_format, product.getName()),
                             () -> undoMark(product));
                 }
             }, error -> {
                 Log.e(TAG, "Failed to delete product", error);
-                Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+                showErrorNotification(getString(R.string.error_load));
             });
         });
 
@@ -956,6 +884,6 @@ public class InventoryActivity extends BaseActivity {
 
     private void onStatusUpdateFailed(Exception error) {
         Log.e(TAG, "Failed to update product status", error);
-        Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+        showErrorNotification(getString(R.string.error_load));
     }
 }

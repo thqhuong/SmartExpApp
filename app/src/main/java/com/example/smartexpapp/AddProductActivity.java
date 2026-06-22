@@ -91,9 +91,6 @@ public class AddProductActivity extends BaseActivity {
     private int smartDraftTotalCount;
     private int smartDraftCurrentIndex;
 
-    private final ActivityResultLauncher<String> pickPhotoLauncher = registerForActivityResult(
-            new ActivityResultContracts.GetContent(), this::onPhotoPicked);
-
     private final ActivityResultLauncher<Uri> ocrPhotoLauncher = registerForActivityResult(
             new ActivityResultContracts.TakePicture(), this::onOcrPhotoCaptured);
 
@@ -140,7 +137,7 @@ public class AddProductActivity extends BaseActivity {
         findViewById(R.id.btnLaunchSmartVoice).setOnClickListener(v -> startSmartAddVoice());
         findViewById(R.id.btnTypeSmartAdd).setOnClickListener(v -> showSmartAddTextDialog());
 
-        photoPreview.setOnClickListener(v -> pickPhotoLauncher.launch("image/*"));
+        photoPreview.setOnClickListener(v -> pickProductPhoto(this::onPhotoPicked));
         btnOcrScan.setOnClickListener(v -> showOcrSourceDialog());
         btnRemovePhoto.setOnClickListener(v -> confirmRemovePhoto());
 
