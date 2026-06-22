@@ -297,8 +297,20 @@ public class EditProductDialog {
             name.setText(cat);
             name.setTextColor(activity.getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
 
-            ImageButton gear = row.findViewById(R.id.btnGear);
-            gear.setOnClickListener(v -> showCategoryActionDialog(activity, canonicalCat));
+            ImageButton editBtn = row.findViewById(R.id.btnEditCategory);
+            ImageButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
+            editBtn.setOnClickListener(v -> showRenameCategoryDialog(activity, canonicalCat, () -> {
+                if (manageDialog != null) manageDialog.dismiss();
+                showManageCategoriesDialog(activity);
+            }));
+            deleteBtn.setOnClickListener(v -> showDeleteCategoryDialog(
+                    activity,
+                    canonicalCat,
+                    countProductsForCategory(activity, canonicalCat),
+                    () -> {
+                        if (manageDialog != null) manageDialog.dismiss();
+                        showManageCategoriesDialog(activity);
+                    }));
 
             categoryList.addView(row);
         }

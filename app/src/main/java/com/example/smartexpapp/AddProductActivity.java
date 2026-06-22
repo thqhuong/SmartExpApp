@@ -9,13 +9,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,9 +61,15 @@ public class AddProductActivity extends BaseActivity {
     private int selectedStorageId = R.id.storageRoom;
     private EditText productNameInput;
     private EditText quantityInput;
-    private Spinner unitSpinner;
-    private Spinner categorySpinner;
+    private TextView unitSelectorValue;
+    private ImageView unitSelectorChevron;
+    private LinearLayout unitDropdown;
+    private TextView categorySelectorValue;
+    private ImageView categorySelectorChevron;
+    private View categorySelectedDot;
+    private LinearLayout categoryDropdown;
     private MaterialButton btnManageCategories;
+    private String selectedUnit = "pcs";
     private String selectedCategory = "General";
     private TextView expiryDateInput;
     private MaterialButton submitButton;
@@ -119,8 +123,13 @@ public class AddProductActivity extends BaseActivity {
 
         productNameInput = findViewById(R.id.productNameInput);
         quantityInput = findViewById(R.id.quantityInput);
-        unitSpinner = findViewById(R.id.unitSpinner);
-        categorySpinner = findViewById(R.id.categorySpinner);
+        unitSelectorValue = findViewById(R.id.unitSelectorValue);
+        unitSelectorChevron = findViewById(R.id.unitSelectorChevron);
+        unitDropdown = findViewById(R.id.unitDropdown);
+        categorySelectorValue = findViewById(R.id.categorySelectorValue);
+        categorySelectorChevron = findViewById(R.id.categorySelectorChevron);
+        categorySelectedDot = findViewById(R.id.categorySelectedDot);
+        categoryDropdown = findViewById(R.id.categoryDropdown);
         btnManageCategories = findViewById(R.id.btnManageCategories);
         expiryDateInput = findViewById(R.id.expiryDateInput);
         submitButton = findViewById(R.id.addProductButton);
@@ -420,7 +429,7 @@ public class AddProductActivity extends BaseActivity {
     private void applyDraftFields(ProductDraft draft, boolean includeExpiry) {
         productNameInput.setText(draft.getName());
         quantityInput.setText(draft.getQuantity());
-        selectSpinnerValue(unitSpinner, draft.getUnit());
+        selectUnitValue(draft.getUnit());
 
         selectedCategory = canonicalCategory(draft.getCategory());
         if (!CategoryRepository.isBuiltInCanonical(selectedCategory)) {
@@ -449,12 +458,16 @@ public class AddProductActivity extends BaseActivity {
         }
     }
 
-    private void selectSpinnerValue(Spinner spinner, String value) {
-        if (value == null)
+    private void selectUnitValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
             return;
-        for (int i = 0; i < spinner.getCount(); i++) {
-            if (value.equalsIgnoreCase(spinner.getItemAtPosition(i).toString())) {
-                spinner.setSelection(i);
+        }
+        String[] units = getResources().getStringArray(R.array.unit_options);
+        for (String unit : units) {
+            if (value.trim().equalsIgnoreCase(unit)) {
+                selectedUnit = unit;
+                unitSelectorValue.setText(unit);
+                updateDropdownSelection(unitDropdown, unit);
                 return;
             }
         }
@@ -675,10 +688,19 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void setupUnitSpinner() {
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.unit_options, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        unitSpinner.setAdapter(adapter);
+        String[] units = getResources().getStringArray(R.array.unit_options);
+        if (units.length > 0) {
+            selectedUnit = units[0];
+        }
+        populateDropdown(unitDropdown, units, value -> {
+            selectedUnit = value;
+            unitSelectorValue.setText(value);
+            updateDropdownSelection(unitDropdown, value);
+            hideDropdown(unitDropdown, unitSelectorChevron);
+        });
+        unitSelectorValue.setText(selectedUnit);
+        updateDropdownSelection(unitDropdown, selectedUnit);
+        findViewById(R.id.unitSelectorRow).setOnClickListener(v -> toggleDropdown(unitDropdown, unitSelectorChevron));
         if (editingProductId == null) {
             quantityInput.setText(R.string.quantity_default);
         }
@@ -696,33 +718,75 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void refreshCategorySpinner(List<String> items) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, items);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(adapter);
-
         String canonicalSelected = canonicalCategory(selectedCategory);
-        int pos = -1;
-        for (int i = 0; i < items.size(); i++) {
-            if (canonicalCategory(items.get(i)).equals(canonicalSelected)) {
-                pos = i;
+        String displaySelected = items.isEmpty() ? selectedCategory : items.get(0);
+        for (String item : items) {
+            if (canonicalCategory(item).equals(canonicalSelected)) {
+                displaySelected = item;
                 break;
             }
         }
-        if (pos >= 0)
-            categorySpinner.setSelection(pos);
+        selectedCategory = canonicalCategory(displaySelected);
+        categorySelectorValue.setText(displaySelected);
+        categorySelectedDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, selectedCategory)));
 
-        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String display = parent.getItemAtPosition(position).toString();
-                selectedCategory = canonicalCategory(display);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+        populateDropdown(categoryDropdown, items.toArray(new String[0]), value -> {
+            selectedCategory = canonicalCategory(value);
+            categorySelectorValue.setText(value);
+            categorySelectedDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, selectedCategory)));
+            updateDropdownSelection(categoryDropdown, value);
+            hideDropdown(categoryDropdown, categorySelectorChevron);
         });
+        updateDropdownSelection(categoryDropdown, displaySelected);
+        findViewById(R.id.categorySelectorRow).setOnClickListener(
+                v -> toggleDropdown(categoryDropdown, categorySelectorChevron));
+    }
+
+    private void populateDropdown(LinearLayout container, String[] options, DropdownCallback callback) {
+        container.removeAllViews();
+        for (String option : options) {
+            TextView row = new TextView(this);
+            row.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dpToPx(44)));
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.setPadding(dpToPx(16), 0, dpToPx(16), 0);
+            row.setText(option);
+            row.setTextColor(getColor(R.color.smart_on_surface));
+            row.setTextSize(15);
+            row.setOnClickListener(v -> callback.onSelected(option));
+            container.addView(row);
+        }
+    }
+
+    private void updateDropdownSelection(LinearLayout container, String selectedValue) {
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View child = container.getChildAt(i);
+            if (child instanceof TextView) {
+                TextView label = (TextView) child;
+                boolean selected = label.getText().toString().equalsIgnoreCase(selectedValue);
+                label.setTextColor(getColor(selected ? R.color.smart_primary : R.color.smart_on_surface));
+                label.setTypeface(null, selected ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            }
+        }
+    }
+
+    private void toggleDropdown(LinearLayout dropdown, ImageView chevron) {
+        if (dropdown.getVisibility() == View.VISIBLE) {
+            hideDropdown(dropdown, chevron);
+        } else {
+            showDropdown(dropdown, chevron);
+        }
+    }
+
+    private void showDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.setVisibility(View.VISIBLE);
+        chevron.animate().rotation(180f).setDuration(200).start();
+    }
+
+    private void hideDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.setVisibility(View.GONE);
+        chevron.animate().rotation(0f).setDuration(200).start();
     }
 
     private void showManageCategoriesDialog() {
@@ -749,8 +813,8 @@ public class AddProductActivity extends BaseActivity {
             name.setText(cat);
             name.setTextColor(getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
 
-            MaterialButton editBtn = row.findViewById(R.id.btnEditCategory);
-            MaterialButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
+            ImageButton editBtn = row.findViewById(R.id.btnEditCategory);
+            ImageButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
 
             editBtn.setVisibility(View.VISIBLE);
             editBtn.setOnClickListener(v -> showRenameCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
@@ -997,7 +1061,7 @@ public class AddProductActivity extends BaseActivity {
 
         productNameInput.setText(product.getName());
         quantityInput.setText(product.getQuantity());
-        selectSpinnerValue(unitSpinner, product.getUnit());
+        selectUnitValue(product.getUnit());
 
         selectedCategory = product.getCategory() == null || product.getCategory().trim().isEmpty()
                 ? "General"
@@ -1051,7 +1115,7 @@ public class AddProductActivity extends BaseActivity {
             return;
         }
         final String finalQuantity = quantity;
-        String unit = unitSpinner.getSelectedItem().toString();
+        String unit = selectedUnit;
         submitButton.setEnabled(false);
         skipSmartDraftButton.setEnabled(false);
         if (editingProductId != null) {
@@ -1183,7 +1247,7 @@ public class AddProductActivity extends BaseActivity {
         clearPhotoPreviewOnly();
         productNameInput.setText("");
         quantityInput.setText(R.string.quantity_default);
-        selectSpinnerValue(unitSpinner, "pcs");
+        selectUnitValue("pcs");
         selectedCategory = "General";
         refreshCategorySpinner();
         selectStorage(R.id.storageRoom);
@@ -1234,5 +1298,9 @@ public class AddProductActivity extends BaseActivity {
             return R.drawable.ic_storage_fridge;
         }
         return R.drawable.ic_storage_room;
+    }
+
+    interface DropdownCallback {
+        void onSelected(String value);
     }
 }
