@@ -309,9 +309,9 @@ public class SettingsActivity extends BaseActivity {
 
     private void showStoragePreferencesDialog() {
         String[] labels = {
-                LocalDataContract.STORAGE_ROOM_TEMP_NAME,
-                LocalDataContract.STORAGE_REFRIGERATOR_NAME,
-                LocalDataContract.STORAGE_FREEZE_NAME
+                getString(R.string.storage_room_temp),
+                getString(R.string.storage_cool),
+                getString(R.string.storage_frozen)
         };
         String[] ids = {
                 LocalDataContract.STORAGE_ROOM_TEMP_ID,
@@ -372,7 +372,7 @@ public class SettingsActivity extends BaseActivity {
                         this,
                         ids[selected[0]],
                         updated -> showSuccessNotification(
-                                getString(R.string.default_storage_saved_format, updated.getDefaultStorageName())),
+                                getString(R.string.default_storage_saved_format, labels[selected[0]])),
                         error -> showErrorNotification(getString(R.string.default_storage_save_error)));
             });
 
