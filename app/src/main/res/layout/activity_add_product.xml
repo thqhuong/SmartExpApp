@@ -4,7 +4,7 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/smart_background"
+    android:background="@drawable/bg_glass_screen"
     android:orientation="vertical">
 
     <include layout="@layout/include_top_bar" />
