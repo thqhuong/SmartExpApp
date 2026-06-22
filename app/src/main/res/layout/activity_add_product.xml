@@ -472,6 +472,7 @@
                         app:iconGravity="textStart"
                         app:iconTint="@color/smart_error" />
                 </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
