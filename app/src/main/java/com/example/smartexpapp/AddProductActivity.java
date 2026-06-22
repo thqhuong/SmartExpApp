@@ -3,12 +3,17 @@ package com.example.smartexpapp;
 import android.app.DatePickerDialog;
 import android.app.AlertDialog;
 import android.app.Activity;
+import android.content.res.ColorStateList;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -38,6 +43,7 @@ import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ProductQuantityValidator;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
@@ -62,12 +68,12 @@ public class AddProductActivity extends BaseActivity {
     private EditText productNameInput;
     private EditText quantityInput;
     private TextView unitSelectorValue;
-    private ImageView unitSelectorChevron;
-    private LinearLayout unitDropdown;
     private TextView categorySelectorValue;
-    private ImageView categorySelectorChevron;
     private View categorySelectedDot;
+    private LinearLayout unitDropdown;
     private LinearLayout categoryDropdown;
+    private ImageView unitSelectorChevron;
+    private ImageView categorySelectorChevron;
     private MaterialButton btnManageCategories;
     private String selectedUnit = "pcs";
     private String selectedCategory = "General";
@@ -124,12 +130,12 @@ public class AddProductActivity extends BaseActivity {
         productNameInput = findViewById(R.id.productNameInput);
         quantityInput = findViewById(R.id.quantityInput);
         unitSelectorValue = findViewById(R.id.unitSelectorValue);
-        unitSelectorChevron = findViewById(R.id.unitSelectorChevron);
-        unitDropdown = findViewById(R.id.unitDropdown);
         categorySelectorValue = findViewById(R.id.categorySelectorValue);
-        categorySelectorChevron = findViewById(R.id.categorySelectorChevron);
         categorySelectedDot = findViewById(R.id.categorySelectedDot);
+        unitDropdown = findViewById(R.id.unitDropdown);
         categoryDropdown = findViewById(R.id.categoryDropdown);
+        unitSelectorChevron = findViewById(R.id.unitSelectorChevron);
+        categorySelectorChevron = findViewById(R.id.categorySelectorChevron);
         btnManageCategories = findViewById(R.id.btnManageCategories);
         expiryDateInput = findViewById(R.id.expiryDateInput);
         submitButton = findViewById(R.id.addProductButton);
@@ -152,8 +158,8 @@ public class AddProductActivity extends BaseActivity {
 
         editingProductId = getIntent().getStringExtra(EXTRA_PRODUCT_ID);
 
-        setupUnitSpinner();
-        setupCategorySpinner();
+        setupUnitDropdown();
+        setupCategoryDropdown();
         setupStorageOptions();
         expiryDateInput.setOnClickListener(v -> showDatePicker());
         submitButton.setOnClickListener(v -> submitProduct());
@@ -170,6 +176,28 @@ public class AddProductActivity extends BaseActivity {
             deleteUnsavedSelectedPhoto(selectedPhotoPath);
         }
         super.onDestroy();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View focused = getCurrentFocus();
+            if (focused instanceof EditText) {
+                int[] pos = new int[2];
+                focused.getLocationOnScreen(pos);
+                float x = event.getRawX();
+                float y = event.getRawY();
+                if (x < pos[0] || x > pos[0] + focused.getWidth()
+                        || y < pos[1] || y > pos[1] + focused.getHeight()) {
+                    focused.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
     }
 
     private void startSmartAddVoice() {
@@ -433,10 +461,10 @@ public class AddProductActivity extends BaseActivity {
 
         selectedCategory = canonicalCategory(draft.getCategory());
         if (!CategoryRepository.isBuiltInCanonical(selectedCategory)) {
-            CategoryRepository.addCategoryAsync(this, selectedCategory, ignored -> refreshCategorySpinner(),
-                    error -> refreshCategorySpinner());
+            CategoryRepository.addCategoryAsync(this, selectedCategory, ignored -> refreshCategoryDropdown(),
+                    error -> refreshCategoryDropdown());
         } else {
-            refreshCategorySpinner();
+            refreshCategoryDropdown();
         }
 
         String storageId = LocalDataContract.storageIdForName(draft.getStorage());
@@ -455,21 +483,6 @@ public class AddProductActivity extends BaseActivity {
             expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
         } else if (includeExpiry) {
             Toast.makeText(this, R.string.expiry_not_detected, Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void selectUnitValue(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return;
-        }
-        String[] units = getResources().getStringArray(R.array.unit_options);
-        for (String unit : units) {
-            if (value.trim().equalsIgnoreCase(unit)) {
-                selectedUnit = unit;
-                unitSelectorValue.setText(unit);
-                updateDropdownSelection(unitDropdown, unit);
-                return;
-            }
         }
     }
 
@@ -687,92 +700,138 @@ public class AddProductActivity extends BaseActivity {
         }
     }
 
-    private void setupUnitSpinner() {
-        String[] units = getResources().getStringArray(R.array.unit_options);
-        if (units.length > 0) {
-            selectedUnit = units[0];
-        }
-        populateDropdown(unitDropdown, units, value -> {
-            selectedUnit = value;
-            unitSelectorValue.setText(value);
-            updateDropdownSelection(unitDropdown, value);
-            hideDropdown(unitDropdown, unitSelectorChevron);
+    private void setupUnitDropdown() {
+        findViewById(R.id.unitSelectorRow).setOnClickListener(v -> {
+            closeDropdown(categoryDropdown, categorySelectorChevron);
+            toggleDropdown(unitDropdown, unitSelectorChevron);
         });
-        unitSelectorValue.setText(selectedUnit);
-        updateDropdownSelection(unitDropdown, selectedUnit);
-        findViewById(R.id.unitSelectorRow).setOnClickListener(v -> toggleDropdown(unitDropdown, unitSelectorChevron));
+        populateUnitDropdown();
         if (editingProductId == null) {
             quantityInput.setText(R.string.quantity_default);
         }
     }
 
-    private void setupCategorySpinner() {
-        refreshCategorySpinner();
+    private void setupCategoryDropdown() {
+        findViewById(R.id.categorySelectorRow).setOnClickListener(v -> {
+            closeDropdown(unitDropdown, unitSelectorChevron);
+            toggleDropdown(categoryDropdown, categorySelectorChevron);
+        });
+        refreshCategoryDropdown();
         btnManageCategories.setOnClickListener(v -> showManageCategoriesDialog());
     }
 
-    private void refreshCategorySpinner() {
-        CategoryRepository.getDisplayCategoriesAsync(this, this::refreshCategorySpinner, error -> {
+    private void populateUnitDropdown() {
+        String[] units = getResources().getStringArray(R.array.unit_options);
+        int selectedIndex = indexOfIgnoreCase(units, selectedUnit);
+        if (selectedIndex < 0 && units.length > 0) {
+            selectedIndex = 0;
+            selectedUnit = units[0];
+        }
+        unitSelectorValue.setText(selectedUnit);
+        populateDropdown(unitDropdown, units, selectedIndex, (index, label) -> {
+            selectedUnit = label;
+            unitSelectorValue.setText(label);
+            updateRadioSelection(unitDropdown, index);
+            toggleDropdown(unitDropdown, unitSelectorChevron);
+        });
+    }
+
+    private void refreshCategoryDropdown() {
+        CategoryRepository.getDisplayCategoriesAsync(this, this::refreshCategoryDropdown, error -> {
             Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show();
         });
     }
 
-    private void refreshCategorySpinner(List<String> items) {
+    private void refreshCategoryDropdown(List<String> items) {
         String canonicalSelected = canonicalCategory(selectedCategory);
-        String displaySelected = items.isEmpty() ? selectedCategory : items.get(0);
-        for (String item : items) {
-            if (canonicalCategory(item).equals(canonicalSelected)) {
-                displaySelected = item;
+        int pos = -1;
+        for (int i = 0; i < items.size(); i++) {
+            if (canonicalCategory(items.get(i)).equals(canonicalSelected)) {
+                pos = i;
                 break;
             }
         }
-        selectedCategory = canonicalCategory(displaySelected);
-        categorySelectorValue.setText(displaySelected);
-        categorySelectedDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, selectedCategory)));
-
-        populateDropdown(categoryDropdown, items.toArray(new String[0]), value -> {
-            selectedCategory = canonicalCategory(value);
-            categorySelectorValue.setText(value);
-            categorySelectedDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, selectedCategory)));
-            updateDropdownSelection(categoryDropdown, value);
-            hideDropdown(categoryDropdown, categorySelectorChevron);
-        });
-        updateDropdownSelection(categoryDropdown, displaySelected);
-        findViewById(R.id.categorySelectorRow).setOnClickListener(
-                v -> toggleDropdown(categoryDropdown, categorySelectorChevron));
-    }
-
-    private void populateDropdown(LinearLayout container, String[] options, DropdownCallback callback) {
-        container.removeAllViews();
-        for (String option : options) {
-            TextView row = new TextView(this);
-            row.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dpToPx(44)));
-            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
-            row.setPadding(dpToPx(16), 0, dpToPx(16), 0);
-            row.setText(option);
-            row.setTextColor(getColor(R.color.smart_on_surface));
-            row.setTextSize(15);
-            row.setOnClickListener(v -> callback.onSelected(option));
-            container.addView(row);
+        if (pos < 0 && !items.isEmpty()) {
+            pos = 0;
+            selectedCategory = canonicalCategory(items.get(0));
         }
+
+        String[] options = items.toArray(new String[0]);
+        updateCategorySelectorDisplay(pos >= 0 ? options[pos] : selectedCategory);
+        populateDropdown(categoryDropdown, options, pos, true, (index, label) -> {
+            selectedCategory = canonicalCategory(label);
+            updateCategorySelectorDisplay(label);
+            updateRadioSelection(categoryDropdown, index);
+            toggleDropdown(categoryDropdown, categorySelectorChevron);
+        });
     }
 
-    private void updateDropdownSelection(LinearLayout container, String selectedValue) {
-        for (int i = 0; i < container.getChildCount(); i++) {
-            View child = container.getChildAt(i);
-            if (child instanceof TextView) {
-                TextView label = (TextView) child;
-                boolean selected = label.getText().toString().equalsIgnoreCase(selectedValue);
-                label.setTextColor(getColor(selected ? R.color.smart_primary : R.color.smart_on_surface));
-                label.setTypeface(null, selected ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+    private void selectUnitValue(String value) {
+        if (value == null || value.trim().isEmpty()) return;
+        String[] units = getResources().getStringArray(R.array.unit_options);
+        int index = indexOfIgnoreCase(units, value);
+        if (index < 0) return;
+        selectedUnit = units[index];
+        unitSelectorValue.setText(selectedUnit);
+        updateRadioSelection(unitDropdown, index);
+    }
+
+    private void populateDropdown(LinearLayout container, String[] options, int selectedIndex, DropdownCallback callback) {
+        populateDropdown(container, options, selectedIndex, false, callback);
+    }
+
+    private void populateDropdown(LinearLayout container, String[] options, int selectedIndex,
+                                  boolean showCategoryDots, DropdownCallback callback) {
+        container.removeAllViews();
+        for (int i = 0; i < options.length; i++) {
+            View option = getLayoutInflater().inflate(R.layout.item_filter_option, container, false);
+            TextView label = option.findViewById(R.id.filterOptionLabel);
+            label.setText(options[i]);
+            if (showCategoryDots) {
+                addCategoryDot(option, label, options[i]);
             }
+            final int pos = i;
+            option.setOnClickListener(v -> callback.onSelected(pos, options[pos]));
+            container.addView(option);
+        }
+        updateRadioSelection(container, selectedIndex);
+    }
+
+    private void addCategoryDot(View option, TextView label, String category) {
+        ViewGroup parent = (ViewGroup) label.getParent();
+        View dot = new View(this);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dpToPx(10), dpToPx(10));
+        params.setMarginEnd(dpToPx(8));
+        dot.setLayoutParams(params);
+        dot.setBackgroundResource(R.drawable.bg_category_dot);
+        dot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, category)));
+        parent.addView(dot, parent.indexOfChild(label));
+        option.setContentDescription(category);
+    }
+
+    private void updateCategorySelectorDisplay(String displayCategory) {
+        categorySelectorValue.setText(displayCategory);
+        String canonical = canonicalCategory(displayCategory);
+        categorySelectedDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, canonical)));
+    }
+
+    private void updateRadioSelection(LinearLayout container, int selectedIndex) {
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View option = container.getChildAt(i);
+            ImageView radio = option.findViewById(R.id.filterOptionRadio);
+            boolean selected = i == selectedIndex;
+            radio.setImageResource(selected
+                    ? R.drawable.ic_radio_button_checked
+                    : R.drawable.ic_radio_button_unchecked);
+            radio.setImageTintList(ColorStateList.valueOf(getColor(selected
+                    ? R.color.smart_primary_container
+                    : R.color.smart_outline_variant)));
         }
     }
 
     private void toggleDropdown(LinearLayout dropdown, ImageView chevron) {
-        if (dropdown.getVisibility() == View.VISIBLE) {
+        boolean isOpen = dropdown.getVisibility() == View.VISIBLE;
+        if (isOpen) {
             hideDropdown(dropdown, chevron);
         } else {
             showDropdown(dropdown, chevron);
@@ -780,13 +839,48 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void showDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.setAlpha(0f);
+        dropdown.setTranslationY(-8f);
         dropdown.setVisibility(View.VISIBLE);
+        dropdown.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(200)
+                .start();
         chevron.animate().rotation(180f).setDuration(200).start();
     }
 
     private void hideDropdown(LinearLayout dropdown, ImageView chevron) {
-        dropdown.setVisibility(View.GONE);
+        dropdown.animate()
+                .alpha(0f)
+                .translationY(-8f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    dropdown.setVisibility(View.GONE);
+                    dropdown.setTranslationY(0f);
+                })
+                .start();
         chevron.animate().rotation(0f).setDuration(200).start();
+    }
+
+    private void closeDropdown(LinearLayout dropdown, ImageView chevron) {
+        if (dropdown.getVisibility() == View.VISIBLE) {
+            hideDropdown(dropdown, chevron);
+        }
+    }
+
+    private int indexOfIgnoreCase(String[] items, String value) {
+        if (value == null) return -1;
+        for (int i = 0; i < items.length; i++) {
+            if (value.equalsIgnoreCase(items[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    interface DropdownCallback {
+        void onSelected(int index, String label);
     }
 
     private void showManageCategoriesDialog() {
@@ -825,7 +919,7 @@ public class AddProductActivity extends BaseActivity {
             } else {
                 deleteBtn.setVisibility(View.VISIBLE);
                 deleteBtn.setOnClickListener(
-                        v -> showDeleteCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
+                        v -> showDeleteCategoryDialog(canonicalCat, 0, () -> showManageCategoriesDialog()));
             }
 
             categoryList.addView(row);
@@ -849,7 +943,7 @@ public class AddProductActivity extends BaseActivity {
                                     return;
                                 }
                                 selectedCategory = canonicalNew;
-                                refreshCategorySpinner();
+                                refreshCategoryDropdown();
                                 showManageCategoriesDialog();
                             }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
                         }
@@ -865,6 +959,60 @@ public class AddProductActivity extends BaseActivity {
                 .setTitle(R.string.manage_categories_title)
                 .setView(content)
                 .setPositiveButton(R.string.close_label, null)
+                .show();
+    }
+
+    private void showCategoryActionDialog(String canonicalCat, List<Product> all) {
+        View actionView = getLayoutInflater().inflate(R.layout.dialog_category_action, null);
+        int usedCount = countProductsForCategory(canonicalCat, all);
+        String displayName = CategoryColorHelper.getLocalizedCategory(this, canonicalCat);
+
+        android.app.Dialog actionDialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(displayName)
+                .setView(actionView)
+                .show();
+
+        actionView.findViewById(R.id.actionEdit).setOnClickListener(v -> {
+            actionDialog.dismiss();
+            showRenameCategoryDialog(canonicalCat, () -> {
+                if (manageDialog != null) manageDialog.dismiss();
+                showManageCategoriesDialog();
+            });
+        });
+        actionView.findViewById(R.id.actionDelete).setOnClickListener(v -> {
+            actionDialog.dismiss();
+            showDeleteCategoryDialog(canonicalCat, usedCount, () -> {
+                if (manageDialog != null) manageDialog.dismiss();
+                showManageCategoriesDialog();
+            });
+        });
+    }
+
+    private void showAddCategoryDialog() {
+        View inputLayout = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
+        EditText input = inputLayout.findViewById(android.R.id.edit);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.category_add_title)
+                .setView(inputLayout)
+                .setPositiveButton(R.string.add_label, (d, w) -> {
+                    String newCat = input.getText().toString().trim();
+                    String canonicalNew = canonicalCategory(newCat);
+                    if (!newCat.isEmpty()) {
+                        CategoryRepository.addCategoryAsync(this, canonicalNew, added -> {
+                            if (!added) {
+                                Toast.makeText(this, getString(R.string.category_already_exists_format, newCat), Toast.LENGTH_SHORT).show();
+                                showManageCategoriesDialog();
+                                return;
+                            }
+                            selectedCategory = canonicalNew;
+                            refreshCategoryDropdown();
+                            showManageCategoriesDialog();
+                            showCategorySnackbar(getString(R.string.category_add_success_format, newCat),
+                                    android.R.drawable.ic_menu_add, R.color.smart_primary_container);
+                        }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
@@ -885,10 +1033,11 @@ public class AddProductActivity extends BaseActivity {
                     }
                     ProductRepository.getProductsAsync(this, all -> {
                         CategoryRepository.renameCategoryAsync(this, oldName, canonicalNew, ignored -> {
-                            if (canonicalCategory(selectedCategory).equals(oldName))
-                                selectedCategory = canonicalNew;
-                            refreshCategorySpinner();
+                            if (canonicalCategory(selectedCategory).equals(oldName)) selectedCategory = canonicalNew;
+                            refreshCategoryDropdown();
                             onDone.run();
+                            showCategorySnackbar(getString(R.string.category_rename_success_format, newName),
+                                    R.drawable.ic_edit, R.color.smart_primary_container);
                         }, error -> {
                             Toast.makeText(this, R.string.category_rename_error, Toast.LENGTH_SHORT).show();
                             onDone.run();
@@ -902,28 +1051,104 @@ public class AddProductActivity extends BaseActivity {
                 .show();
     }
 
-    private void showDeleteCategoryDialog(String catToDelete, Runnable onDone) {
+    private void showDeleteCategoryDialog(String catToDelete, int productCount, Runnable onDone) {
         String displayDelete = CategoryColorHelper.getLocalizedCategory(this, catToDelete);
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(getString(R.string.delete_category_title_format, displayDelete))
-                .setMessage(R.string.category_delete_message_empty)
-                .setPositiveButton(R.string.delete_confirm, (d, w) -> {
-                    CategoryRepository.deleteCategoryAsync(this, catToDelete, ignored -> {
-                        CategoryRepository.getDisplayCategoriesAsync(this, active -> {
-                            if (canonicalCategory(selectedCategory).equals(catToDelete)) {
-                                String fallback = active.isEmpty() ? "General" : canonicalCategory(active.get(0));
-                                selectedCategory = fallback;
-                            }
-                            refreshCategorySpinner();
-                            onDone.run();
-                        }, error -> {
-                            refreshCategorySpinner();
-                            onDone.run();
-                        });
-                    }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        if (productCount > 0) {
+            showCannotDeleteDialog(displayDelete, catToDelete, productCount);
+            return;
+        }
+        View confirmView = getLayoutInflater().inflate(R.layout.dialog_delete_confirm, null);
+        android.app.Dialog dialog = new android.app.Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
+        dialog.setContentView(confirmView);
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            android.view.WindowManager.LayoutParams p = dialog.getWindow().getAttributes();
+            p.gravity = android.view.Gravity.CENTER;
+            p.dimAmount = 0.5f;
+            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dialog.getWindow().setAttributes(p);
+            dialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(
+                getString(R.string.delete_category_title_format, displayDelete));
+        ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
+                R.string.category_delete_message_empty);
+
+        confirmView.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            CategoryRepository.deleteCategoryAsync(this, catToDelete, success -> {
+                if (!success) {
+                    Toast.makeText(this, R.string.category_delete_blocked_title, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                CategoryRepository.getDisplayCategoriesAsync(this, active -> {
+                    if (canonicalCategory(selectedCategory).equals(catToDelete)) {
+                        String fallback = active.isEmpty() ? "General" : canonicalCategory(active.get(0));
+                        selectedCategory = fallback;
+                    }
+                    refreshCategoryDropdown();
+                    onDone.run();
+
+                    Snackbar snackbar = Snackbar.make(findViewById(R.id.root),
+                            getString(R.string.category_delete_success_format, displayDelete),
+                            Snackbar.LENGTH_SHORT);
+                    snackbar.getView().setBackgroundResource(R.drawable.bg_undo_bar);
+                    snackbar.setActionTextColor(getColor(R.color.smart_primary));
+                    snackbar.setAction(R.string.undo_delete_label, v2 -> {
+                        CategoryRepository.addCategoryAsync(this, catToDelete, unused -> {
+                            selectedCategory = catToDelete;
+                            refreshCategoryDropdown();
+                        }, error -> {});
+                    });
+                    snackbar.show();
+                }, error -> {
+                    refreshCategoryDropdown();
+                    onDone.run();
+                });
+            }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+        });
+        confirmView.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
+    }
+
+    private void showCannotDeleteDialog(String displayName, String canonicalCat, int count) {
+        View confirmView = getLayoutInflater().inflate(R.layout.dialog_delete_confirm, null);
+        android.app.Dialog dialog = new android.app.Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
+        dialog.setContentView(confirmView);
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            android.view.WindowManager.LayoutParams p = dialog.getWindow().getAttributes();
+            p.gravity = android.view.Gravity.CENTER;
+            p.dimAmount = 0.5f;
+            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dialog.getWindow().setAttributes(p);
+            dialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(R.string.category_delete_blocked_title);
+        ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
+                getString(R.string.category_delete_blocked_message_format, count));
+
+        Button confirmBtn = confirmView.findViewById(R.id.dialogConfirm);
+        confirmBtn.setText(R.string.got_it);
+        confirmBtn.setOnClickListener(v -> dialog.dismiss());
+        confirmView.findViewById(R.id.dialogCancel).setVisibility(View.GONE);
+    }
+
+    private int countProductsForCategory(String canonicalCat, List<Product> allProducts) {
+        int count = 0;
+        for (Product p : allProducts) {
+            if (canonicalCat.equals(canonicalCategory(p.getCategory()))) count++;
+        }
+        return count;
+    }
+
+    private void showCategorySnackbar(String message, int iconRes, int tintRes) {
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.root), message, Snackbar.LENGTH_SHORT);
+        snackbar.getView().setBackgroundResource(R.drawable.bg_undo_bar);
+        snackbar.show();
     }
 
     private Product copyWithCategory(Product product, String category) {
@@ -1066,7 +1291,7 @@ public class AddProductActivity extends BaseActivity {
         selectedCategory = product.getCategory() == null || product.getCategory().trim().isEmpty()
                 ? "General"
                 : canonicalCategory(product.getCategory());
-        refreshCategorySpinner();
+        refreshCategoryDropdown();
 
         String imgPath = product.getImageUrl();
         if (imgPath != null && !imgPath.isEmpty()) {
@@ -1249,7 +1474,7 @@ public class AddProductActivity extends BaseActivity {
         quantityInput.setText(R.string.quantity_default);
         selectUnitValue("pcs");
         selectedCategory = "General";
-        refreshCategorySpinner();
+        refreshCategoryDropdown();
         selectStorage(R.id.storageRoom);
         hasSelectedDate = false;
         expiryDateInput.setText(R.string.select_expiry_date);
@@ -1298,9 +1523,5 @@ public class AddProductActivity extends BaseActivity {
             return R.drawable.ic_storage_fridge;
         }
         return R.drawable.ic_storage_room;
-    }
-
-    interface DropdownCallback {
-        void onSelected(String value);
     }
 }
