@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SmartExpApp</string>
+    <string name="splash_tagline">Track freshness. Reduce waste.</string>
     <string name="search_hint">Search products...</string>
     <string name="toggle_theme">Toggle Light/Dark Theme</string>
     <string name="empty_inventory">No products yet</string>
