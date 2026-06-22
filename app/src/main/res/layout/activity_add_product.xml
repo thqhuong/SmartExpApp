@@ -187,7 +187,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="20dp"
-                    android:gravity="center_vertical"
+                    android:gravity="top"
                     android:orientation="horizontal">
 
                     <EditText
@@ -206,14 +206,49 @@
                         android:textColorHint="@color/smart_secondary"
                         android:textSize="16sp" />
 
-                    <Spinner
-                        android:id="@+id/unitSpinner"
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="52dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_glass_input"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp" />
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:id="@+id/unitSelectorRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_glass_input"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="12dp">
+
+                            <TextView
+                                android:id="@+id/unitSelectorValue"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical"
+                                android:textColor="@color/smart_on_surface"
+                                android:textSize="16sp" />
+
+                            <ImageView
+                                android:id="@+id/unitSelectorChevron"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_expand_more"
+                                app:tint="@color/smart_outline_variant" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/unitDropdown"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:background="@drawable/bg_filter_dropdown"
+                            android:orientation="vertical"
+                            android:visibility="gone" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView
@@ -229,17 +264,59 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
+                    android:gravity="top"
                     android:orientation="horizontal">
 
-                    <Spinner
-                        android:id="@+id/categorySpinner"
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="52dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_glass_input"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp" />
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:id="@+id/categorySelectorRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_glass_input"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="12dp">
+
+                            <View
+                                android:id="@+id/categorySelectedDot"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:layout_marginEnd="8dp"
+                                android:background="@drawable/bg_category_dot" />
+
+                            <TextView
+                                android:id="@+id/categorySelectorValue"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical"
+                                android:textColor="@color/smart_on_surface"
+                                android:textSize="16sp" />
+
+                            <ImageView
+                                android:id="@+id/categorySelectorChevron"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_expand_more"
+                                app:tint="@color/smart_outline_variant" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/categoryDropdown"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:background="@drawable/bg_filter_dropdown"
+                            android:orientation="vertical"
+                            android:visibility="gone" />
+                    </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnManageCategories"

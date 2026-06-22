@@ -1,6 +1,7 @@
 package com.example.smartexpapp;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -548,9 +549,13 @@ public class InventoryActivity extends BaseActivity {
         for (int i = 0; i < container.getChildCount(); i++) {
             View option = container.getChildAt(i);
             ImageView radio = option.findViewById(R.id.filterOptionRadio);
-            radio.setImageResource(i == selectedIndex
+            boolean selected = i == selectedIndex;
+            radio.setImageResource(selected
                     ? R.drawable.ic_radio_button_checked
                     : R.drawable.ic_radio_button_unchecked);
+            radio.setImageTintList(ColorStateList.valueOf(getColor(selected
+                    ? R.color.smart_primary_container
+                    : R.color.smart_outline_variant)));
         }
     }
 
