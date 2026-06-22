@@ -366,6 +366,12 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void batchDelete(Set<String> ids) {
+        List<Product> deletedProducts = new ArrayList<>();
+        for (Product p : latestProducts) {
+            if (ids.contains(p.getId())) {
+                deletedProducts.add(p);
+            }
+        }
         String message = getString(R.string.batch_deleted_format, ids.size());
 
         int[] completed = { 0 };
@@ -376,7 +382,11 @@ public class InventoryActivity extends BaseActivity {
                     runOnUiThread(() -> {
                         finishMultiSelect();
                         viewModel.loadProducts();
-                        InAppNotificationManager.show(InventoryActivity.this, message, InAppNotificationManager.Type.SUCCESS);
+                        InAppNotificationManager.showUndo(InventoryActivity.this, message,
+                                R.drawable.ic_delete,
+                                R.drawable.bg_action_icon_circle_delete,
+                                R.color.smart_error,
+                                () -> batchUndo(deletedProducts));
                     });
                 }
             }
@@ -390,21 +400,37 @@ public class InventoryActivity extends BaseActivity {
     private void batchUndo(List<Product> products) {
         int[] completed = { 0 };
         int total = products.size();
-        ProductRepository.Callback<Boolean> callback = result -> {
-            synchronized (completed) {
-                completed[0]++;
-                if (completed[0] == total) {
-                    runOnUiThread(() -> {
-                        showSuccessNotification(getString(R.string.batch_undone_format, total));
-                        ReminderScheduler.runSoon(this);
-                        viewModel.loadProducts();
-                    });
-                }
-            }
-        };
         ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch undo failed", e);
         for (Product product : products) {
-            viewModel.revertStatus(product.getId(), "Batch undo", callback, errorCallback);
+            viewModel.revertStatus(product.getId(), "Batch undo",
+                    reverted -> {
+                        if (!Boolean.TRUE.equals(reverted)) {
+                            ProductRepository.addProductAsync(InventoryActivity.this, product,
+                                    unused -> {
+                                        synchronized (completed) {
+                                            completed[0]++;
+                                            if (completed[0] == total) {
+                                                runOnUiThread(() -> {
+                                                    showSuccessNotification(getString(R.string.batch_undone_format, total));
+                                                    ReminderScheduler.runSoon(this);
+                                                    viewModel.loadProducts();
+                                                });
+                                            }
+                                        }
+                                    }, errorCallback);
+                        } else {
+                            synchronized (completed) {
+                                completed[0]++;
+                                if (completed[0] == total) {
+                                    runOnUiThread(() -> {
+                                        showSuccessNotification(getString(R.string.batch_undone_format, total));
+                                        ReminderScheduler.runSoon(this);
+                                        viewModel.loadProducts();
+                                    });
+                                }
+                            }
+                        }
+                    }, errorCallback);
         }
     }
 
@@ -846,6 +872,25 @@ public class InventoryActivity extends BaseActivity {
                 }, this::onStatusUpdateFailed);
     }
 
+    private void undoDelete(Product product) {
+        viewModel.revertStatus(product.getId(), "Restored from undo bar",
+                reverted -> {
+                    if (Boolean.TRUE.equals(reverted)) {
+                        showSuccessNotification(getString(R.string.restored_format, product.getName()));
+                        ReminderScheduler.runSoon(this);
+                        viewModel.loadProducts();
+                    } else {
+                        ProductRepository.addProductAsync(InventoryActivity.this, product,
+                                unused -> {
+                                    showSuccessNotification(getString(R.string.restored_format, product.getName()));
+                                    ReminderScheduler.runSoon(this);
+                                    viewModel.loadProducts();
+                                },
+                                this::onStatusUpdateFailed);
+                    }
+                }, this::onStatusUpdateFailed);
+    }
+
     private void openEditDialog(Product product) {
         new EditProductDialog(product, viewModel::loadProducts, latestProducts).show(this);
     }
@@ -872,9 +917,12 @@ public class InventoryActivity extends BaseActivity {
                 if (Boolean.TRUE.equals(deleted)) {
                     ReminderScheduler.runSoon(this);
                     viewModel.loadProducts();
-                    InAppNotificationManager.show(InventoryActivity.this,
+                    InAppNotificationManager.showUndo(InventoryActivity.this,
                             getString(R.string.undo_delete_format, product.getName()),
-                            InAppNotificationManager.Type.SUCCESS);
+                            R.drawable.ic_delete,
+                            R.drawable.bg_action_icon_circle_delete,
+                            R.color.smart_error,
+                            () -> undoDelete(product));
                 }
             }, error -> {
                 Log.e(TAG, "Failed to delete product", error);
