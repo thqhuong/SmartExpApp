@@ -2,7 +2,7 @@ package com.example.smartexpapp;
 
 import android.app.Application;
 
-public class SmartExpApplication extends Application {
+public class SmartExpAppApplication extends Application {
     public AppContainer appContainer;
 
     @Override

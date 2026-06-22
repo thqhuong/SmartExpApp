@@ -8,6 +8,7 @@ public class SettingItem {
     public static final String KEY_HELP = "help";
     public static final String KEY_LANGUAGE = "language";
     public static final String KEY_DARK_MODE = "dark_mode";
+    public static final String KEY_EXPIRING_SOON = "expiring_soon";
 
     private final String key;
     private final String title;

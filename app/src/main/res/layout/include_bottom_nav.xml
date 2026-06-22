@@ -26,31 +26,31 @@
 
         <LinearLayout
             android:id="@+id/nav_inventory"
-            style="@style/SmartExpBottomNavItem">
+            style="@style/SmartExpAppBottomNavItem">
 
             <ImageView
-                style="@style/SmartExpBottomNavIcon"
+                style="@style/SmartExpAppBottomNavIcon"
                 android:src="@drawable/ic_nav_inventory"
                 android:contentDescription="@string/nav_inventory_label"
                 app:tint="@color/bottom_nav_item" />
 
             <TextView
-                style="@style/SmartExpBottomNavLabel"
+                style="@style/SmartExpAppBottomNavLabel"
                 android:text="@string/nav_inventory_label" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/nav_stats"
-            style="@style/SmartExpBottomNavItem">
+            style="@style/SmartExpAppBottomNavItem">
 
             <ImageView
-                style="@style/SmartExpBottomNavIcon"
+                style="@style/SmartExpAppBottomNavIcon"
                 android:src="@drawable/ic_nav_stats"
                 android:contentDescription="@string/nav_stats_label"
                 app:tint="@color/bottom_nav_item" />
 
             <TextView
-                style="@style/SmartExpBottomNavLabel"
+                style="@style/SmartExpAppBottomNavLabel"
                 android:text="@string/nav_stats_label" />
         </LinearLayout>
 
@@ -63,31 +63,31 @@
 
         <LinearLayout
             android:id="@+id/nav_recipes"
-            style="@style/SmartExpBottomNavItem">
+            style="@style/SmartExpAppBottomNavItem">
 
             <ImageView
-                style="@style/SmartExpBottomNavIcon"
+                style="@style/SmartExpAppBottomNavIcon"
                 android:src="@drawable/ic_nav_agent"
                 android:contentDescription="@string/nav_agent_label"
                 app:tint="@color/bottom_nav_item" />
 
             <TextView
-                style="@style/SmartExpBottomNavLabel"
+                style="@style/SmartExpAppBottomNavLabel"
                 android:text="@string/nav_agent_label" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/nav_settings"
-            style="@style/SmartExpBottomNavItem">
+            style="@style/SmartExpAppBottomNavItem">
 
             <ImageView
-                style="@style/SmartExpBottomNavIcon"
+                style="@style/SmartExpAppBottomNavIcon"
                 android:src="@drawable/ic_nav_settings_gear"
                 android:contentDescription="@string/nav_settings_label"
                 app:tint="@color/bottom_nav_item" />
 
             <TextView
-                style="@style/SmartExpBottomNavLabel"
+                style="@style/SmartExpAppBottomNavLabel"
                 android:text="@string/nav_settings_label" />
         </LinearLayout>
     </LinearLayout>

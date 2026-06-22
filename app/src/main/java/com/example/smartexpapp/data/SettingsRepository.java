@@ -10,6 +10,7 @@ import com.example.smartexpapp.data.firestore.UserDataSyncRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.data.local.StorageLocationEntity;
 import com.example.smartexpapp.data.local.UserSettingsEntity;
+import com.example.smartexpapp.model.Product;
 
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +25,7 @@ public final class SettingsRepository {
     private static final String KEY_REMINDER_DAYS = "reminder_days_before";
     private static final String KEY_DARK_MODE = "dark_mode";
     private static final String KEY_LANGUAGE_TAG = "language_tag";
+    private static final String KEY_EXPIRING_SOON_DAYS = "expiring_soon_days";
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
     public interface Callback<T> {
@@ -43,6 +45,7 @@ public final class SettingsRepository {
         private final String languageTag;
         private final String defaultStorageLocationId;
         private final String dietaryPreferences;
+        private final String profileAvatarPath;
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore) {
             this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES);
@@ -69,10 +72,14 @@ public final class SettingsRepository {
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, String displayName, boolean darkMode, String languageTag, String defaultStorageLocationId, String dietaryPreferences) {
-            this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, displayName, darkMode, languageTag, defaultStorageLocationId, dietaryPreferences);
+            this(notificationsEnabled, reminderDaysBefore, DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, displayName, darkMode, languageTag, defaultStorageLocationId, dietaryPreferences, null);
         }
 
         public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, int reminderNotifyTimeMinutes, String displayName, boolean darkMode, String languageTag, String defaultStorageLocationId, String dietaryPreferences) {
+            this(notificationsEnabled, reminderDaysBefore, reminderNotifyTimeMinutes, displayName, darkMode, languageTag, defaultStorageLocationId, dietaryPreferences, null);
+        }
+
+        public SettingsSnapshot(boolean notificationsEnabled, int reminderDaysBefore, int reminderNotifyTimeMinutes, String displayName, boolean darkMode, String languageTag, String defaultStorageLocationId, String dietaryPreferences, String profileAvatarPath) {
             this.notificationsEnabled = notificationsEnabled;
             this.reminderDaysBefore = normalizeReminderDaysBefore(reminderDaysBefore);
             this.reminderNotifyTimeMinutes = normalizeReminderNotifyTimeMinutes(reminderNotifyTimeMinutes);
@@ -83,6 +90,7 @@ public final class SettingsRepository {
             this.languageTag = normalizeLanguageTag(languageTag);
             this.defaultStorageLocationId = normalizeStorageLocationId(defaultStorageLocationId);
             this.dietaryPreferences = normalizeOptionalText(dietaryPreferences);
+            this.profileAvatarPath = normalizeOptionalText(profileAvatarPath);
         }
 
         public boolean areNotificationsEnabled() {
@@ -123,6 +131,10 @@ public final class SettingsRepository {
 
         public String getDietaryPreferencesLabel() {
             return dietaryPreferences == null ? "No dietary preferences" : dietaryPreferences;
+        }
+
+        public String getProfileAvatarPath() {
+            return profileAvatarPath;
         }
     }
 
@@ -383,6 +395,42 @@ public final class SettingsRepository {
         database.userSettingsDao().insert(settings);
     }
 
+    public static void setProfileAvatarPath(Context context, String profileAvatarPath) {
+        AppDatabase database = AppDatabase.getInstance(context);
+        UserSettingsEntity settings = getOrCreateSettings(context, database);
+        settings.profileAvatarPath = normalizeOptionalText(profileAvatarPath);
+        settings.updatedAt = System.currentTimeMillis();
+        database.userSettingsDao().insert(settings);
+        UserDataSyncRepository.syncSettingsAsync(context, database);
+    }
+
+    public static void setProfileAvatarPathAsync(Context context, String profileAvatarPath, Callback<SettingsSnapshot> callback, ErrorCallback errorCallback) {
+        execute(() -> {
+            setProfileAvatarPath(context, profileAvatarPath);
+            return getSettings(context);
+        }, callback, errorCallback);
+    }
+
+    public static void setProfileAvatarPath(AppDatabase database, String profileAvatarPath) {
+        UserSettingsEntity settings = getOrCreateSettings(database);
+        settings.profileAvatarPath = normalizeOptionalText(profileAvatarPath);
+        settings.updatedAt = System.currentTimeMillis();
+        database.userSettingsDao().insert(settings);
+    }
+
+    public static int getExpiringSoonDays(Context context) {
+        SharedPreferences prefs = context.getApplicationContext().getSharedPreferences(LEGACY_PREFS, Context.MODE_PRIVATE);
+        return prefs.getInt(KEY_EXPIRING_SOON_DAYS, Product.DEFAULT_EXPIRING_SOON_DAYS);
+    }
+
+    public static void setExpiringSoonDays(Context context, int days) {
+        context.getApplicationContext()
+                .getSharedPreferences(LEGACY_PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putInt(KEY_EXPIRING_SOON_DAYS, days)
+                .apply();
+    }
+
     private static UserSettingsEntity getOrCreateSettings(Context context, AppDatabase database) {
         UserSettingsEntity existing = database.userSettingsDao().getById(SETTINGS_ID);
         if (existing != null) {
@@ -445,7 +493,8 @@ public final class SettingsRepository {
                 settings.darkMode,
                 settings.languageTag,
                 settings.defaultStorageLocationId,
-                settings.dietaryPreferences
+                settings.dietaryPreferences,
+                settings.profileAvatarPath
         );
     }
 

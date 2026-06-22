@@ -165,46 +165,52 @@
 
         <LinearLayout
             android:id="@+id/editStorageRoom"
-            style="@style/SmartExpStorageOption">
+            style="@style/SmartExpAppStorageOption"
+            android:background="@drawable/bg_storage_option_room">
 
             <ImageView
-                style="@style/SmartExpStorageIcon"
+                style="@style/SmartExpAppStorageIcon"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_storage_room"
                 app:tint="@color/color_storage_room_tint" />
 
             <TextView
-                style="@style/SmartExpStorageLabel"
+                style="@style/SmartExpAppStorageLabel"
+                android:textColor="@color/color_storage_room_tint"
                 android:text="@string/storage_room_temp_upper" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/editStorageFridge"
-            style="@style/SmartExpStorageOption">
+            style="@style/SmartExpAppStorageOption"
+            android:background="@drawable/bg_storage_option_fridge">
 
             <ImageView
-                style="@style/SmartExpStorageIcon"
+                style="@style/SmartExpAppStorageIcon"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_storage_fridge"
                 app:tint="@color/color_storage_fridge_tint" />
 
             <TextView
-                style="@style/SmartExpStorageLabel"
+                style="@style/SmartExpAppStorageLabel"
+                android:textColor="@color/color_storage_fridge_tint"
                 android:text="@string/storage_refrigerator_upper" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/editStorageFreezer"
-            style="@style/SmartExpStorageOption">
+            style="@style/SmartExpAppStorageOption"
+            android:background="@drawable/bg_storage_option_freezer">
 
             <ImageView
-                style="@style/SmartExpStorageIcon"
+                style="@style/SmartExpAppStorageIcon"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_storage_freeze"
                 app:tint="@color/color_storage_freezer_tint" />
 
             <TextView
-                style="@style/SmartExpStorageLabel"
+                style="@style/SmartExpAppStorageLabel"
+                android:textColor="@color/color_storage_freezer_tint"
                 android:text="@string/storage_freeze_upper" />
         </LinearLayout>
     </LinearLayout>

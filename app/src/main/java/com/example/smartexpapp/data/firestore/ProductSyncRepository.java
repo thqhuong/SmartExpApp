@@ -60,7 +60,7 @@ public final class ProductSyncRepository {
             target.products().get()
                     .addOnSuccessListener(snapshot -> EXECUTOR.execute(() -> {
                         try {
-                            applyRemoteProducts(database, snapshot.getDocuments(), target.userId);
+                            applyRemoteProducts(context, database, snapshot.getDocuments(), target.userId);
                             uploadPendingChanges(target, database, () -> MAIN_HANDLER.post(() -> {
                                         startProductListener(target, database);
                                         SyncStatusRepository.markSynced(context);
@@ -155,7 +155,7 @@ public final class ProductSyncRepository {
             }
             EXECUTOR.execute(() -> {
                 try {
-                    applyRemoteProducts(database, snapshot.getDocuments(), target.userId);
+                    applyRemoteProducts(target.context, database, snapshot.getDocuments(), target.userId);
                 } catch (RuntimeException applyError) {
                     SyncStatusRepository.markError(target.context);
                 }
@@ -163,51 +163,60 @@ public final class ProductSyncRepository {
         });
     }
 
-    private static void applyRemoteProducts(AppDatabase database, List<com.google.firebase.firestore.DocumentSnapshot> documents, String ownerUserId) {
+    private static void applyRemoteProducts(Context context, AppDatabase database, List<com.google.firebase.firestore.DocumentSnapshot> documents, String ownerUserId) {
         long syncedAt = System.currentTimeMillis();
-        database.runInTransaction(() -> {
-            for (com.google.firebase.firestore.DocumentSnapshot document : documents) {
-                ProductEntity remote = FirestoreProductMapper.toEntity(document, syncedAt);
-                remote.ownerUserId = ownerUserId;
-                ProductEntity local = database.productDao().getById(remote.id);
-                long deletedAt = FirestoreProductMapper.deletedAt(document);
-                if (deletedAt > 0L) {
-                    database.productDao().deleteById(remote.id);
-                    continue;
-                }
-                if (local == null) {
-                    database.productDao().insert(remote);
-                    continue;
-                }
-                if (Product.SYNC_STATUS_PENDING_DELETE.equals(local.syncStatus)) {
-                    continue;
-                }
-                if (Product.SYNC_STATUS_PENDING_UPLOAD.equals(local.syncStatus) && local.updatedAt > remote.updatedAt) {
-                    if (local.lastSyncedAt != null && remote.updatedAt > local.lastSyncedAt) {
+        int batchSize = 250;
+        for (int i = 0; i < documents.size(); i += batchSize) {
+            AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(context);
+            if (!ownerUserId.equals(authState.getUserId())) {
+                break;
+            }
+            int end = Math.min(documents.size(), i + batchSize);
+            List<com.google.firebase.firestore.DocumentSnapshot> batch = documents.subList(i, end);
+            database.runInTransaction(() -> {
+                for (com.google.firebase.firestore.DocumentSnapshot document : batch) {
+                    ProductEntity remote = FirestoreProductMapper.toEntity(document, syncedAt);
+                    remote.ownerUserId = ownerUserId;
+                    ProductEntity local = database.productDao().getById(remote.id);
+                    long deletedAt = FirestoreProductMapper.deletedAt(document);
+                    if (deletedAt > 0L) {
+                        database.productDao().deleteById(remote.id);
+                        continue;
+                    }
+                    if (local == null) {
+                        database.productDao().insert(remote);
+                        continue;
+                    }
+                    if (Product.SYNC_STATUS_PENDING_DELETE.equals(local.syncStatus)) {
+                        continue;
+                    }
+                    if (Product.SYNC_STATUS_PENDING_UPLOAD.equals(local.syncStatus) && local.updatedAt > remote.updatedAt) {
+                        if (local.lastSyncedAt != null && remote.updatedAt > local.lastSyncedAt) {
+                            database.productDao().updateSyncMetadata(
+                                    local.id,
+                                    hasText(local.cloudId) ? local.cloudId : document.getId(),
+                                    Product.SYNC_STATUS_CONFLICT,
+                                    local.lastSyncedAt
+                            );
+                            continue;
+                        }
+                        continue;
+                    }
+                    if (remote.updatedAt == local.updatedAt) {
                         database.productDao().updateSyncMetadata(
                                 local.id,
                                 hasText(local.cloudId) ? local.cloudId : document.getId(),
-                                Product.SYNC_STATUS_CONFLICT,
-                                local.lastSyncedAt
+                                Product.SYNC_STATUS_SYNCED,
+                                syncedAt
                         );
                         continue;
                     }
-                    continue;
+                    if (remote.updatedAt >= local.updatedAt || Product.SYNC_STATUS_SYNCED.equals(local.syncStatus)) {
+                        database.productDao().insert(remote);
+                    }
                 }
-                if (remote.updatedAt == local.updatedAt) {
-                    database.productDao().updateSyncMetadata(
-                            local.id,
-                            hasText(local.cloudId) ? local.cloudId : document.getId(),
-                            Product.SYNC_STATUS_SYNCED,
-                            syncedAt
-                    );
-                    continue;
-                }
-                if (remote.updatedAt >= local.updatedAt || Product.SYNC_STATUS_SYNCED.equals(local.syncStatus)) {
-                    database.productDao().insert(remote);
-                }
-            }
-        });
+            });
+        }
     }
 
     private static void uploadPendingChanges(SyncTarget target, AppDatabase database, Runnable successCallback, ErrorCallback errorCallback) {

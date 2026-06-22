@@ -9,6 +9,8 @@ import android.content.Context;
 import com.example.smartexpapp.R;
 
 public class Product {
+    public static final int DEFAULT_EXPIRING_SOON_DAYS = 7;
+
     public static final String SYNC_STATUS_LOCAL = "LOCAL";
     public static final String SYNC_STATUS_LOCAL_ONLY = "LOCAL_ONLY";
     public static final String SYNC_STATUS_PENDING_UPLOAD = "PENDING_UPLOAD";
@@ -284,8 +286,12 @@ public class Product {
     }
 
     public boolean isExpiringSoon() {
+        return isExpiringSoon(DEFAULT_EXPIRING_SOON_DAYS);
+    }
+
+    public boolean isExpiringSoon(int thresholdDays) {
         int days = getDaysUntilExpiry();
-        return days >= 0 && days <= 7 && !isExpired();
+        return days >= 0 && days <= thresholdDays && !isExpired();
     }
 
     public boolean isExpired() {
@@ -373,10 +379,14 @@ public class Product {
     }
 
     public String getGroup() {
+        return getGroup(DEFAULT_EXPIRING_SOON_DAYS);
+    }
+
+    public String getGroup(int expiringSoonDays) {
         if (isExpired()) return "Expired";
         int days = getDaysUntilExpiry();
         if (days <= 1) return "Urgent";
-        if (days <= 7) return "Soon";
+        if (days <= expiringSoonDays) return "Soon";
         return "Safe";
     }
 

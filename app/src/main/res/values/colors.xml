@@ -100,4 +100,16 @@
     <color name="signin_input_border">#CBD5E1</color>
     <color name="signin_btn_sec_bg">#F1F5F9</color>
     <color name="signin_btn_sec_stroke">#CBD5E1</color>
+
+    <!-- History Chip Active Text Colors -->
+    <color name="color_consumed_active_text">#2E7D32</color>
+    <color name="color_wasted_active_text">#C62828</color>
+    <color name="color_donated_active_text">#1565C0</color>
+    <color name="color_all_active_text">#904D00</color>
+
+    <!-- History Chip Active Background Soft Colors -->
+    <color name="bg_consumed_active_soft">#1A4CAF50</color>
+    <color name="bg_wasted_active_soft">#1ABA1A1A</color>
+    <color name="bg_donated_active_soft">#1A3498DB</color>
+    <color name="bg_all_active_soft">#1AFF8C00</color>
 </resources>

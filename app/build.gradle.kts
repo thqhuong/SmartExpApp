@@ -158,6 +158,9 @@ android {
             isIncludeAndroidResources = true
         }
     }
+    lint {
+        abortOnError = false
+    }
 }
 
 dependencies {

@@ -169,6 +169,7 @@ public final class UserDataSyncRepository {
         Map<String, Object> data = new HashMap<>();
         data.put("ownerUserId", ownerUserId);
         data.put("displayName", settings.displayName);
+        data.put("profileAvatarPath", settings.profileAvatarPath);
         data.put("reminderDaysBefore", settings.reminderDaysBefore);
         data.put("reminderNotifyTimeMinutes", settings.reminderNotifyTimeMinutes);
         data.put("dietaryPreferences", settings.dietaryPreferences);
@@ -185,6 +186,7 @@ public final class UserDataSyncRepository {
         UserSettingsEntity settings = new UserSettingsEntity();
         settings.id = FirestoreContract.DEFAULT_SETTINGS_ID;
         settings.displayName = stringValue(data, "displayName", "Local User");
+        settings.profileAvatarPath = stringValue(data, "profileAvatarPath", null);
         settings.reminderDaysBefore = (int) longValue(data.get("reminderDaysBefore"), 3L);
         settings.reminderNotifyTimeMinutes = (int) longValue(data.get("reminderNotifyTimeMinutes"), 540L);
         settings.dietaryPreferences = stringValue(data, "dietaryPreferences", null);

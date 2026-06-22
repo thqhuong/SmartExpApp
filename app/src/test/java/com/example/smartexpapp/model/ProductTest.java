@@ -110,6 +110,22 @@ public class ProductTest {
         assertEquals("3 Tháng", longRange.getExpiryStatus("vi"));
     }
 
+    @Test
+    public void testExpiringSoonThreshold() {
+        Product product = productExpiringIn(5);
+        
+        // Default threshold is 7 days
+        assertTrue(product.isExpiringSoon());
+        assertEquals("Soon", product.getGroup());
+        
+        // Custom threshold of 3 days
+        assertFalse(product.isExpiringSoon(3));
+        assertEquals("Safe", product.getGroup(3));
+        
+        // Custom threshold of 10 days
+        assertTrue(product.isExpiringSoon(10));
+        assertEquals("Soon", product.getGroup(10));
+    }
     private Product productExpiringIn(int days) {
         return new Product("Milk", "Dairy", "1", "Gal", "Refrigerator", expiryMillisForOffset(days), 0);
     }

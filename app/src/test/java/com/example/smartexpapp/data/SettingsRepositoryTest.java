@@ -68,6 +68,7 @@ public class SettingsRepositoryTest {
         SettingsRepository.setLanguageTag(database, "vi-VN");
         SettingsRepository.setDefaultStorageLocation(database, LocalDataContract.STORAGE_REFRIGERATOR_ID);
         SettingsRepository.setDietaryPreferences(database, " vegetarian, dairy-free ");
+        SettingsRepository.setProfileAvatarPath(database, " /tmp/avatar.jpg ");
 
         SettingsRepository.SettingsSnapshot settings = SettingsRepository.getSettings(database);
 
@@ -81,6 +82,7 @@ public class SettingsRepositoryTest {
         assertEquals(LocalDataContract.STORAGE_REFRIGERATOR_NAME, settings.getDefaultStorageName());
         assertEquals("vegetarian, dairy-free", settings.getDietaryPreferences());
         assertEquals("vegetarian, dairy-free", settings.getDietaryPreferencesLabel());
+        assertEquals("/tmp/avatar.jpg", settings.getProfileAvatarPath());
         UserSettingsEntity entity = database.userSettingsDao().getById("default");
         assertNotNull(entity);
         assertFalse(entity.notificationEnabled);
@@ -91,6 +93,7 @@ public class SettingsRepositoryTest {
         assertEquals("vi", entity.languageTag);
         assertEquals(LocalDataContract.STORAGE_REFRIGERATOR_ID, entity.defaultStorageLocationId);
         assertEquals("vegetarian, dairy-free", entity.dietaryPreferences);
+        assertEquals("/tmp/avatar.jpg", entity.profileAvatarPath);
     }
 
     @Test

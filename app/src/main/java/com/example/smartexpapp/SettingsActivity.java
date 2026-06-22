@@ -2,6 +2,7 @@ package com.example.smartexpapp;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
@@ -23,8 +24,10 @@ import com.example.smartexpapp.data.SampleData;
 import com.example.smartexpapp.data.SettingsRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.SettingItem;
+import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -78,6 +81,8 @@ public class SettingsActivity extends BaseActivity {
     private void bindLocalProfile() {
         TextView displayName = findViewById(R.id.settingsDisplayNameText);
         TextView subtitle = findViewById(R.id.settingsProfileSubtitleText);
+        ImageView profileImage = findViewById(R.id.profileImage);
+        bindProfileAvatar(profileImage);
         AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
         if (authState.isSignedIn()) {
             String identity = authState.getBestDisplayName(getString(R.string.profile_local_user));
@@ -115,6 +120,32 @@ public class SettingsActivity extends BaseActivity {
         });
     }
 
+    private void bindProfileAvatar(ImageView profileImage) {
+        if (profileImage == null) {
+            return;
+        }
+        profileImage.setImageResource(R.drawable.ic_nav_profile);
+        profileImage.setImageTintList(ColorStateList.valueOf(getColor(R.color.smart_primary)));
+        SettingsRepository.getSettingsAsync(this, settings -> {
+            String avatarPath = settings.getProfileAvatarPath();
+            if (hasUsableAvatar(avatarPath)) {
+                profileImage.setImageTintList(null);
+                ImageLoader.load(profileImage, avatarPath);
+            }
+        }, error -> {
+            profileImage.setImageResource(R.drawable.ic_nav_profile);
+            profileImage.setImageTintList(ColorStateList.valueOf(getColor(R.color.smart_primary)));
+        });
+    }
+
+    private boolean hasUsableAvatar(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            return false;
+        }
+        String filePath = path.startsWith("file://") ? path.substring(7) : path;
+        return new File(filePath).isFile();
+    }
+
     private void navigateToSignIn() {
         Intent intent = new Intent(this, SignInActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -133,7 +164,8 @@ public class SettingsActivity extends BaseActivity {
         bindNotificationSummary();
         bindSettingsGroup(findViewById(R.id.inventoryPreferencesList), Arrays.asList(
                 setting(SettingItem.KEY_STORAGE),
-                setting(SettingItem.KEY_DIETARY)
+                setting(SettingItem.KEY_DIETARY),
+                setting(SettingItem.KEY_EXPIRING_SOON)
         ));
         bindSettingsGroup(findViewById(R.id.appPreferencesList), Arrays.asList(
                 setting(SettingItem.KEY_LANGUAGE),
@@ -269,6 +301,8 @@ public class SettingsActivity extends BaseActivity {
             showDietaryPreferencesDialog();
         } else if (SettingItem.KEY_LANGUAGE.equals(key)) {
             showLanguageDialog();
+        } else if (SettingItem.KEY_EXPIRING_SOON.equals(key)) {
+            showExpiringSoonDialog();
         }
 
         if (intent != null) {
@@ -399,6 +433,131 @@ public class SettingsActivity extends BaseActivity {
 
             dialog.show();
         }, error -> Toast.makeText(this, R.string.dietary_preferences_load_error, Toast.LENGTH_SHORT).show());
+    }
+
+    private void showExpiringSoonDialog() {
+        int currentDays = SettingsRepository.getExpiringSoonDays(this);
+
+        String[] labels = {
+                getString(R.string.expiring_soon_1_day),
+                getString(R.string.expiring_soon_3_days),
+                getString(R.string.expiring_soon_1_week),
+                getString(R.string.expiring_soon_2_weeks),
+                getString(R.string.expiring_soon_1_month),
+                getString(R.string.expiring_soon_custom)
+        };
+        int[] values = {1, 3, 7, 14, 30, -1};
+
+        int checked = values.length - 1;
+        for (int i = 0; i < values.length - 1; i++) {
+            if (values[i] == currentDays) {
+                checked = i;
+                break;
+            }
+        }
+        if (checked == values.length - 1 && currentDays != -1) {
+            labels[values.length - 1] = getString(R.string.expiring_soon_custom_format, currentDays);
+        }
+
+        final int[] selected = {checked};
+        final int[] customValue = {currentDays};
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_single_choice, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setDimAmount(0.8f);
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView title = dialogView.findViewById(R.id.dialogTitle);
+        title.setText(R.string.expiring_soon_dialog_title);
+
+        RadioGroup radioGroup = dialogView.findViewById(R.id.dialogRadioGroup);
+        radioGroup.removeAllViews();
+        for (int i = 0; i < labels.length; i++) {
+            RadioButton radioButton = new RadioButton(this);
+            radioButton.setText(labels[i]);
+            radioButton.setId(i);
+            radioButton.setTextColor(getColor(R.color.dialog_text_primary));
+            radioButton.setTextSize(16);
+            radioButton.setPadding(ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12), ViewUtils.dp(this, 12));
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                radioButton.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8C00")));
+            }
+            radioGroup.addView(radioButton);
+            if (i == checked) {
+                radioGroup.check(i);
+            }
+        }
+
+        radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            selected[0] = checkedId;
+            if (checkedId == values.length - 1) {
+                dialog.dismiss();
+                showExpiringSoonCustomDialog(customValue[0]);
+            }
+        });
+
+        dialogView.findViewById(R.id.btnNegative).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btnPositive).setOnClickListener(v -> {
+            dialog.dismiss();
+            int idx = selected[0];
+            if (idx >= 0 && idx < values.length - 1) {
+                SettingsRepository.setExpiringSoonDays(this, values[idx]);
+                Toast.makeText(this, getString(R.string.expiring_soon_saved_format, labels[idx]), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void showExpiringSoonCustomDialog(int currentValue) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_text_input, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setDimAmount(0.8f);
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView title = dialogView.findViewById(R.id.dialogTitle);
+        title.setText(R.string.expiring_soon_custom_title);
+
+        TextView message = dialogView.findViewById(R.id.dialogMessage);
+        message.setVisibility(View.VISIBLE);
+        message.setText(R.string.expiring_soon_custom_message);
+
+        EditText input = dialogView.findViewById(R.id.dialogEditText);
+        input.setHint(R.string.expiring_soon_custom_hint);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setText(String.valueOf(currentValue));
+        input.setSelection(input.getText().length());
+
+        TextView positiveText = dialogView.findViewById(R.id.btnPositiveText);
+        positiveText.setText(R.string.save_label);
+
+        dialogView.findViewById(R.id.btnNegative).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btnPositive).setOnClickListener(v -> {
+            String text = input.getText().toString().trim();
+            try {
+                int days = Integer.parseInt(text);
+                if (days < 1 || days > 365) {
+                    Toast.makeText(this, R.string.expiring_soon_custom_invalid, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                dialog.dismiss();
+                SettingsRepository.setExpiringSoonDays(this, days);
+                Toast.makeText(this, getString(R.string.expiring_soon_saved_format, getString(R.string.expiring_soon_custom_format, days)), Toast.LENGTH_SHORT).show();
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, R.string.expiring_soon_custom_invalid, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
     }
 
     private void showLanguageDialog() {

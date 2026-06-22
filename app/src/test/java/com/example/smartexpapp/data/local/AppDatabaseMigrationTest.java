@@ -17,6 +17,7 @@ import java.io.File;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 35)
@@ -42,11 +43,11 @@ public class AppDatabaseMigrationTest {
     }
 
     @Test
-    public void migrationFrom2To7AddsDisplayNameDarkModeLanguageCategoriesNotifyTimeAndPreservesSettings() {
+    public void migrationFrom2To8AddsDisplayNameDarkModeLanguageCategoriesNotifyTimeAvatarAndPreservesSettings() {
         createVersion2Database();
 
         AppDatabase database = Room.databaseBuilder(context, AppDatabase.class, DB_NAME)
-                .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7)
+                .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7, AppDatabase.MIGRATION_7_8)
                 .allowMainThreadQueries()
                 .build();
 
@@ -59,6 +60,7 @@ public class AppDatabaseMigrationTest {
         assertEquals("Local User", settings.displayName);
         assertEquals(false, settings.darkMode);
         assertEquals("en", settings.languageTag);
+        assertNull(settings.profileAvatarPath);
         assertEquals(0, database.categoryDao().count());
         database.close();
     }

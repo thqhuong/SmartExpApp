@@ -182,7 +182,7 @@ Goal: separate UI, state, data, and domain rules.
 
 Steps:
 
-1. Add a simple dependency container, for example `SmartExpApplication`, `AppContainer`, and repository instances.
+1. Add a simple dependency container, for example `SmartExpAppApplication`, `AppContainer`, and repository instances.
 2. Convert `ProductRepository` from static methods into an injectable class.
 3. Add repositories for settings, inventory actions, expiry scans, recipes, agent messages, and remote product lookup.
 4. Introduce ViewModels per screen:

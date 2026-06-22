@@ -81,7 +81,7 @@
                         android:paddingEnd="12dp">
 
                         <TextView
-                            android:layout_width="80dp"
+                            android:layout_width="100dp"
                             android:layout_height="wrap_content"
                             android:text="@string/expiry_label"
                             android:textColor="@color/smart_secondary"
@@ -134,7 +134,7 @@
                         android:paddingEnd="12dp">
 
                         <TextView
-                            android:layout_width="80dp"
+                            android:layout_width="100dp"
                             android:layout_height="wrap_content"
                             android:text="@string/storage_type_label"
                             android:textColor="@color/smart_secondary"
@@ -187,7 +187,7 @@
                         android:paddingEnd="12dp">
 
                         <TextView
-                            android:layout_width="80dp"
+                            android:layout_width="100dp"
                             android:layout_height="wrap_content"
                             android:text="@string/sort_by"
                             android:textColor="@color/smart_secondary"

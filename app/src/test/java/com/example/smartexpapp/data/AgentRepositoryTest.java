@@ -111,7 +111,7 @@ public class AgentRepositoryTest {
                 product("Milk", "Dairy", 3)
         );
 
-        List<Recipe> recipes = AgentRepository.localRecipeSuggestions(products);
+        List<Recipe> recipes = AgentRepository.localRecipeSuggestions(products, 7);
 
         assertFalse(recipes.isEmpty());
         assertTrue(recipes.get(0).getTitle().contains("Spinach"));
@@ -120,7 +120,7 @@ public class AgentRepositoryTest {
 
     @Test
     public void localRecipesHandleEmptyInventory() {
-        List<Recipe> recipes = AgentRepository.localRecipeSuggestions(Collections.emptyList());
+        List<Recipe> recipes = AgentRepository.localRecipeSuggestions(Collections.emptyList(), 7);
 
         assertEquals(3, recipes.size());
         assertTrue(recipes.get(0).getTitle().contains("pantry items"));
@@ -130,7 +130,7 @@ public class AgentRepositoryTest {
     @Test
     public void localRecipeResultMarksEmptyInventoryFallback() {
         AgentRepository.RecipeSuggestionResult result =
-                AgentRepository.localRecipeSuggestionResult(Collections.emptyList());
+                AgentRepository.localRecipeSuggestionResult(Collections.emptyList(), 7);
 
         assertTrue(result.isLocalFallback());
         assertTrue(result.isInventoryEmpty());
@@ -141,7 +141,7 @@ public class AgentRepositoryTest {
     @Test
     public void localRecipeResultMarksInventoryBackedFallback() {
         AgentRepository.RecipeSuggestionResult result =
-                AgentRepository.localRecipeSuggestionResult(Collections.singletonList(product("Milk", "Dairy", 2)));
+                AgentRepository.localRecipeSuggestionResult(Collections.singletonList(product("Milk", "Dairy", 2)), 7);
 
         assertTrue(result.isLocalFallback());
         assertFalse(result.isInventoryEmpty());
@@ -154,7 +154,8 @@ public class AgentRepositoryTest {
         AgentRepository.RecipeSuggestionResult result =
                 AgentRepository.localRecipeSuggestionResult(
                         Collections.singletonList(product("Tofu", "General", 2)),
-                        "vegetarian, dairy-free"
+                        "vegetarian, dairy-free",
+                        7
                 );
 
         assertTrue(result.getStatusMessage().contains("Dietary preferences: vegetarian, dairy-free"));
@@ -165,7 +166,8 @@ public class AgentRepositoryTest {
     public void localRecipesNormalizeDietaryPreferenceWhitespace() {
         List<Recipe> recipes = AgentRepository.localRecipeSuggestions(
                 Collections.singletonList(product("Spinach", "Vegetables", 1)),
-                "  low   sodium  "
+                "  low   sodium  ",
+                7
         );
 
         assertTrue(recipes.get(0).getSummary().contains("Adapt for: low sodium"));
@@ -221,7 +223,7 @@ public class AgentRepositoryTest {
                 product("Milk", "Dairy", 3)
         );
 
-        List<String> prompts = AgentRepository.recipePromptSuggestions(products);
+        List<String> prompts = AgentRepository.recipePromptSuggestions(products, 7);
 
         assertFalse(prompts.isEmpty());
         assertEquals("Suggest recipes using Spinach", prompts.get(0));
@@ -232,7 +234,8 @@ public class AgentRepositoryTest {
     @Test
     public void recipePromptSuggestionsHideWhenInventoryHasNoCookableItems() {
         List<String> prompts = AgentRepository.recipePromptSuggestions(
-                Collections.singletonList(product("Expired Bread", "Pantry", -1))
+                Collections.singletonList(product("Expired Bread", "Pantry", -1)),
+                7
         );
 
         assertTrue(prompts.isEmpty());

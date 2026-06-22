@@ -19,7 +19,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 UserSettingsEntity.class,
                 CategoryEntity.class
         },
-        version = 7,
+        version = 8,
         exportSchema = true
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -63,6 +63,12 @@ public abstract class AppDatabase extends RoomDatabase {
             database.execSQL("ALTER TABLE user_settings ADD COLUMN reminder_notify_time_minutes INTEGER NOT NULL DEFAULT 540");
         }
     };
+    public static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE user_settings ADD COLUMN profile_avatar_path TEXT");
+        }
+    };
 
     public abstract ProductDao productDao();
 
@@ -89,7 +95,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     DATABASE_NAME
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                             .fallbackToDestructiveMigrationOnDowngrade(true)
                             .build();
                 }

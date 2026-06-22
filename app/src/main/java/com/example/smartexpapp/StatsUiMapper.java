@@ -41,7 +41,7 @@ public final class StatsUiMapper {
         return result;
     }
 
-    public static Map<String, List<Product>> groupProducts(List<Product> products) {
+    public static Map<String, List<Product>> groupProducts(List<Product> products, int expiringSoonDays) {
         if (products == null || products.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -53,7 +53,7 @@ public final class StatsUiMapper {
         groups.put("Safe", new ArrayList<>());
 
         for (Product product : products) {
-            String group = product.getGroup();
+            String group = product.getGroup(expiringSoonDays);
             List<Product> list = groups.get(group);
             if (list != null) {
                 list.add(product);

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 public class StatsUiMapperTest {
     @Test
     public void groupProducts_emptyList_returnsEmptyMap() {
-        Map<String, List<Product>> groups = StatsUiMapper.groupProducts(Collections.emptyList());
+        Map<String, List<Product>> groups = StatsUiMapper.groupProducts(Collections.emptyList(), 7);
         assertNotNull(groups);
         assertTrue(groups.isEmpty());
     }
@@ -34,7 +34,7 @@ public class StatsUiMapperTest {
                 product("f1", "Butter", "Dairy", LocalDataContract.STORAGE_FREEZE_NAME, 90)
         );
 
-        Map<String, List<Product>> groups = StatsUiMapper.groupProducts(products);
+        Map<String, List<Product>> groups = StatsUiMapper.groupProducts(products, 7);
 
         assertEquals(1, groups.get("Expired").size());
         assertEquals(1, groups.get("Urgent").size());

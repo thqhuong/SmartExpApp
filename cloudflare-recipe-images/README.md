@@ -1,6 +1,6 @@
-# SmartExp AI Worker
+# SmartExpApp AI Worker
 
-Cloudflare Worker endpoints for SmartExp AI features using Workers AI.
+Cloudflare Worker endpoints for SmartExpApp AI features using Workers AI.
 
 ## Setup
 

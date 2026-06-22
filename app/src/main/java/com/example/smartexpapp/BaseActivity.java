@@ -297,6 +297,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     public void pickProductPhoto(Consumer<Uri> callback) {
+        pickImage(callback);
+    }
+
+    public void pickImage(Consumer<Uri> callback) {
         productPhotoCallback = callback;
         productPhotoPicker.launch("image/*");
     }

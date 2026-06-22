@@ -33,6 +33,9 @@ public class UserSettingsEntity {
     @ColumnInfo(name = "display_name")
     public String displayName = "Local User";
 
+    @ColumnInfo(name = "profile_avatar_path")
+    public String profileAvatarPath;
+
     @ColumnInfo(name = "dark_mode", defaultValue = "0")
     public boolean darkMode = false;
 

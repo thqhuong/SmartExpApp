@@ -73,7 +73,7 @@ public class ProductHistoryActivity extends BaseActivity {
         filterWasted.setOnClickListener(v -> setActiveFilter("WASTED", filterWasted));
         filterDonated.setOnClickListener(v -> setActiveFilter("DONATED", filterDonated));
 
-        ProductRepository repository = ((SmartExpApplication) getApplicationContext()).appContainer.getProductRepository();
+        ProductRepository repository = ((SmartExpAppApplication) getApplicationContext()).appContainer.getProductRepository();
         ProductHistoryViewModelFactory factory = new ProductHistoryViewModelFactory(repository);
         viewModel = new ViewModelProvider(this, factory).get(ProductHistoryViewModel.class);
 
@@ -111,8 +111,19 @@ public class ProductHistoryActivity extends BaseActivity {
         Button[] chips = {filterAll, filterConsumed, filterWasted, filterDonated};
         for (Button chip : chips) {
             if (chip == activeButton) {
-                chip.setBackgroundResource(R.drawable.bg_chip_active);
-                chip.setTextColor(getColor(R.color.smart_on_primary));
+                if (chip == filterAll) {
+                    chip.setBackgroundResource(R.drawable.bg_chip_active_all);
+                    chip.setTextColor(getColor(R.color.color_all_active_text));
+                } else if (chip == filterConsumed) {
+                    chip.setBackgroundResource(R.drawable.bg_chip_active_consumed);
+                    chip.setTextColor(getColor(R.color.color_consumed_active_text));
+                } else if (chip == filterWasted) {
+                    chip.setBackgroundResource(R.drawable.bg_chip_active_wasted);
+                    chip.setTextColor(getColor(R.color.color_wasted_active_text));
+                } else if (chip == filterDonated) {
+                    chip.setBackgroundResource(R.drawable.bg_chip_active_donated);
+                    chip.setTextColor(getColor(R.color.color_donated_active_text));
+                }
             } else {
                 chip.setBackgroundResource(R.drawable.bg_chip_inactive);
                 chip.setTextColor(getColor(R.color.smart_secondary));

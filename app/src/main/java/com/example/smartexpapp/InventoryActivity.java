@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.smartexpapp.AppContainer;
 import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.data.ProductRepository;
+import com.example.smartexpapp.data.SettingsRepository;
 import com.example.smartexpapp.data.firestore.ProductSyncRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.model.Product;
@@ -159,7 +160,7 @@ public class InventoryActivity extends BaseActivity {
         findViewById(R.id.btnBatchDonated).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.DONATED));
         findViewById(R.id.btnBatchDelete).setOnClickListener(v -> batchDelete(adapter.getSelectedIds()));
 
-        AppContainer appContainer = ((SmartExpApplication) getApplicationContext()).appContainer;
+        AppContainer appContainer = ((SmartExpAppApplication) getApplicationContext()).appContainer;
         InventoryViewModelFactory factory = new InventoryViewModelFactory(appContainer.getProductRepository());
         viewModel = new ViewModelProvider(this, factory).get(InventoryViewModel.class);
 
@@ -225,6 +226,9 @@ public class InventoryActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        int expiringSoonDays = SettingsRepository.getExpiringSoonDays(this);
+        viewModel.setExpiringSoonDays(expiringSoonDays);
+        adapter.setExpiringSoonDays(expiringSoonDays);
         viewModel.loadProducts();
     }
 

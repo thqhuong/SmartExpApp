@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_glass_screen"
@@ -23,7 +24,7 @@
             android:paddingEnd="20dp"
             android:gravity="center_vertical">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/filterAll"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
@@ -32,11 +33,12 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textAllCaps="false"
-                android:background="@drawable/bg_chip_active"
-                android:textColor="@color/smart_on_primary"
+                android:background="@drawable/bg_chip_active_all"
+                app:backgroundTint="@null"
+                android:textColor="@color/color_all_active_text"
                 android:stateListAnimator="@null" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/filterConsumed"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
@@ -47,10 +49,11 @@
                 android:textStyle="bold"
                 android:textAllCaps="false"
                 android:background="@drawable/bg_chip_inactive"
+                app:backgroundTint="@null"
                 android:textColor="@color/smart_secondary"
                 android:stateListAnimator="@null" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/filterWasted"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
@@ -61,10 +64,11 @@
                 android:textStyle="bold"
                 android:textAllCaps="false"
                 android:background="@drawable/bg_chip_inactive"
+                app:backgroundTint="@null"
                 android:textColor="@color/smart_secondary"
                 android:stateListAnimator="@null" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/filterDonated"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
@@ -75,6 +79,7 @@
                 android:textStyle="bold"
                 android:textAllCaps="false"
                 android:background="@drawable/bg_chip_inactive"
+                app:backgroundTint="@null"
                 android:textColor="@color/smart_secondary"
                 android:stateListAnimator="@null" />
         </LinearLayout>

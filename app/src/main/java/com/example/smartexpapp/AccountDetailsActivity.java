@@ -4,11 +4,14 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.smartexpapp.data.AuthStateRepository;
+import com.example.smartexpapp.data.LocalImageRepository;
 import com.example.smartexpapp.data.firestore.FirestoreProvider;
 import com.example.smartexpapp.data.firestore.ProductSyncRepository;
 import com.example.smartexpapp.data.firestore.SyncStatusRepository;
@@ -17,18 +20,26 @@ import com.example.smartexpapp.data.LocalDataExportRepository;
 import com.example.smartexpapp.data.LocalDataResetRepository;
 import com.example.smartexpapp.data.SettingsRepository;
 import com.example.smartexpapp.data.local.AppDatabase;
+import com.example.smartexpapp.util.ImageLoader;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+
+import java.io.File;
 
 public class AccountDetailsActivity extends BaseActivity {
     private EditText displayNameInput;
+    private ImageView accountAvatarImage;
     private TextView displayNameHeader;
     private TextView accountStatusText;
-    private TextView accountAuthStateText;
     private TextView accountSyncStateText;
-    private EditText accountModeValue;
     private MaterialButton accountAuthButton;
     private MaterialButton accountSaveButton;
     private MaterialButton retrySyncButton;
+    private MaterialButton chooseAvatarButton;
+    private MaterialButton removeAvatarButton;
+    private String profileAvatarPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,15 +49,22 @@ public class AccountDetailsActivity extends BaseActivity {
         setTopTitle(getString(R.string.account_details_title));
         useBackButton();
         displayNameInput = findViewById(R.id.displayNameInput);
+        accountAvatarImage = findViewById(R.id.accountAvatarImage);
         displayNameHeader = findViewById(R.id.accountDisplayNameText);
         accountStatusText = findViewById(R.id.accountStatusText);
-        accountAuthStateText = findViewById(R.id.accountAuthStateText);
         accountSyncStateText = findViewById(R.id.accountSyncStateText);
-        accountModeValue = findViewById(R.id.accountModeValue);
         accountAuthButton = findViewById(R.id.accountAuthButton);
         accountSaveButton = findViewById(R.id.accountSaveButton);
         retrySyncButton = findViewById(R.id.retrySyncButton);
+        chooseAvatarButton = findViewById(R.id.chooseAvatarButton);
+        removeAvatarButton = findViewById(R.id.removeAvatarButton);
         bindAccountState();
+        if (chooseAvatarButton != null) {
+            chooseAvatarButton.setOnClickListener(v -> pickImage(this::onAvatarPicked));
+        }
+        if (removeAvatarButton != null) {
+            removeAvatarButton.setOnClickListener(v -> confirmRemoveAvatar());
+        }
         findViewById(R.id.exportDataButton).setOnClickListener(v -> exportLocalData());
         findViewById(R.id.deleteLocalDataButton).setOnClickListener(v -> confirmDeleteLocalData());
     }
@@ -64,13 +82,14 @@ public class AccountDetailsActivity extends BaseActivity {
         } else {
             bindLocalAccount(authState);
         }
+        bindAvatar();
         bindSyncState(authState);
     }
 
     private void bindSignedInAccount(AuthStateRepository.AuthState authState) {
         String identity = authState.getBestDisplayName(getString(R.string.profile_local_user));
         if (displayNameInput != null) {
-            displayNameInput.setEnabled(false);
+            displayNameInput.setEnabled(true);
             displayNameInput.setText(identity);
         }
         if (displayNameHeader != null) {
@@ -78,12 +97,6 @@ public class AccountDetailsActivity extends BaseActivity {
         }
         if (accountStatusText != null) {
             accountStatusText.setText(R.string.account_signed_in_device);
-        }
-        if (accountModeValue != null) {
-            accountModeValue.setText(R.string.signed_in_mode);
-        }
-        if (accountAuthStateText != null) {
-            accountAuthStateText.setText(getString(R.string.auth_signed_in_format, signedInIdentity(authState)));
         }
         if (accountAuthButton != null) {
             accountAuthButton.setVisibility(android.view.View.VISIBLE);
@@ -95,8 +108,13 @@ public class AccountDetailsActivity extends BaseActivity {
             });
         }
         if (accountSaveButton != null) {
-            accountSaveButton.setVisibility(android.view.View.GONE);
+            accountSaveButton.setVisibility(android.view.View.VISIBLE);
+            accountSaveButton.setOnClickListener(v -> saveProfile());
         }
+        SettingsRepository.getSettingsAsync(this, settings -> {
+            profileAvatarPath = settings.getProfileAvatarPath();
+            bindAvatar();
+        }, error -> Toast.makeText(this, R.string.profile_load_error, Toast.LENGTH_SHORT).show());
     }
 
     private void bindLocalAccount(AuthStateRepository.AuthState authState) {
@@ -108,16 +126,6 @@ public class AccountDetailsActivity extends BaseActivity {
                     ? R.string.account_guest_device
                     : R.string.account_stored_only_device);
         }
-        if (accountModeValue != null) {
-            accountModeValue.setText(authState.isGuest()
-                    ? R.string.guest_mode_label
-                    : R.string.no_sign_in_required);
-        }
-        if (accountAuthStateText != null) {
-            accountAuthStateText.setText(authState.isGuest()
-                    ? R.string.auth_guest_local
-                    : R.string.auth_local_only);
-        }
         if (accountAuthButton != null) {
             accountAuthButton.setVisibility(android.view.View.VISIBLE);
             accountAuthButton.setText(R.string.sign_in_label);
@@ -126,7 +134,7 @@ public class AccountDetailsActivity extends BaseActivity {
         }
         if (accountSaveButton != null) {
             accountSaveButton.setVisibility(android.view.View.VISIBLE);
-            accountSaveButton.setOnClickListener(v -> saveLocalProfile());
+            accountSaveButton.setOnClickListener(v -> saveProfile());
         }
         SettingsRepository.getSettingsAsync(this, settings -> {
             if (displayNameInput != null) {
@@ -135,11 +143,42 @@ public class AccountDetailsActivity extends BaseActivity {
             if (displayNameHeader != null) {
                 displayNameHeader.setText(settings.getDisplayName());
             }
+            profileAvatarPath = settings.getProfileAvatarPath();
+            bindAvatar();
         }, error -> Toast.makeText(this, R.string.profile_load_error, Toast.LENGTH_SHORT).show());
     }
 
-    private void saveLocalProfile() {
-        String displayName = displayNameInput == null ? getString(R.string.profile_local_user) : displayNameInput.getText().toString();
+    private void saveProfile() {
+        String displayName = displayNameInput == null ? "" : displayNameInput.getText().toString().trim();
+        if (displayName.isEmpty()) {
+            Toast.makeText(this, R.string.display_name_empty_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (authState.isSignedIn()) {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setDisplayName(displayName)
+                        .build();
+                user.updateProfile(profileUpdates).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        saveLocalAndRefresh(displayName);
+                    } else {
+                        String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
+                        Toast.makeText(this, getString(R.string.profile_save_error) + ": " + errorMsg, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else {
+                saveLocalAndRefresh(displayName);
+            }
+        } else {
+            saveLocalAndRefresh(displayName);
+        }
+    }
+
+    private void saveLocalAndRefresh(String displayName) {
         SettingsRepository.setDisplayNameAsync(this, displayName,
                 settings -> {
                     if (displayNameInput != null) {
@@ -151,6 +190,82 @@ public class AccountDetailsActivity extends BaseActivity {
                     Toast.makeText(this, R.string.profile_saved, Toast.LENGTH_SHORT).show();
                 },
                 error -> Toast.makeText(this, R.string.profile_save_error, Toast.LENGTH_SHORT).show());
+    }
+
+    private void bindAvatar() {
+        if (accountAvatarImage == null) {
+            return;
+        }
+        if (!hasUsableAvatar(profileAvatarPath)) {
+            accountAvatarImage.setImageResource(R.drawable.account_avatar);
+            if (removeAvatarButton != null) {
+                removeAvatarButton.setVisibility(View.GONE);
+            }
+            if (chooseAvatarButton != null) {
+                chooseAvatarButton.setText(R.string.choose_avatar);
+            }
+            return;
+        }
+        ImageLoader.load(accountAvatarImage, profileAvatarPath);
+        if (removeAvatarButton != null) {
+            removeAvatarButton.setVisibility(View.VISIBLE);
+        }
+        if (chooseAvatarButton != null) {
+            chooseAvatarButton.setText(R.string.change_avatar);
+        }
+    }
+
+    private boolean hasUsableAvatar(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            return false;
+        }
+        String filePath = path.startsWith("file://") ? path.substring(7) : path;
+        return new File(filePath).isFile();
+    }
+
+    private void onAvatarPicked(Uri uri) {
+        if (uri == null) {
+            return;
+        }
+        String previousPath = profileAvatarPath;
+        String path = saveImageToInternalStorage(uri);
+        if (path == null) {
+            Toast.makeText(this, R.string.avatar_save_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        SettingsRepository.setProfileAvatarPathAsync(this, path, settings -> {
+            profileAvatarPath = settings.getProfileAvatarPath();
+            if (previousPath != null && !previousPath.equals(profileAvatarPath)) {
+                LocalImageRepository.deleteProductImage(getApplicationContext(), previousPath);
+            }
+            bindAvatar();
+            Toast.makeText(this, R.string.avatar_saved, Toast.LENGTH_SHORT).show();
+        }, error -> {
+            LocalImageRepository.deleteProductImage(getApplicationContext(), path);
+            Toast.makeText(this, R.string.avatar_save_error, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void confirmRemoveAvatar() {
+        if (profileAvatarPath == null || profileAvatarPath.trim().isEmpty()) {
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.remove_avatar_title)
+                .setMessage(R.string.remove_avatar_message)
+                .setPositiveButton(R.string.remove_label, (dialog, which) -> removeAvatar())
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void removeAvatar() {
+        String previousPath = profileAvatarPath;
+        SettingsRepository.setProfileAvatarPathAsync(this, null, settings -> {
+            profileAvatarPath = settings.getProfileAvatarPath();
+            LocalImageRepository.deleteProductImage(getApplicationContext(), previousPath);
+            bindAvatar();
+            Toast.makeText(this, R.string.avatar_removed, Toast.LENGTH_SHORT).show();
+        }, error -> Toast.makeText(this, R.string.avatar_remove_error, Toast.LENGTH_SHORT).show());
     }
 
     private void bindSyncState(AuthStateRepository.AuthState authState) {

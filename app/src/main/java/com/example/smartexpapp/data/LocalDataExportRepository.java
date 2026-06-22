@@ -132,6 +132,7 @@ public final class LocalDataExportRepository {
                 .put("reminderNotifyTimeMinutes", settings.reminderNotifyTimeMinutes)
                 .put("dietaryPreferences", settings.dietaryPreferences)
                 .put("displayName", settings.displayName)
+                .put("profileAvatarPath", settings.profileAvatarPath)
                 .put("darkMode", settings.darkMode)
                 .put("languageTag", settings.languageTag)
                 .put("defaultStorageLocationId", settings.defaultStorageLocationId)

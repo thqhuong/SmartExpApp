@@ -36,6 +36,7 @@ public class LocalDataResetRepositoryTest {
     @Before
     public void setUp() {
         Context context = ApplicationProvider.getApplicationContext();
+        LocalImageRepository.deleteAllProductImages(context);
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase.class)
                 .allowMainThreadQueries()
                 .build();
@@ -50,12 +51,14 @@ public class LocalDataResetRepositoryTest {
     public void resetDeletesLocalUserDataImagesAndRecreatesDefaults() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         File image = createImageFile(context, "milk.jpg");
+        File avatar = createImageFile(context, "avatar.jpg");
         ProductRepository.addProduct(database, product("milk-id", "Milk", image.getAbsolutePath()));
         ProductRepository.markConsumed(database, "milk-id", "Used");
         database.expiryScanDao().insert(scan("scan-id", "milk-id"));
         database.recipeCacheDao().insert(recipe("recipe-id"));
         database.agentMessageDao().insert(message("message-id"));
         SettingsRepository.setDisplayName(database, "Kitchen Team");
+        SettingsRepository.setProfileAvatarPath(database, avatar.getAbsolutePath());
 
         LocalDataResetRepository.ResetSummary summary = LocalDataResetRepository.reset(database, context);
 
@@ -65,8 +68,9 @@ public class LocalDataResetRepositoryTest {
         assertEquals(1, summary.getRecipeCacheDeleted());
         assertEquals(1, summary.getAgentMessagesDeleted());
         assertEquals(1, summary.getSettingsDeleted());
-        assertEquals(1, summary.getImageFilesDeleted());
+        assertEquals(2, summary.getImageFilesDeleted());
         assertFalse(image.exists());
+        assertFalse(avatar.exists());
         assertEquals(0, database.productDao().count());
         assertEquals(0, database.inventoryActionDao().getAll().size());
         assertEquals(0, database.expiryScanDao().getAll().size());
@@ -74,6 +78,7 @@ public class LocalDataResetRepositoryTest {
         assertEquals(0, database.agentMessageDao().getConversation().size());
         assertNotNull(database.userSettingsDao().getById("default"));
         assertEquals("Local User", SettingsRepository.getSettings(database).getDisplayName());
+        assertEquals(null, SettingsRepository.getSettings(database).getProfileAvatarPath());
         assertEquals(3, database.storageLocationDao().count());
     }
 

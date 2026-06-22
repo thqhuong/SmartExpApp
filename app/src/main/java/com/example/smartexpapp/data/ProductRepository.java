@@ -4,7 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.content.Context;
 
-import com.example.smartexpapp.SmartExpApplication;
+import com.example.smartexpapp.SmartExpAppApplication;
 import com.example.smartexpapp.data.firestore.FirestoreProductMapper;
 import com.example.smartexpapp.data.firestore.ProductSyncRepository;
 import com.example.smartexpapp.data.firestore.UserDataSyncRepository;
@@ -139,9 +139,10 @@ public final class ProductRepository {
         List<Product> allProducts = getProducts();
         int urgentCount = 0;
         int expiredCount = 0;
+        int expiringSoonDays = SettingsRepository.getExpiringSoonDays(context);
 
         for (Product product : allProducts) {
-            if (product.isExpiringSoon()) {
+            if (product.isExpiringSoon(expiringSoonDays)) {
                 urgentCount++;
             }
             if (product.isExpired()) {
@@ -393,7 +394,7 @@ public final class ProductRepository {
     // --- Legacy Static compatibility delegators (Context-taking) ---
 
     private static ProductRepository getContainerRepository(Context context) {
-        return ((SmartExpApplication) context.getApplicationContext()).appContainer.getProductRepository();
+        return ((SmartExpAppApplication) context.getApplicationContext()).appContainer.getProductRepository();
     }
 
     private Product prepareForLocalWrite(Product product) {

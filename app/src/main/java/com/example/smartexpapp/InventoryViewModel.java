@@ -34,6 +34,7 @@ public class InventoryViewModel extends ViewModel {
     private String currentFilter = "All";
     private String currentStorage = "All";
     private String currentSort = "oldest";
+    private int expiringSoonDays = Product.DEFAULT_EXPIRING_SOON_DAYS;
     private List<Product> latestProducts = new ArrayList<>();
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
@@ -113,6 +114,15 @@ public class InventoryViewModel extends ViewModel {
     public void setSortOrder(String sort) {
         this.currentSort = sort != null ? sort : "oldest";
         applyFiltersAndSort();
+    }
+
+    public void setExpiringSoonDays(int days) {
+        this.expiringSoonDays = days;
+        applyFiltersAndSort();
+    }
+
+    public int getExpiringSoonDays() {
+        return expiringSoonDays;
     }
 
     public void applyLaunchFilter(String filter) {
@@ -205,7 +215,7 @@ public class InventoryViewModel extends ViewModel {
             return !product.isExpired();
         }
         if ("ExpiringSoon".equals(currentFilter)) {
-            return product.isExpiringSoon();
+            return product.isExpiringSoon(expiringSoonDays);
         }
         return product.isExpired();
     }

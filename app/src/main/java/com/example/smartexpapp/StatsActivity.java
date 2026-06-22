@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.data.ProductRepository;
+import com.example.smartexpapp.data.SettingsRepository;
 import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
@@ -82,8 +83,9 @@ public class StatsActivity extends BaseActivity {
             resetGroup(R.id.soonList, R.id.sectionSoonTitle, R.id.sectionSoonCard);
             resetGroup(R.id.safeList, R.id.sectionSafeTitle, R.id.sectionSafeCard);
             List<Product> products = snapshot.getActiveProducts();
+            int expiringSoonDays = SettingsRepository.getExpiringSoonDays(this);
             bindStorageSummaries(StatsUiMapper.buildStorageSummaries(products));
-            bindGroupedProducts(StatsUiMapper.groupProducts(products));
+            bindGroupedProducts(StatsUiMapper.groupProducts(products, expiringSoonDays));
         }, error -> {
             ((TextView) findViewById(R.id.urgentCount)).setText("0");
             ((TextView) findViewById(R.id.consumedCount)).setText("0");

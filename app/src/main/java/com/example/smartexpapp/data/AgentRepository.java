@@ -183,7 +183,8 @@ public final class AgentRepository {
         SettingsRepository.SettingsSnapshot settings = SettingsRepository.getSettings(database);
         String dietaryPreferences = settings.getDietaryPreferences();
         String languageTag = settings.getLanguageTag();
-        List<Recipe> local = localRecipeSuggestions(products, dietaryPreferences, languageTag);
+        int expiringSoonDays = SettingsRepository.getExpiringSoonDays(context);
+        List<Recipe> local = localRecipeSuggestions(products, dietaryPreferences, languageTag, expiringSoonDays);
         String prompt = userPrompt == null ? "" : userPrompt.trim();
         boolean inventoryEmpty = products.isEmpty();
 
@@ -249,10 +250,10 @@ public final class AgentRepository {
         return answer;
     }
 
-    public static List<String> recipePromptSuggestions(List<Product> products) {
+    public static List<String> recipePromptSuggestions(List<Product> products, int expiringSoonDays) {
         List<Product> candidates = new ArrayList<>();
         for (Product product : products) {
-            if (!product.isExpired() && product.getDaysUntilExpiry() <= 7) {
+            if (!product.isExpired() && product.getDaysUntilExpiry() <= expiringSoonDays) {
                 candidates.add(product);
             }
         }
@@ -280,18 +281,18 @@ public final class AgentRepository {
         return prompts;
     }
 
-    public static List<Recipe> localRecipeSuggestions(List<Product> products) {
-        return localRecipeSuggestions(products, null);
+    public static List<Recipe> localRecipeSuggestions(List<Product> products, int expiringSoonDays) {
+        return localRecipeSuggestions(products, null, "en", expiringSoonDays);
     }
 
-    public static List<Recipe> localRecipeSuggestions(List<Product> products, String dietaryPreferences) {
-        return localRecipeSuggestions(products, dietaryPreferences, "en");
+    public static List<Recipe> localRecipeSuggestions(List<Product> products, String dietaryPreferences, int expiringSoonDays) {
+        return localRecipeSuggestions(products, dietaryPreferences, "en", expiringSoonDays);
     }
 
-    public static List<Recipe> localRecipeSuggestions(List<Product> products, String dietaryPreferences, String languageTag) {
+    public static List<Recipe> localRecipeSuggestions(List<Product> products, String dietaryPreferences, String languageTag, int expiringSoonDays) {
         List<Product> expiring = new ArrayList<>();
         for (Product product : products) {
-            if (!product.isExpired() && product.getDaysUntilExpiry() <= 7) {
+            if (!product.isExpired() && product.getDaysUntilExpiry() <= expiringSoonDays) {
                 expiring.add(product);
             }
         }
@@ -401,14 +402,14 @@ public final class AgentRepository {
         return recipes;
     }
 
-    public static RecipeSuggestionResult localRecipeSuggestionResult(List<Product> products) {
-        return localRecipeSuggestionResult(products, null);
+    public static RecipeSuggestionResult localRecipeSuggestionResult(List<Product> products, int expiringSoonDays) {
+        return localRecipeSuggestionResult(products, null, expiringSoonDays);
     }
 
-    public static RecipeSuggestionResult localRecipeSuggestionResult(List<Product> products, String dietaryPreferences) {
+    public static RecipeSuggestionResult localRecipeSuggestionResult(List<Product> products, String dietaryPreferences, int expiringSoonDays) {
         boolean inventoryEmpty = products.isEmpty();
         String status = localRecipeStatus(inventoryEmpty, "en");
-        return new RecipeSuggestionResult(localRecipeSuggestions(products, dietaryPreferences), recipeStatus(status, dietaryPreferences), true, inventoryEmpty);
+        return new RecipeSuggestionResult(localRecipeSuggestions(products, dietaryPreferences, expiringSoonDays), recipeStatus(status, dietaryPreferences), true, inventoryEmpty);
     }
 
     private static List<Recipe> generateCloudflareRecipes(String baseUrl, List<Product> products, String userPrompt,

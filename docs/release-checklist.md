@@ -67,12 +67,12 @@ For the cleanest school evidence build, use the placeholder Firebase helper so a
 Debug APKs are enough for the current school demo only if the instructor accepts them. For a release APK, keep signing credentials out of Git and provide either:
 
 - `release-signing.properties` in the project root, or
-- environment variables named `SMARTEXP_RELEASE_STORE_FILE`, `SMARTEXP_RELEASE_STORE_PASSWORD`, `SMARTEXP_RELEASE_KEY_ALIAS`, and `SMARTEXP_RELEASE_KEY_PASSWORD`.
+- environment variables named `SMARTEXPAPP_RELEASE_STORE_FILE`, `SMARTEXPAPP_RELEASE_STORE_PASSWORD`, `SMARTEXPAPP_RELEASE_KEY_ALIAS`, and `SMARTEXPAPP_RELEASE_KEY_PASSWORD`.
 
 The properties file uses:
 
 ```properties
-STORE_FILE=C:\\path\\to\\smartexp-release.jks
+STORE_FILE=C:\\path\\to\\smartexpapp-release.jks
 STORE_PASSWORD=...
 KEY_ALIAS=...
 KEY_PASSWORD=...

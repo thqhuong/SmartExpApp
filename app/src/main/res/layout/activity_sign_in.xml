@@ -116,7 +116,7 @@
                     android:layout_height="54dp"
                     android:layout_marginTop="6dp"
                     android:background="@drawable/bg_sign_in_input"
-                    android:hint="chef@smartexp.com"
+                    android:hint="@string/sample_account_email"
                     android:inputType="textEmailAddress"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
@@ -164,6 +164,15 @@
                     android:textColor="@color/signin_title"
                     android:textColorHint="@color/dialog_text_hint"
                     android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/sampleAccountHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/sample_account_hint"
+                    android:textColor="@color/signin_subtitle"
+                    android:textSize="12sp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/signInButton"

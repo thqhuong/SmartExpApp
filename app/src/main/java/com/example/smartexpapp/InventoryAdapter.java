@@ -67,10 +67,18 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
     @Nullable private OnProductLongClickListener longClickListener;
     @Nullable private OnSelectionChangedListener selectionChangedListener;
     @Nullable private Set<String> selectedIds;
+    private int expiringSoonDays = Product.DEFAULT_EXPIRING_SOON_DAYS;
 
     public InventoryAdapter(OnProductClickListener listener) {
         super(DIFF_CALLBACK);
         this.clickListener = listener;
+    }
+
+    public void setExpiringSoonDays(int days) {
+        if (days != this.expiringSoonDays) {
+            this.expiringSoonDays = days;
+            notifyItemRangeChanged(0, getItemCount());
+        }
     }
 
     public void setOnProductLongClickListener(@Nullable OnProductLongClickListener listener) {
@@ -205,7 +213,7 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
                 urgentBadge.setTextColor(card.getContext().getColor(R.color.smart_error));
                 expiryStatus.setTextColor(card.getContext().getColor(R.color.smart_error));
                 progress.setProgressDrawable(AppCompatResources.getDrawable(card.getContext(), R.drawable.progress_orange));
-            } else if (product.isExpiringSoon()) {
+            } else if (product.isExpiringSoon(expiringSoonDays)) {
                 card.setCardBackgroundColor(card.getContext().getColor(R.color.smart_glass_urgent));
                 card.setStrokeColor(card.getContext().getColor(R.color.smart_glass_urgent_stroke));
                 card.setStrokeWidth((int) (1.5f * density));

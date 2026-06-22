@@ -160,7 +160,10 @@ public class RecipesActivity extends BaseActivity {
 
     private void loadRecipePromptChips() {
         ProductRepository.getProductsAsync(this,
-                products -> renderPromptChips(AgentRepository.recipePromptSuggestions(products)),
+                products -> {
+                    int expiringSoonDays = com.example.smartexpapp.data.SettingsRepository.getExpiringSoonDays(this);
+                    renderPromptChips(AgentRepository.recipePromptSuggestions(products, expiringSoonDays));
+                },
                 error -> renderPromptChips(new ArrayList<>()));
     }
 
@@ -515,6 +518,7 @@ public class RecipesActivity extends BaseActivity {
     }
 
     private void bindRecipeCard(LayoutInflater inflater, View item, Recipe recipe, List<Product> products) {
+        int expiringSoonDays = com.example.smartexpapp.data.SettingsRepository.getExpiringSoonDays(this);
         FrameLayout hero = item.findViewById(R.id.recipeHero);
         if (hero != null) {
             hero.setBackgroundResource(recipe.isFeatured() ? R.drawable.bg_hero_primary : R.drawable.bg_hero_neutral);
@@ -594,7 +598,7 @@ public class RecipesActivity extends BaseActivity {
                     TextView badgeText = badge.findViewById(R.id.ingredientBadgeText);
 
                     int daysLeft = product.getDaysUntilExpiry();
-                    if (daysLeft <= 7) {
+                    if (daysLeft <= expiringSoonDays) {
                         badge.setBackgroundResource(R.drawable.bg_recipe_ingredient_expiring);
                         badgeText.setText(product.getName() + " (" + daysLeft + "d left)");
                         badgeText.setTextColor(getColor(R.color.smart_error));

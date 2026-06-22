@@ -15,7 +15,7 @@ This document provides step-by-step instructions for setting up and configuring 
    com.example.smartexpapp
    ```
    *Note: If you change the app's package name for release (e.g., in `app/build.gradle.kts`), you must register the new package name in the Firebase project settings as well.*
-6. (Optional) Provide an app nickname (e.g., `SmartExp App Dev`).
+6. (Optional) Provide an app nickname (e.g., `SmartExpApp Dev`).
 7. Enter the **Debug signing certificate SHA-1** fingerprint (see [Section 4](#4-generating-sha-fingerprints) on how to generate this). This is **required** for Google Sign-In to function.
 8. Click **Register app**.
 

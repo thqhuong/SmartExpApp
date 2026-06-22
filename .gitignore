@@ -76,3 +76,4 @@ pnpm-debug.log*
 *.sln
 *.sw?
 .idea/
+.vs/
