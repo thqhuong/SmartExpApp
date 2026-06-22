@@ -53,15 +53,36 @@ public class CategoryColorHelper {
 
     public static String toCanonical(Context context, String category) {
         if (category == null) return null;
+        String trimmed = category.trim();
         String[] canonicals = {"Dairy", "General", "Meat", "Pantry", "Produce", "Vegetables"};
-        int[] resIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
-                R.string.cat_pantry, R.string.cat_produce, R.string.cat_vegetables};
+        String[][] translations = {
+            {"Dairy", "Sữa"},
+            {"General", "Chung"},
+            {"Meat", "Thịt"},
+            {"Pantry", "Đồ khô"},
+            {"Produce", "Rau quả"},
+            {"Vegetables", "Rau củ"}
+        };
         for (int i = 0; i < canonicals.length; i++) {
-            if (canonicals[i].equals(category) || context.getString(resIds[i]).equals(category)) {
+            if (canonicals[i].equalsIgnoreCase(trimmed)) {
                 return canonicals[i];
             }
+            for (String translation : translations[i]) {
+                if (translation.equalsIgnoreCase(trimmed)) {
+                    return canonicals[i];
+                }
+            }
         }
-        return category;
+        if (context != null) {
+            int[] resIds = {R.string.cat_dairy, R.string.cat_general, R.string.cat_meat,
+                    R.string.cat_pantry, R.string.cat_produce, R.string.cat_vegetables};
+            for (int i = 0; i < canonicals.length; i++) {
+                if (context.getString(resIds[i]).equalsIgnoreCase(trimmed)) {
+                    return canonicals[i];
+                }
+            }
+        }
+        return trimmed;
     }
 
     public static boolean isBuiltInCanonical(String category) {

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="24dp"
+    android:insetRight="24dp"
+    android:insetTop="24dp"
+    android:insetBottom="24dp">
+    <layer-list>
+        <!-- Outer glass background -->
+        <item>
+            <shape>
+                <solid android:color="@color/smart_glass_surface_strong" />
+                <corners android:radius="24dp" />
+            </shape>
+        </item>
+        <!-- Inner edge white glow -->
+        <item android:left="1dp" android:right="1dp" android:top="1dp" android:bottom="1dp">
+            <shape>
+                <stroke
+                    android:width="1dp"
+                    android:color="@color/smart_glass_inner_glow" />
+                <corners android:radius="23dp" />
+            </shape>
+        </item>
+        <!-- Main outer border -->
+        <item>
+            <shape>
+                <stroke
+                    android:width="1dp"
+                    android:color="@color/smart_glass_stroke" />
+                <corners android:radius="24dp" />
+            </shape>
+        </item>
+    </layer-list>
+</inset>

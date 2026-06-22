@@ -8,8 +8,8 @@
     android:elevation="4dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp">
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp">
 
     <ImageButton
         android:id="@+id/topActionMenu"

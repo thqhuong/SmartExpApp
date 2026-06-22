@@ -283,6 +283,8 @@
     <string name="category_add_title">Add new category</string>
     <string name="add_label">Add</string>
     <string name="manage_categories_title">Manage Categories</string>
+    <string name="manage_categories_instruction">Click on a category to rename or remove it</string>
+    <string name="category_default_tag"> (Default)</string>
     <string name="close_label">Close</string>
     <string name="rename_category_title">Rename category</string>
     <string name="rename_label">Rename</string>

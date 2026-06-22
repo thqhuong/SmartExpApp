@@ -904,8 +904,19 @@ public class AddProductActivity extends BaseActivity {
             dot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, cat)));
 
             TextView name = row.findViewById(R.id.categoryName);
-            name.setText(cat);
-            name.setTextColor(getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
+            if (builtin) {
+                String defaultTag = getString(R.string.category_default_tag);
+                String fullText = cat + defaultTag;
+                android.text.SpannableString spannable = new android.text.SpannableString(fullText);
+                int start = cat.length();
+                int end = fullText.length();
+                spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.ITALIC), start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                name.setText(spannable);
+                name.setTextColor(getColor(R.color.smart_secondary));
+            } else {
+                name.setText(cat);
+                name.setTextColor(getColor(R.color.smart_on_surface));
+            }
 
             ImageButton editBtn = row.findViewById(R.id.btnEditCategory);
             ImageButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
@@ -955,11 +966,18 @@ public class AddProductActivity extends BaseActivity {
         if (manageDialog != null && manageDialog.isShowing()) {
             manageDialog.dismiss();
         }
-        manageDialog = new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.manage_categories_title)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(content)
-                .setPositiveButton(R.string.close_label, null)
-                .show();
+                .create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setDimAmount(0.6f);
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        manageDialog = dialog;
+        dialog.show();
+
+        content.findViewById(R.id.dialogClose).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void showCategoryActionDialog(String canonicalCat, List<Product> all) {

@@ -1,39 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp">
+    android:padding="24dp">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="320dp">
+        android:background="@drawable/bg_dialog_confirm"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-        <LinearLayout
-            android:id="@+id/categoryList"
+        <TextView
+            android:id="@+id/dialogTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </ScrollView>
+            android:gravity="center"
+            android:text="@string/manage_categories_title"
+            android:textColor="@color/smart_on_surface"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnAddCategory"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:text="@string/category_add_button"
-        android:textAllCaps="false"
-        android:textColor="@color/smart_primary_container"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:backgroundTint="@color/smart_primary_soft"
-        app:cornerRadius="12dp"
-        app:icon="@android:drawable/ic_menu_add"
-        app:iconGravity="textStart"
-        app:iconTint="@color/smart_primary_container" />
-</LinearLayout>
+        <TextView
+            android:id="@+id/dialogSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="@string/manage_categories_instruction"
+            android:textColor="@color/smart_secondary"
+            android:textSize="14sp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:maxHeight="240dp">
+
+            <LinearLayout
+                android:id="@+id/categoryList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddCategory"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/smart_primary_soft"
+            android:text="@string/category_add_button"
+            android:textAllCaps="false"
+            android:textColor="@color/smart_primary_container"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"
+            app:icon="@android:drawable/ic_menu_add"
+            app:iconGravity="textStart"
+            app:iconTint="@color/smart_primary_container" />
+
+        <TextView
+            android:id="@+id/dialogClose"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:paddingHorizontal="24dp"
+            android:text="@string/close_label"
+            android:textColor="@color/smart_secondary"
+            android:textSize="14sp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+</FrameLayout>

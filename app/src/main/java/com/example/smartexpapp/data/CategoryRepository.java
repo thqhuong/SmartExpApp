@@ -249,6 +249,20 @@ public final class CategoryRepository {
 
     private static void importExistingCategoryState(Context context, AppDatabase database) {
         long now = System.currentTimeMillis();
+        // Clean up duplicates: find any category whose canonical name matches a built-in category
+        // but was inserted as a custom category (e.g. name is "Thịt", "Sữa", etc.)
+        for (CategoryEntity cat : database.categoryDao().getActiveCategories()) {
+            if (!cat.builtIn) {
+                String canonical = canonicalName(context, cat.name);
+                if (isBuiltInCanonical(canonical)) {
+                    cat.active = false;
+                    cat.deletedAt = now;
+                    cat.updatedAt = now;
+                    database.categoryDao().update(cat);
+                    database.productDao().renameCategory(cat.name, canonical, now, syncStatusForWrite(context));
+                }
+            }
+        }
         Set<String> inactiveBuiltIns = new HashSet<>(legacyCustomizedBuiltIns(context));
         for (String builtIn : inactiveBuiltIns) {
             CategoryEntity category = database.categoryDao().getByName(canonicalName(context, builtIn));

@@ -281,6 +281,8 @@
     <string name="category_add_title">Thêm danh mục mới</string>
     <string name="add_label">Thêm</string>
     <string name="manage_categories_title">Quản lý danh mục</string>
+    <string name="manage_categories_instruction">Nhấn vào một danh mục để đổi tên hoặc xóa</string>
+    <string name="category_default_tag"> (Mặc định)</string>
     <string name="close_label">Đóng</string>
     <string name="rename_category_title">Đổi tên danh mục</string>
     <string name="rename_label">Đổi tên</string>
