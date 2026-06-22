@@ -894,6 +894,7 @@ public class AddProductActivity extends BaseActivity {
         LinearLayout categoryList = content.findViewById(R.id.categoryList);
         MaterialButton btnAdd = content.findViewById(R.id.btnAddCategory);
 
+        Collections.sort(allCats);
         for (String cat : allCats) {
             String canonicalCat = canonicalCategory(cat);
             boolean builtin = CategoryColorHelper.isBuiltInCanonical(canonicalCat);
@@ -905,6 +906,11 @@ public class AddProductActivity extends BaseActivity {
             TextView name = row.findViewById(R.id.categoryName);
             name.setText(cat);
             name.setTextColor(getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
+
+            int usedCount = countProductsForCategory(canonicalCat, all);
+            TextView countView = row.findViewById(R.id.categoryCount);
+            countView.setText(getString(R.string.category_product_count_format, usedCount));
+            countView.setVisibility(usedCount > 0 ? View.VISIBLE : View.GONE);
 
             ImageButton gear = row.findViewById(R.id.btnGear);
             gear.setOnClickListener(v -> showCategoryActionDialog(canonicalCat, all));

@@ -24,6 +24,14 @@
         android:textStyle="bold"
         android:textColor="@color/smart_on_surface" />
 
+    <TextView
+        android:id="@+id/categoryCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingEnd="8dp"
+        android:textSize="13sp"
+        android:textColor="@color/smart_muted" />
+
     <ImageButton
         android:id="@+id/btnGear"
         android:layout_width="44dp"

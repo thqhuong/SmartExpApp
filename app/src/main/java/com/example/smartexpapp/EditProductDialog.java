@@ -287,6 +287,7 @@ public class EditProductDialog {
         MaterialButton btnAdd = content.findViewById(R.id.btnAddCategory);
 
         LayoutInflater inflater = LayoutInflater.from(activity);
+        Collections.sort(allCats);
         for (String cat : allCats) {
             String canonicalCat = canonicalCategory(activity, cat);
             boolean builtin = CategoryColorHelper.isBuiltInCanonical(canonicalCat);
@@ -298,6 +299,11 @@ public class EditProductDialog {
             TextView name = row.findViewById(R.id.categoryName);
             name.setText(cat);
             name.setTextColor(activity.getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
+
+            int usedCount = countProductsForCategory(activity, canonicalCat);
+            TextView countView = row.findViewById(R.id.categoryCount);
+            countView.setText(activity.getString(R.string.category_product_count_format, usedCount));
+            countView.setVisibility(usedCount > 0 ? View.VISIBLE : View.GONE);
 
             ImageButton gear = row.findViewById(R.id.btnGear);
             gear.setOnClickListener(v -> showCategoryActionDialog(activity, canonicalCat));

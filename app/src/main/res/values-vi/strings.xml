@@ -567,5 +567,6 @@
     <string name="category_rename_blocked_message_format">Danh mục này có %1$d sản phẩm. Hãy xóa hết sản phẩm trước khi đổi tên.</string>
     <string name="got_it">Đã hiểu</string>
     <string name="undo_delete_label">HOÀN TÁC</string>
+    <string name="category_product_count_format">%1$d sản phẩm</string>
     <string name="category_delete_success_format">Đã xóa \"%1$s\"</string>
 </resources>
