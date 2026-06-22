@@ -64,9 +64,11 @@ public class ProductHistoryAdapter extends ListAdapter<Product, ProductHistoryAd
         private final TextView productName;
         private final TextView productMeta;
         private final TextView actionInfo;
-    private final TextView expiryStatus;
-    private final ProgressBar expiryProgress;
-    private final Button btnRestore;
+        private final TextView expiryStatus;
+        private final ProgressBar expiryProgress;
+        private final Button btnRestore;
+        private final View noteContainer;
+        private final TextView productNote;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -77,6 +79,8 @@ public class ProductHistoryAdapter extends ListAdapter<Product, ProductHistoryAd
             expiryStatus = itemView.findViewById(R.id.expiryStatus);
             expiryProgress = itemView.findViewById(R.id.expiryProgress);
             btnRestore = itemView.findViewById(R.id.btnRestore);
+            noteContainer = itemView.findViewById(R.id.noteContainer);
+            productNote = itemView.findViewById(R.id.productNote);
         }
 
         void bind(Product product) {
@@ -116,6 +120,14 @@ public class ProductHistoryAdapter extends ListAdapter<Product, ProductHistoryAd
             expiryProgress.setProgressDrawable(
                     androidx.appcompat.content.res.AppCompatResources.getDrawable(
                             itemView.getContext(), R.drawable.progress_gray));
+
+            String note = product.getNote();
+            if (note != null && !note.isEmpty()) {
+                productNote.setText(itemView.getContext().getString(R.string.history_note_format, note));
+                noteContainer.setVisibility(View.VISIBLE);
+            } else {
+                noteContainer.setVisibility(View.GONE);
+            }
 
             btnRestore.setOnClickListener(v -> restoreListener.onRestoreClick(product));
         }

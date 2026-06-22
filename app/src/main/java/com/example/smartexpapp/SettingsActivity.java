@@ -218,11 +218,11 @@ public class SettingsActivity extends BaseActivity {
                                 switchBtn.setOnCheckedChangeListener((retryButton, checked) -> {
                                     if (checked != SettingsRepository.getCachedDarkMode(this)) {
                                         applyDarkMode(checked, retryError ->
-                                                Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show()
+                                                showErrorNotification(getString(R.string.theme_save_error))
                                         );
                                     }
                                 });
-                                Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show();
+                                showErrorNotification(getString(R.string.theme_save_error));
                             });
                         }
                     });
@@ -372,13 +372,13 @@ public class SettingsActivity extends BaseActivity {
                 SettingsRepository.setDefaultStorageLocationAsync(
                         this,
                         ids[selected[0]],
-                        updated -> Toast.makeText(this, getString(R.string.default_storage_saved_format, updated.getDefaultStorageName()), Toast.LENGTH_SHORT).show(),
-                        error -> Toast.makeText(this, R.string.default_storage_save_error, Toast.LENGTH_SHORT).show()
+                        updated -> showSuccessNotification(getString(R.string.default_storage_saved_format, updated.getDefaultStorageName())),
+                        error -> showErrorNotification(getString(R.string.default_storage_save_error))
                 );
             });
 
             dialog.show();
-        }, error -> Toast.makeText(this, R.string.default_storage_load_error, Toast.LENGTH_SHORT).show());
+        }, error -> showErrorNotification(getString(R.string.default_storage_load_error)));
     }
 
     private void showDietaryPreferencesDialog() {
@@ -415,8 +415,8 @@ public class SettingsActivity extends BaseActivity {
                 SettingsRepository.setDietaryPreferencesAsync(
                         this,
                         "",
-                        updated -> Toast.makeText(this, R.string.dietary_preferences_cleared, Toast.LENGTH_SHORT).show(),
-                        error -> Toast.makeText(this, R.string.dietary_preferences_clear_error, Toast.LENGTH_SHORT).show()
+                        updated -> showSuccessNotification(getString(R.string.dietary_preferences_cleared)),
+                        error -> showErrorNotification(getString(R.string.dietary_preferences_clear_error))
                 );
             });
 
@@ -426,13 +426,13 @@ public class SettingsActivity extends BaseActivity {
                 SettingsRepository.setDietaryPreferencesAsync(
                         this,
                         input.getText().toString(),
-                        updated -> Toast.makeText(this, R.string.dietary_preferences_saved, Toast.LENGTH_SHORT).show(),
-                        error -> Toast.makeText(this, R.string.dietary_preferences_save_error, Toast.LENGTH_SHORT).show()
+                        updated -> showSuccessNotification(getString(R.string.dietary_preferences_saved)),
+                        error -> showErrorNotification(getString(R.string.dietary_preferences_save_error))
                 );
             });
 
             dialog.show();
-        }, error -> Toast.makeText(this, R.string.dietary_preferences_load_error, Toast.LENGTH_SHORT).show());
+        }, error -> showErrorNotification(getString(R.string.dietary_preferences_load_error)));
     }
 
     private void showExpiringSoonDialog() {
@@ -506,7 +506,7 @@ public class SettingsActivity extends BaseActivity {
             int idx = selected[0];
             if (idx >= 0 && idx < values.length - 1) {
                 SettingsRepository.setExpiringSoonDays(this, values[idx]);
-                Toast.makeText(this, getString(R.string.expiring_soon_saved_format, labels[idx]), Toast.LENGTH_SHORT).show();
+                showSuccessNotification(getString(R.string.expiring_soon_saved_format, labels[idx]));
             }
         });
 
@@ -546,14 +546,14 @@ public class SettingsActivity extends BaseActivity {
             try {
                 int days = Integer.parseInt(text);
                 if (days < 1 || days > 365) {
-                    Toast.makeText(this, R.string.expiring_soon_custom_invalid, Toast.LENGTH_SHORT).show();
+                    showErrorNotification(getString(R.string.expiring_soon_custom_invalid));
                     return;
                 }
                 dialog.dismiss();
                 SettingsRepository.setExpiringSoonDays(this, days);
-                Toast.makeText(this, getString(R.string.expiring_soon_saved_format, getString(R.string.expiring_soon_custom_format, days)), Toast.LENGTH_SHORT).show();
+                showSuccessNotification(getString(R.string.expiring_soon_saved_format, getString(R.string.expiring_soon_custom_format, days)));
             } catch (NumberFormatException e) {
-                Toast.makeText(this, R.string.expiring_soon_custom_invalid, Toast.LENGTH_SHORT).show();
+                showErrorNotification(getString(R.string.expiring_soon_custom_invalid));
             }
         });
 
@@ -613,13 +613,13 @@ public class SettingsActivity extends BaseActivity {
                         languageTag,
                         updated -> {
                             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(updated.getLanguageTag()));
-                            Toast.makeText(this, R.string.language_saved, Toast.LENGTH_SHORT).show();
+                            showSuccessNotification(getString(R.string.language_saved));
                         },
-                        error -> Toast.makeText(this, R.string.language_save_error, Toast.LENGTH_SHORT).show()
+                        error -> showErrorNotification(getString(R.string.language_save_error))
                 );
             });
 
             dialog.show();
-        }, error -> Toast.makeText(this, R.string.language_load_error, Toast.LENGTH_SHORT).show());
+        }, error -> showErrorNotification(getString(R.string.language_load_error)));
     }
 }

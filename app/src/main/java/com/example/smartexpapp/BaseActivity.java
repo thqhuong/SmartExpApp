@@ -23,6 +23,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.smartexpapp.data.SettingsRepository;
+import com.example.smartexpapp.util.InAppNotificationManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -294,5 +295,21 @@ public abstract class BaseActivity extends AppCompatActivity {
     public void pickImage(Consumer<Uri> callback) {
         productPhotoCallback = callback;
         productPhotoPicker.launch("image/*");
+    }
+
+    public void showSuccessNotification(String message) {
+        InAppNotificationManager.showNotification(this, message, InAppNotificationManager.Type.SUCCESS, null, null);
+    }
+
+    public void showErrorNotification(String message) {
+        InAppNotificationManager.showNotification(this, message, InAppNotificationManager.Type.ERROR, null, null);
+    }
+
+    public void showWarningNotification(String message) {
+        InAppNotificationManager.showNotification(this, message, InAppNotificationManager.Type.WARNING, null, null);
+    }
+
+    public void showInfoNotification(String message) {
+        InAppNotificationManager.showNotification(this, message, InAppNotificationManager.Type.INFO, null, null);
     }
 }

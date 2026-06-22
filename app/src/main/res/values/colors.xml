@@ -44,8 +44,6 @@
     <color name="smart_glass_error">#1FBA1A1A</color>
     <color name="smart_glass_error_stroke">#4DBA1A1A</color>
     <color name="smart_glass_stroke">#4DFFFFFF</color>
-    <color name="multi_select_bar_bg">#F9FFFFFF</color>
-    <color name="multi_select_bar_stroke">#1A000000</color>
     <color name="smart_glass_inner_glow">#B3FFFFFF</color>
     <color name="smart_glass_input_bg">#80FFFFFF</color>
     <color name="smart_glass_input_stroke">#26000000</color>

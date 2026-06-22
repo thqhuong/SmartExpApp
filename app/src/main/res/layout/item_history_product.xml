@@ -114,6 +114,32 @@
                 android:layout_marginTop="8dp"
                 android:max="100"
                 android:progressDrawable="@drawable/progress_gray" />
+
+            <LinearLayout
+                android:id="@+id/noteContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="6dp"
+                    android:src="@drawable/ic_info"
+                    app:tint="@color/smart_secondary"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/productNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/smart_secondary"
+                    android:textSize="13sp"
+                    android:textStyle="italic" />
+            </LinearLayout>
         </LinearLayout>
 
     </FrameLayout>

@@ -36,6 +36,7 @@ public class Product {
     private final String ownerUserId;
     private final String syncStatus;
     private final Long lastSyncedAt;
+    private final String note;
 
     public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes) {
         this(name, category, amount, storage, daysUntilExpiry, iconRes, null);
@@ -111,6 +112,30 @@ public class Product {
             String syncStatus,
             Long lastSyncedAt
     ) {
+        this(id, name, category, quantity, unit, storage, storageLocationId, expiryDateMillis, barcode, status, iconRes, imageUrl, createdAt, updatedAt, cloudId, ownerUserId, syncStatus, lastSyncedAt, null);
+    }
+
+    public Product(
+            String id,
+            String name,
+            String category,
+            String quantity,
+            String unit,
+            String storage,
+            String storageLocationId,
+            long expiryDateMillis,
+            String barcode,
+            String status,
+            int iconRes,
+            String imageUrl,
+            long createdAt,
+            long updatedAt,
+            String cloudId,
+            String ownerUserId,
+            String syncStatus,
+            Long lastSyncedAt,
+            String note
+    ) {
         this.id = valueOrDefault(id, newId());
         this.name = valueOrDefault(name, "Unnamed Product");
         this.category = valueOrDefault(category, "General");
@@ -129,6 +154,7 @@ public class Product {
         this.ownerUserId = ownerUserId;
         this.syncStatus = valueOrDefault(syncStatus, SYNC_STATUS_LOCAL);
         this.lastSyncedAt = lastSyncedAt;
+        this.note = note;
     }
 
     public Product withStatus(String newStatus, long updatedAt) {
@@ -150,7 +176,8 @@ public class Product {
                 cloudId,
                 ownerUserId,
                 syncStatus,
-                lastSyncedAt
+                lastSyncedAt,
+                note
         );
     }
 
@@ -173,7 +200,8 @@ public class Product {
                 cloudId,
                 newOwnerUserId,
                 syncStatus,
-                lastSyncedAt
+                lastSyncedAt,
+                note
         );
     }
 
@@ -196,12 +224,41 @@ public class Product {
                 newCloudId,
                 ownerUserId,
                 newSyncStatus,
-                newLastSyncedAt
+                newLastSyncedAt,
+                note
+        );
+    }
+
+    public Product withNote(String newNote) {
+        return new Product(
+                id,
+                name,
+                category,
+                quantity,
+                unit,
+                storage,
+                storageLocationId,
+                expiryDateMillis,
+                barcode,
+                status,
+                iconRes,
+                imageUrl,
+                createdAt,
+                updatedAt,
+                cloudId,
+                ownerUserId,
+                syncStatus,
+                lastSyncedAt,
+                newNote
         );
     }
 
     public String getId() {
         return id;
+    }
+
+    public String getNote() {
+        return note;
     }
 
     public String getName() {
