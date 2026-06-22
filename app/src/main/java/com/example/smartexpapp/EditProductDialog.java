@@ -113,7 +113,7 @@ public class EditProductDialog {
         }
 
         selectedDate.setTimeInMillis(product.getExpiryDateMillis());
-        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+        expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
         expiryDateInput.setTextColor(activity.getColor(R.color.smart_on_surface));
 
         view.findViewById(R.id.editPhotoPreview).setOnClickListener(v ->
@@ -128,7 +128,7 @@ public class EditProductDialog {
                     activity,
                     (dv, year, month, dayOfMonth) -> {
                         selectedDate.set(year, month, dayOfMonth, 23, 59, 59);
-                        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+                        expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
                         expiryDateInput.setTextColor(activity.getColor(R.color.smart_on_surface));
                     },
                     selectedDate.get(Calendar.YEAR),
