@@ -380,24 +380,36 @@ public class SignInActivity extends BaseActivity {
             return;
         }
 
-        new android.app.AlertDialog.Builder(this)
-                .setTitle(R.string.forgot_password_dialog_title)
-                .setMessage(getString(R.string.forgot_password_dialog_message, email))
-                .setPositiveButton(R.string.save_label, (dialog, which) -> {
-                    setLoading(true);
-                    auth.sendPasswordResetEmail(email)
-                            .addOnCompleteListener(task -> {
-                                setLoading(false);
-                                if (task.isSuccessful()) {
-                                    Toast.makeText(this, R.string.forgot_password_email_sent, Toast.LENGTH_LONG).show();
-                                } else {
-                                    String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
-                                    Toast.makeText(this, getString(R.string.forgot_password_email_failed, errorMsg), Toast.LENGTH_LONG).show();
-                                }
-                            });
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_forgot_password_confirm)
+                .create();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogMessage)).setText(
+                getString(R.string.forgot_password_dialog_message, email));
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            setLoading(true);
+            auth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener(task -> {
+                        setLoading(false);
+                        if (task.isSuccessful()) {
+                            Toast.makeText(this, R.string.forgot_password_email_sent, Toast.LENGTH_LONG).show();
+                        } else {
+                            String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
+                            Toast.makeText(this, getString(R.string.forgot_password_email_failed, errorMsg), Toast.LENGTH_LONG).show();
+                        }
+                    });
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void navigateToInventory() {
