@@ -16,6 +16,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -460,8 +461,8 @@ public class AddProductActivity extends BaseActivity {
 
         selectedCategory = canonicalCategory(draft.getCategory());
         if (!CategoryRepository.isBuiltInCanonical(selectedCategory)) {
-            CategoryRepository.addCategoryAsync(this, selectedCategory, ignored -> refreshCategorySpinner(),
-                    error -> refreshCategorySpinner());
+            CategoryRepository.addCategoryAsync(this, selectedCategory, ignored -> refreshCategoryDropdown(),
+                    error -> refreshCategoryDropdown());
         } else {
             refreshCategoryDropdown();
         }
@@ -483,17 +484,6 @@ public class AddProductActivity extends BaseActivity {
             expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
         } else if (includeExpiry) {
             Toast.makeText(this, R.string.expiry_not_detected, Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void selectSpinnerValue(Spinner spinner, String value) {
-        if (value == null)
-            return;
-        for (int i = 0; i < spinner.getCount(); i++) {
-            if (value.equalsIgnoreCase(spinner.getItemAtPosition(i).toString())) {
-                spinner.setSelection(i);
-                return;
-            }
         }
     }
 
@@ -922,13 +912,50 @@ public class AddProductActivity extends BaseActivity {
             name.setText(cat);
             name.setTextColor(getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
 
-            ImageButton gear = row.findViewById(R.id.btnGear);
-            gear.setOnClickListener(v -> showCategoryActionDialog(canonicalCat, all));
+            ImageButton editBtn = row.findViewById(R.id.btnEditCategory);
+            ImageButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
+
+            editBtn.setVisibility(View.VISIBLE);
+            editBtn.setOnClickListener(v -> showRenameCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
+
+            boolean used = isCategoryUsed(canonicalCat, all);
+            if (used) {
+                deleteBtn.setVisibility(View.GONE);
+            } else {
+                deleteBtn.setVisibility(View.VISIBLE);
+                deleteBtn.setOnClickListener(
+                        v -> showDeleteCategoryDialog(canonicalCat, 0, () -> showManageCategoriesDialog()));
+            }
 
             categoryList.addView(row);
         }
 
-        btnAdd.setOnClickListener(v -> showAddCategoryDialog());
+        btnAdd.setOnClickListener(v -> {
+            View inputLayout = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
+            EditText input = inputLayout.findViewById(android.R.id.edit);
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.category_add_title)
+                    .setView(inputLayout)
+                    .setPositiveButton(R.string.add_label, (d, w) -> {
+                        String newCat = input.getText().toString().trim();
+                        String canonicalNew = canonicalCategory(newCat);
+                        if (!newCat.isEmpty()) {
+                            CategoryRepository.addCategoryAsync(this, canonicalNew, added -> {
+                                if (!added) {
+                                    Toast.makeText(this, getString(R.string.category_already_exists_format, newCat),
+                                            Toast.LENGTH_SHORT).show();
+                                    showManageCategoriesDialog();
+                                    return;
+                                }
+                                selectedCategory = canonicalNew;
+                                refreshCategoryDropdown();
+                                showManageCategoriesDialog();
+                            }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .show();
+        });
 
         if (manageDialog != null && manageDialog.isShowing()) {
             manageDialog.dismiss();
