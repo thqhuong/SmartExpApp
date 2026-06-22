@@ -257,7 +257,7 @@
     <string name="expiry_not_detected">Không phát hiện ngày hết hạn. Vui lòng chọn ngày trước khi lưu.</string>
     <string name="select_expiry_before_saving">Chọn ngày hết hạn trước khi lưu.</string>
     <string name="enter_product_name">Nhập tên sản phẩm.</string>
-    <string name="scan_expiry_text">Quét chữ hạn dùng</string>
+    <string name="scan_expiry_text">Quét thông tin hạn sử dụng</string>
     <string name="ocr_source_camera">Camera</string>
     <string name="ocr_source_gallery">Thư viện</string>
     <string name="ocr_camera_error">Không thể mở camera để OCR.</string>
