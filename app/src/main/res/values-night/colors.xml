@@ -37,6 +37,8 @@
     <color name="smart_glass_error">#26EF4444</color>
     <color name="smart_glass_error_stroke">#66EF4444</color>
     <color name="smart_glass_stroke">#1AFFFFFF</color>
+    <color name="multi_select_bar_bg">#F22A2A2E</color>
+    <color name="multi_select_bar_stroke">#26FFFFFF</color>
     <color name="smart_glass_inner_glow">#1AFFFFFF</color>
     <color name="smart_glass_input_bg">#66000000</color>
     <color name="smart_glass_input_stroke">#26FFFFFF</color>

@@ -4,7 +4,7 @@
     android:id="@+id/multiSelectBar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_glass_header"
+    android:background="@drawable/bg_multi_select_bar"
     android:elevation="4dp"
     android:orientation="vertical"
     android:visibility="gone"
@@ -80,11 +80,13 @@
     <LinearLayout
         android:id="@+id/multiSelectActions"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="12dp"
-        android:paddingEnd="12dp">
+        android:paddingEnd="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp">
 
         <LinearLayout
             android:id="@+id/btnBatchConsumed"
