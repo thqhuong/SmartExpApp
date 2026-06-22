@@ -323,7 +323,7 @@ public class AddProductActivity extends BaseActivity {
                 }
 
                 if (draft.hasExpiryDate()) {
-                    String expiry = new SimpleDateFormat("MMM d, yyyy", Locale.US)
+                    String expiry = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                             .format(new java.util.Date(draft.getExpiryDateMillis()));
                     rowValueExpiry.setText(expiry);
                     rowValueExpiry.setTextColor(Color.WHITE);
@@ -442,7 +442,7 @@ public class AddProductActivity extends BaseActivity {
         if (includeExpiry && draft.hasExpiryDate()) {
             selectedDate.setTimeInMillis(draft.getExpiryDateMillis());
             hasSelectedDate = true;
-            expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+            expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
             expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
         } else if (includeExpiry) {
             Toast.makeText(this, R.string.expiry_not_detected, Toast.LENGTH_LONG).show();
@@ -548,7 +548,7 @@ public class AddProductActivity extends BaseActivity {
 
     private void showDetectedDatesDialog(List<DateCandidate> dates, String rawText, ProductDraft draft) {
         String[] dateStrings = new String[dates.size()];
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy", Locale.US);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         for (int i = 0; i < dates.size(); i++) {
             DateCandidate candidate = dates.get(i);
             dateStrings[i] = sdf.format(new java.util.Date(candidate.getDateMillis()))
@@ -610,7 +610,7 @@ public class AddProductActivity extends BaseActivity {
         selectedDate.set(Calendar.SECOND, 59);
         selectedDate.set(Calendar.MILLISECOND, 999);
         hasSelectedDate = true;
-        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+        expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
         expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
 
         pendingExpiryScan = new ExpiryScanEntity();
@@ -958,7 +958,7 @@ public class AddProductActivity extends BaseActivity {
                     selectedDate.set(Calendar.MILLISECOND, 999);
                     hasSelectedDate = true;
                     expiryDateInput
-                            .setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+                            .setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
                     expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
                     if (rawOcrText != null) {
                         pendingExpiryScan = new ExpiryScanEntity();
@@ -1022,7 +1022,7 @@ public class AddProductActivity extends BaseActivity {
 
         selectedDate.setTimeInMillis(product.getExpiryDateMillis());
         hasSelectedDate = true;
-        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+        expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
         expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
     }
 
