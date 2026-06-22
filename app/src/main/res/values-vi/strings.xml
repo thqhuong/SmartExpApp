@@ -112,7 +112,7 @@
     <string name="label_expiring_soon_uppercase">SẮP HẾT HẠN</string>
     <string name="app_name_chrome">SmartExpApp</string>
     <string name="nav_inventory_label">Kho</string>
-    <string name="nav_stats_label">Thống kê</string>
+    <string name="nav_stats_label">Trang chủ</string>
     <string name="nav_agent_label">Trợ lý</string>
     <string name="nav_settings_label">Cài đặt</string>
     <string name="profile_local_user">Người dùng cục bộ</string>
@@ -165,7 +165,7 @@
     <string name="urgent_attention">CẦN CHÚ Ý GẤP</string>
     <string name="items_expiring_soon_label">Món sắp hết hạn</string>
     <string name="immediate_attention_desc">Cần xử lý ngay</string>
-    <string name="stats_title">Bảng điều khiển và thống kê</string>
+    <string name="stats_title">Trang chủ và thống kê</string>
     <string name="stats_range_week">Tuần</string>
     <string name="stats_range_month">Tháng</string>
     <string name="stats_range_all_time">Tất cả</string>
@@ -514,4 +514,43 @@
     <string name="batch_deleted_format">Đã chuyển %1$d sản phẩm vào lịch sử</string>
     <string name="batch_status_format">Đã cập nhật %1$d sản phẩm</string>
     <string name="batch_undone_format">Đã khôi phục %1$d sản phẩm</string>
+
+    <!-- Email Verification Dialog Strings -->
+    <string name="verify_title">Xác thực Email</string>
+    <string name="verify_subtitle">Một liên kết xác thực đã được gửi tới %1$s. Vui lòng kiểm tra hộp thư và bấm vào liên kết để xác thực tài khoản.</string>
+    <string name="verify_btn_check_status">Kiểm tra trạng thái xác thực</string>
+    <string name="verify_timer_format">Gửi lại email sau %1$ds</string>
+    <string name="verify_resend_label">Gửi lại email xác thực</string>
+    <string name="verify_btn_cancel">Hủy &amp; Đăng xuất</string>
+    <string name="verify_error_not_verified">Email chưa được xác thực. Vui lòng kiểm tra hộp thư và bấm vào liên kết.</string>
+    <string name="verify_code_resent">Đã gửi lại email xác thực!</string>
+
+    <!-- Expiring Soon Threshold -->
+    <string name="settings_expiring_soon_title">Ngưỡng sắp hết hạn</string>
+    <string name="settings_expiring_soon_desc">Khi nào sản phẩm được coi là sắp hết hạn</string>
+    <string name="expiring_soon_dialog_title">Ngưỡng sắp hết hạn</string>
+    <string name="expiring_soon_1_day">1 ngày</string>
+    <string name="expiring_soon_3_days">3 ngày</string>
+    <string name="expiring_soon_1_week">1 tuần</string>
+    <string name="expiring_soon_2_weeks">2 tuần</string>
+    <string name="expiring_soon_1_month">1 tháng</string>
+    <string name="expiring_soon_custom">Tùy chỉnh</string>
+    <string name="expiring_soon_custom_format">Tùy chỉnh: %1$d ngày</string>
+    <string name="expiring_soon_saved_format">Đã đặt ngưỡng sắp hết hạn thành %1$s.</string>
+    <string name="expiring_soon_save_error">Không thể lưu ngưỡng sắp hết hạn.</string>
+    <string name="expiring_soon_load_error">Không thể tải ngưỡng sắp hết hạn.</string>
+    <string name="expiring_soon_custom_title">Ngưỡng tùy chỉnh</string>
+    <string name="expiring_soon_custom_message">Nhập số ngày trước hạn để một sản phẩm được coi là sắp hết hạn.</string>
+    <string name="expiring_soon_custom_hint">Số ngày</string>
+    <string name="expiring_soon_custom_invalid">Nhập một số từ 1 đến 365.</string>
+
+    <!-- Cloudflare AI Recipe Statuses -->
+    <string name="recipe_status_ai_from_request">Đã tạo công thức bằng Cloudflare Workers AI theo yêu cầu của bạn.</string>
+    <string name="recipe_status_ai_empty_inventory">Cloudflare Workers AI đã tạo gợi ý chung vì kho cục bộ đang trống.</string>
+    <string name="recipe_status_ai_from_inventory">Đã tạo công thức bằng Cloudflare Workers AI từ kho cục bộ của bạn.</string>
+    <string name="recipe_status_images_served"> Hình ảnh công thức được cung cấp bởi Cloudflare Workers AI.</string>
+    <string name="recipe_status_images_no_url"> Đã cấu hình tạo ảnh công thức, nhưng không có URL ảnh nào được chuẩn bị.</string>
+    <string name="recipe_status_dietary_pref"> Tùy chọn ăn uống: %1$s.</string>
+    <string name="recipe_status_local_empty_inventory">Kho cục bộ đang trống. Đây là các gợi ý chung; bạn cũng có thể nhập món muốn nấu.</string>
+    <string name="recipe_status_local_active">Đang dùng gợi ý cục bộ từ kho đã lưu và yêu cầu của bạn.</string>
 </resources>

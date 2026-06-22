@@ -25,21 +25,6 @@
         android:paddingEnd="4dp">
 
         <LinearLayout
-            android:id="@+id/nav_inventory"
-            style="@style/SmartExpAppBottomNavItem">
-
-            <ImageView
-                style="@style/SmartExpAppBottomNavIcon"
-                android:src="@drawable/ic_nav_inventory"
-                android:contentDescription="@string/nav_inventory_label"
-                app:tint="@color/bottom_nav_item" />
-
-            <TextView
-                style="@style/SmartExpAppBottomNavLabel"
-                android:text="@string/nav_inventory_label" />
-        </LinearLayout>
-
-        <LinearLayout
             android:id="@+id/nav_stats"
             style="@style/SmartExpAppBottomNavItem">
 
@@ -52,6 +37,21 @@
             <TextView
                 style="@style/SmartExpAppBottomNavLabel"
                 android:text="@string/nav_stats_label" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_inventory"
+            style="@style/SmartExpAppBottomNavItem">
+
+            <ImageView
+                style="@style/SmartExpAppBottomNavIcon"
+                android:src="@drawable/ic_nav_inventory"
+                android:contentDescription="@string/nav_inventory_label"
+                app:tint="@color/bottom_nav_item" />
+
+            <TextView
+                style="@style/SmartExpAppBottomNavLabel"
+                android:text="@string/nav_inventory_label" />
         </LinearLayout>
 
         <!-- Placeholder Spacer for Center FAB -->

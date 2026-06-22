@@ -6,7 +6,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -21,8 +20,10 @@ import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.GetCredentialException;
 
 import com.example.smartexpapp.data.AuthStateRepository;
+import com.example.smartexpapp.data.firestore.FirestoreProvider;
 import com.example.smartexpapp.data.firestore.ProductSyncRepository;
 import com.example.smartexpapp.data.firestore.UserDataSyncRepository;
+import com.example.smartexpapp.util.EmailValidator;
 import com.example.smartexpapp.data.local.AppDatabase;
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
@@ -36,6 +37,9 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
 import java.util.concurrent.Executors;
+import android.os.CountDownTimer;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.Color;
 
 public class SignInActivity extends BaseActivity {
     private static final String TAG = "SignInActivity";
@@ -54,6 +58,8 @@ public class SignInActivity extends BaseActivity {
     private View forgotPasswordLink;
 
     private boolean isRegisterMode = false;
+    private AlertDialog verificationDialog;
+    private CountDownTimer verificationTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,7 +169,7 @@ public class SignInActivity extends BaseActivity {
             return;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!EmailValidator.isValid(email)) {
             Toast.makeText(this, R.string.login_error_invalid_email, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -192,7 +198,6 @@ public class SignInActivity extends BaseActivity {
             auth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
-                            AuthStateRepository.markGuestMode(this, false);
                             FirebaseUser user = auth.getCurrentUser();
                             if (user != null) {
                                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
@@ -200,16 +205,20 @@ public class SignInActivity extends BaseActivity {
                                         .build();
                                 user.updateProfile(profileUpdates)
                                         .addOnCompleteListener(profileTask -> {
-                                            SettingsRepository.setDisplayNameAsync(this, name,
-                                                    snapshot -> {
-                                                        continueAfterSignedIn();
-                                                    },
-                                                    error -> {
-                                                        continueAfterSignedIn();
+                                            user.sendEmailVerification()
+                                                    .addOnCompleteListener(verificationSendTask -> {
+                                                        if (verificationSendTask.isSuccessful()) {
+                                                            showEmailVerificationDialog(user, name);
+                                                        } else {
+                                                            setLoading(false);
+                                                            String errorMsg = verificationSendTask.getException() != null ? verificationSendTask.getException().getLocalizedMessage() : "Failed to send verification email.";
+                                                            Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                                                        }
                                                     });
                                         });
                             } else {
-                                continueAfterSignedIn();
+                                setLoading(false);
+                                Toast.makeText(this, "Failed to get current authenticated user.", Toast.LENGTH_SHORT).show();
                             }
                         } else {
                             setLoading(false);
@@ -347,19 +356,14 @@ public class SignInActivity extends BaseActivity {
     }
 
     private void handleGuestSignIn() {
+        AuthStateRepository.markGuestMode(this, true);
         FirebaseAuth auth = getAuth();
-        setLoading(true);
-        if (auth != null) {
-            auth.signInAnonymously().addOnCompleteListener(this, task -> {
-                AuthStateRepository.markGuestMode(this, true);
-                setLoading(false);
-                navigateToInventory();
-            });
-        } else {
-            AuthStateRepository.markGuestMode(this, true);
-            setLoading(false);
-            navigateToInventory();
+        if (auth != null && FirestoreProvider.isConfigured(this)) {
+            // Attempt anonymous sign-in in the background to get a Firebase UID if needed,
+            // but do not block the user or wait for it.
+            auth.signInAnonymously();
         }
+        navigateToDashboard();
     }
 
     private void handleForgotPassword() {
@@ -369,7 +373,7 @@ public class SignInActivity extends BaseActivity {
             return;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!EmailValidator.isValid(email)) {
             Toast.makeText(this, R.string.login_error_invalid_email, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -400,8 +404,8 @@ public class SignInActivity extends BaseActivity {
                 .show();
     }
 
-    private void navigateToInventory() {
-        Intent intent = new Intent(this, InventoryActivity.class);
+    private void navigateToDashboard() {
+        Intent intent = new Intent(this, StatsActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
@@ -463,18 +467,141 @@ public class SignInActivity extends BaseActivity {
                     ignored -> {
                         UserDataSyncRepository.syncUserDataAsync(this, database);
                         setLoading(false);
-                        navigateToInventory();
+                        navigateToDashboard();
                     },
                     error -> {
                         Log.w(TAG, "Initial product sync failed; continuing with scoped cache.", error);
                         UserDataSyncRepository.syncUserDataAsync(this, database);
                         setLoading(false);
-                        navigateToInventory();
+                        navigateToDashboard();
                     });
         } catch (RuntimeException error) {
             Log.w(TAG, "Initial product sync skipped.", error);
             setLoading(false);
-            navigateToInventory();
+            navigateToDashboard();
         }
+    }
+
+    private void showEmailVerificationDialog(FirebaseUser user, String name) {
+        if (verificationTimer != null) {
+            verificationTimer.cancel();
+            verificationTimer = null;
+        }
+        if (verificationDialog != null && verificationDialog.isShowing()) {
+            verificationDialog.dismiss();
+        }
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_verify_email, null);
+        
+        TextView verifySubtitle = dialogView.findViewById(R.id.verifySubtitle);
+        verifySubtitle.setText(getString(R.string.verify_subtitle, user.getEmail()));
+
+        View btnCheckStatus = dialogView.findViewById(R.id.verifyBtnCheckStatus);
+        TextView timerText = dialogView.findViewById(R.id.verifyTimerText);
+        TextView resendBtn = dialogView.findViewById(R.id.verifyResendBtn);
+        View btnCancel = dialogView.findViewById(R.id.verifyBtnCancel);
+
+        verificationDialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create();
+
+        if (verificationDialog.getWindow() != null) {
+            verificationDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        startVerificationResendTimer(timerText, resendBtn);
+
+        btnCheckStatus.setOnClickListener(v -> {
+            btnCheckStatus.setEnabled(false);
+            user.reload().addOnCompleteListener(task -> {
+                btnCheckStatus.setEnabled(true);
+                if (task.isSuccessful()) {
+                    if (user.isEmailVerified()) {
+                        if (verificationTimer != null) {
+                            verificationTimer.cancel();
+                            verificationTimer = null;
+                        }
+                        verificationDialog.dismiss();
+                        
+                        AuthStateRepository.markGuestMode(this, false);
+                        SettingsRepository.setDisplayNameAsync(this, name,
+                                snapshot -> continueAfterSignedIn(),
+                                error -> continueAfterSignedIn());
+                    } else {
+                        Toast.makeText(this, R.string.verify_error_not_verified, Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        resendBtn.setOnClickListener(v -> {
+            resendBtn.setEnabled(false);
+            user.sendEmailVerification().addOnCompleteListener(task -> {
+                resendBtn.setEnabled(true);
+                if (task.isSuccessful()) {
+                    Toast.makeText(this, R.string.verify_code_resent, Toast.LENGTH_SHORT).show();
+                    startVerificationResendTimer(timerText, resendBtn);
+                } else {
+                    String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                }
+            });
+        });
+
+        btnCancel.setOnClickListener(v -> {
+            if (verificationTimer != null) {
+                verificationTimer.cancel();
+                verificationTimer = null;
+            }
+            FirebaseAuth.getInstance().signOut();
+            verificationDialog.dismiss();
+            setLoading(false);
+        });
+
+        verificationDialog.setOnDismissListener(dialogInterface -> {
+            if (verificationTimer != null) {
+                verificationTimer.cancel();
+                verificationTimer = null;
+            }
+        });
+
+        verificationDialog.show();
+    }
+
+    private void startVerificationResendTimer(TextView timerText, TextView resendBtn) {
+        if (verificationTimer != null) {
+            verificationTimer.cancel();
+        }
+        resendBtn.setVisibility(View.GONE);
+        timerText.setVisibility(View.VISIBLE);
+
+        verificationTimer = new CountDownTimer(60000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                timerText.setText(getString(R.string.verify_timer_format, (int) (millisUntilFinished / 1000)));
+            }
+
+            @Override
+            public void onFinish() {
+                timerText.setVisibility(View.GONE);
+                resendBtn.setVisibility(View.VISIBLE);
+            }
+        }.start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (verificationTimer != null) {
+            verificationTimer.cancel();
+            verificationTimer = null;
+        }
+        if (verificationDialog != null && verificationDialog.isShowing()) {
+            verificationDialog.dismiss();
+        }
+        super.onDestroy();
     }
 }

@@ -43,11 +43,8 @@ public class ProductHistoryActivity extends BaseActivity {
         View archiveButton = findViewById(R.id.topActionArchive);
         if (archiveButton != null) archiveButton.setVisibility(View.GONE);
 
-        View searchButton = findViewById(R.id.topActionSearch);
-        if (searchButton != null) searchButton.setVisibility(View.GONE);
-
         TextView title = findViewById(R.id.topTitle);
-        if (title != null) title.setText(R.string.history_title);
+        if (title != null) title.setText(R.string.app_name_chrome);
 
         loadingIndicator = findViewById(R.id.loadingIndicator);
         if (loadingIndicator == null) {
@@ -81,6 +78,7 @@ public class ProductHistoryActivity extends BaseActivity {
 
         ImageButton menuButton = findViewById(R.id.topActionMenu);
         if (menuButton != null) {
+            menuButton.setVisibility(View.VISIBLE);
             menuButton.setImageResource(R.drawable.ic_arrow_back);
             menuButton.setContentDescription(getString(R.string.back));
             menuButton.setOnClickListener(v -> finish());

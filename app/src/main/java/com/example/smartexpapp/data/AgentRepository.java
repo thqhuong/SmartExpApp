@@ -196,10 +196,12 @@ public final class AgentRepository {
                     remote = enrichRecipeImages(context, database, remote, products, dietaryPreferences);
                     cacheRecipes(database, remote, "cloudflare");
                     saveAgentMessage(database, "user", prompt.isEmpty() ? "Suggest recipes" : prompt, relatedProductIds(products), prompt);
-                    saveAgentMessage(database, "agent", "Generated recipe suggestions with Cloudflare Workers AI.", relatedProductIds(products), prompt);
+                    saveAgentMessage(database, "agent", isVietnamese(languageTag)
+                            ? "Đã tạo gợi ý công thức bằng Cloudflare Workers AI."
+                            : "Generated recipe suggestions with Cloudflare Workers AI.", relatedProductIds(products), prompt);
                     return new RecipeSuggestionResult(
                             remote,
-                            recipeStatus(recipeGenerationStatus(remoteRecipeStatus(inventoryEmpty, !prompt.isEmpty(), languageTag), remote), dietaryPreferences),
+                            recipeStatus(context, recipeGenerationStatus(context, remoteRecipeStatus(context, inventoryEmpty, !prompt.isEmpty()), remote), dietaryPreferences),
                             false,
                             inventoryEmpty
                     );
@@ -215,10 +217,10 @@ public final class AgentRepository {
             saveAgentMessage(database, "user", prompt, relatedProductIds(products), prompt);
             saveAgentMessage(database, "agent", localFallbackAnswer(products, prompt, languageTag), relatedProductIds(products), prompt);
         }
-        String status = localRecipeStatus(inventoryEmpty, languageTag);
+        String status = localRecipeStatus(context, inventoryEmpty);
         return new RecipeSuggestionResult(
                 local,
-                recipeStatus(recipeGenerationStatus(status, local), dietaryPreferences),
+                recipeStatus(context, recipeGenerationStatus(context, status, local), dietaryPreferences),
                 true,
                 inventoryEmpty
         );
@@ -930,12 +932,26 @@ public final class AgentRepository {
                 + ". Check the recipe suggestions below for ways to use it.";
     }
 
+    private static String recipeStatus(Context context, String baseStatus, String dietaryPreferences) {
+        String preferences = normalizeDietaryPreferences(dietaryPreferences);
+        if (preferences.isEmpty()) {
+            return baseStatus;
+        }
+        return baseStatus + context.getString(R.string.recipe_status_dietary_pref, preferences);
+    }
+
     private static String recipeStatus(String baseStatus, String dietaryPreferences) {
         String preferences = normalizeDietaryPreferences(dietaryPreferences);
         if (preferences.isEmpty()) {
             return baseStatus;
         }
         return baseStatus + " Dietary preferences: " + preferences + ".";
+    }
+
+    private static String localRecipeStatus(Context context, boolean inventoryEmpty) {
+        return inventoryEmpty
+                ? context.getString(R.string.recipe_status_local_empty_inventory)
+                : context.getString(R.string.recipe_status_local_active);
     }
 
     private static String localRecipeStatus(boolean inventoryEmpty, String languageTag) {
@@ -947,6 +963,15 @@ public final class AgentRepository {
         return inventoryEmpty
                 ? "Your local inventory is empty. These are generic fallback ideas; you can also type a recipe request."
                 : "Using local fallback suggestions from your saved inventory and request.";
+    }
+
+    private static String remoteRecipeStatus(Context context, boolean inventoryEmpty, boolean hasUserPrompt) {
+        if (hasUserPrompt) {
+            return context.getString(R.string.recipe_status_ai_from_request);
+        }
+        return inventoryEmpty
+                ? context.getString(R.string.recipe_status_ai_empty_inventory)
+                : context.getString(R.string.recipe_status_ai_from_inventory);
     }
 
     private static String remoteRecipeStatus(boolean inventoryEmpty, boolean hasUserPrompt, String languageTag) {
@@ -964,6 +989,19 @@ public final class AgentRepository {
         return inventoryEmpty
                 ? "Cloudflare Workers AI generated general recipe ideas because your local inventory is empty."
                 : "Generated with Cloudflare Workers AI using your local inventory.";
+    }
+
+    private static String recipeGenerationStatus(Context context, String baseStatus, List<Recipe> recipes) {
+        if (BuildConfig.RECIPE_IMAGE_WORKER_URL.trim().isEmpty()) {
+            return baseStatus;
+        }
+        for (Recipe recipe : recipes) {
+            String imageUrl = recipe.getImageUrl();
+            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                return baseStatus + context.getString(R.string.recipe_status_images_served);
+            }
+        }
+        return baseStatus + context.getString(R.string.recipe_status_images_no_url);
     }
 
     private static String recipeGenerationStatus(String baseStatus, List<Recipe> recipes) {

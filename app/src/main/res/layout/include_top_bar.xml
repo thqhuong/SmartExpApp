@@ -21,6 +21,8 @@
         android:padding="10dp"
         android:scaleType="center"
         android:src="@drawable/ic_menu_three_lines"
+        android:visibility="gone"
+        android:layout_marginEnd="8dp"
         app:tint="@color/smart_primary_container" />
 
     <!-- Title (Vibrant Orange "SmartExpApp") -->
@@ -29,18 +31,40 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="0dp"
         android:text="@string/app_name_chrome"
         android:textColor="@color/smart_primary_container"
         android:textSize="20sp"
         android:textStyle="bold" />
+
+    <!-- Archive Button (History) -->
+    <FrameLayout
+        android:id="@+id/topActionArchive"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_search_circle"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:visibility="gone"
+        android:contentDescription="@string/history_title">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_archive"
+            android:contentDescription="@string/history_title" />
+    </FrameLayout>
 
     <!-- Theme Toggle Pill Container -->
     <LinearLayout
         android:id="@+id/themeTogglePill"
         android:layout_width="72dp"
         android:layout_height="36dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="0dp"
         android:background="@drawable/bg_theme_toggle_pill"
         android:gravity="center"
         android:orientation="horizontal"
@@ -105,46 +129,5 @@
                 android:src="@drawable/ic_theme_moon" />
         </FrameLayout>
     </LinearLayout>
-
-    <!-- Archive Button (History) -->
-    <FrameLayout
-        android:id="@+id/topActionArchive"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginEnd="8dp"
-        android:background="@drawable/bg_search_circle"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackgroundBorderless"
-        android:visibility="gone"
-        android:contentDescription="@string/history_title">
-
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_archive"
-            android:contentDescription="@string/history_title" />
-    </FrameLayout>
-
-    <!-- Search Button (Far Right Circle) -->
-    <FrameLayout
-        android:id="@+id/topActionSearch"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_search_circle"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/search_hint">
-
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:src="@android:drawable/ic_menu_search"
-            android:contentDescription="@string/search_hint"
-            app:tint="@color/smart_on_surface" />
-    </FrameLayout>
 
 </LinearLayout>

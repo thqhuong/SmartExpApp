@@ -113,7 +113,7 @@
     <string name="label_expiring_soon_uppercase">EXPIRING SOON</string>
     <string name="app_name_chrome">SmartExpApp</string>
     <string name="nav_inventory_label">Inventory</string>
-    <string name="nav_stats_label">Stats</string>
+    <string name="nav_stats_label">Dashboard</string>
     <string name="nav_agent_label">Agent</string>
     <string name="nav_settings_label">Settings</string>
     <string name="profile_local_user">Local User</string>
@@ -533,4 +533,24 @@
     <string name="batch_status_format">Updated %1$d products</string>
     <string name="batch_undone_format">Restored %1$d products</string>
     <string name="signIn_btn_label">Sign In</string>
+
+    <!-- Email Verification Dialog Strings -->
+    <string name="verify_title">Verify Your Email</string>
+    <string name="verify_subtitle">A verification link has been sent to %1$s. Please check your inbox and click the link to verify your account.</string>
+    <string name="verify_btn_check_status">Check Verification Status</string>
+    <string name="verify_timer_format">Resend email in %1$ds</string>
+    <string name="verify_resend_label">Resend Verification Email</string>
+    <string name="verify_btn_cancel">Cancel &amp; Sign Out</string>
+    <string name="verify_error_not_verified">Email is not verified yet. Please check your inbox and click the link.</string>
+    <string name="verify_code_resent">Verification email resent!</string>
+
+    <!-- Cloudflare AI Recipe Statuses -->
+    <string name="recipe_status_ai_from_request">Generated with Cloudflare Workers AI from your recipe request.</string>
+    <string name="recipe_status_ai_empty_inventory">Cloudflare Workers AI generated general recipe ideas because your local inventory is empty.</string>
+    <string name="recipe_status_ai_from_inventory">Generated with Cloudflare Workers AI using your local inventory.</string>
+    <string name="recipe_status_images_served"> Recipe images are served by Cloudflare Workers AI.</string>
+    <string name="recipe_status_images_no_url"> Recipe image generation is configured, but no image URL was prepared.</string>
+    <string name="recipe_status_dietary_pref"> Dietary preferences: %1$s.</string>
+    <string name="recipe_status_local_empty_inventory">Your local inventory is empty. These are generic fallback ideas; you can also type a recipe request.</string>
+    <string name="recipe_status_local_active">Using local fallback suggestions from your saved inventory and request.</string>
 </resources>

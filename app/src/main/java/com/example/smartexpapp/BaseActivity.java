@@ -75,7 +75,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         View moonBg = findViewById(R.id.themeToggleMoonBg);
         ImageView sunIcon = findViewById(R.id.themeToggleSunIcon);
         ImageView moonIcon = findViewById(R.id.themeToggleMoonIcon);
-        View searchButton = findViewById(R.id.topActionSearch);
         View bottomNavigation = findViewById(R.id.bottomNavigation);
 
         if (menuButton != null) {
@@ -129,15 +128,6 @@ public abstract class BaseActivity extends AppCompatActivity {
             themeTogglePill.setOnClickListener(toggleThemeListener);
         }
 
-        if (searchButton != null) {
-            searchButton.setOnClickListener(v -> {
-                Intent intent = new Intent(this, InventoryActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            });
-        }
-
         if (bottomNavigation == null) {
             return;
         }
@@ -153,7 +143,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void setTopTitle(String title) {
         TextView topTitle = findViewById(R.id.topTitle);
         if (topTitle != null) {
-            topTitle.setText(title);
+            topTitle.setText(R.string.app_name_chrome);
         }
     }
 
@@ -192,6 +182,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void useBackButton() {
         ImageButton menuButton = findViewById(R.id.topActionMenu);
         if (menuButton != null) {
+            menuButton.setVisibility(View.VISIBLE);
             menuButton.setImageResource(R.drawable.ic_arrow_back);
             menuButton.setContentDescription(getString(R.string.back));
             menuButton.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.smart_primary)));

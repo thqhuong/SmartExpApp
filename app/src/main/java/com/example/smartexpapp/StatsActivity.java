@@ -10,6 +10,7 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.example.smartexpapp.data.AuthStateRepository;
 import com.example.smartexpapp.data.local.LocalDataContract;
 import com.example.smartexpapp.data.ProductRepository;
 import com.example.smartexpapp.data.SettingsRepository;
@@ -28,9 +29,18 @@ public class StatsActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        AuthStateRepository.AuthState authState = AuthStateRepository.getAuthState(this);
+        if (!authState.isSignedIn() && !authState.isGuest()) {
+            Intent intent = new Intent(this, SignInActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_stats);
         setupChrome(R.id.nav_stats);
-        setTopTitle(getString(R.string.stats_title));
 
         RadioGroup dateRangeToggle = findViewById(R.id.dateRangeToggle);
         dateRangeToggle.setOnCheckedChangeListener((group, checkedId) -> {
