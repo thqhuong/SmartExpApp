@@ -33,7 +33,6 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
 
     public interface OnProductClickListener {
         void onProductClick(Product product);
-        void onDeleteClick(Product product);
     }
 
     public interface OnProductLongClickListener {
@@ -139,7 +138,6 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
         private final TextView urgentBadge;
         private final TextView expiryStatus;
         private final ProgressBar progress;
-        private final View deleteBtn;
         private final ImageView btnCheckbox;
         private final View categoryDot;
         private final ImageView icon;
@@ -152,7 +150,6 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
             urgentBadge = itemView.findViewById(R.id.urgentBadge);
             expiryStatus = itemView.findViewById(R.id.expiryStatus);
             progress = itemView.findViewById(R.id.expiryProgress);
-            deleteBtn = itemView.findViewById(R.id.btnDelete);
             btnCheckbox = itemView.findViewById(R.id.btnCheckbox);
             categoryDot = itemView.findViewById(R.id.categoryDot);
             icon = itemView.findViewById(R.id.productIcon);
@@ -172,7 +169,6 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
                     clickListener.onProductClick(product);
                 }
             });
-            deleteBtn.setOnClickListener(v -> clickListener.onDeleteClick(product));
             card.setOnLongClickListener(v -> {
                 if (longClickListener != null) {
                     card.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
@@ -233,7 +229,6 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
             }
 
             if (selectionMode) {
-                deleteBtn.setVisibility(View.GONE);
                 btnCheckbox.setVisibility(View.VISIBLE);
                 btnCheckbox.setImageResource(selected ? R.drawable.ic_check_circle : R.drawable.ic_circle_outline);
                 btnCheckbox.setImageTintList(ColorStateList.valueOf(
@@ -247,7 +242,6 @@ public class InventoryAdapter extends ListAdapter<Product, InventoryAdapter.View
                     card.setStrokeWidth((int) (1.0f * density));
                 }
             } else {
-                deleteBtn.setVisibility(View.VISIBLE);
                 btnCheckbox.setVisibility(View.GONE);
             }
         }

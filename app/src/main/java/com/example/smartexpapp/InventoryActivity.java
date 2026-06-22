@@ -111,17 +111,7 @@ public class InventoryActivity extends BaseActivity {
 
         productList = findViewById(R.id.productList);
         productList.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new InventoryAdapter(new InventoryAdapter.OnProductClickListener() {
-            @Override
-            public void onProductClick(Product product) {
-                showProductActions(product);
-            }
-
-            @Override
-            public void onDeleteClick(Product product) {
-                confirmDelete(product);
-            }
-        });
+        adapter = new InventoryAdapter(product -> showProductActions(product));
         adapter.setOnProductLongClickListener(product -> {
             enterMultiSelect(product);
             return true;
@@ -376,13 +366,6 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void batchDelete(Set<String> ids) {
-        List<Product> affectedProducts = new ArrayList<>();
-        for (Product p : latestProducts) {
-            if (ids.contains(p.getId()))
-                affectedProducts.add(p);
-        }
-
-        String note = "Batch deleted from inventory";
         String message = getString(R.string.batch_deleted_format, ids.size());
 
         int[] completed = { 0 };
@@ -393,16 +376,14 @@ public class InventoryActivity extends BaseActivity {
                     runOnUiThread(() -> {
                         finishMultiSelect();
                         viewModel.loadProducts();
-                        InAppNotificationManager.showUndo(InventoryActivity.this, message,
-                                R.drawable.ic_delete, R.drawable.bg_action_icon_circle_delete,
-                                R.color.smart_error, () -> batchUndo(affectedProducts));
+                        InAppNotificationManager.show(InventoryActivity.this, message, InAppNotificationManager.Type.SUCCESS);
                     });
                 }
             }
         };
         ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch delete failed", e);
         for (String id : ids) {
-            viewModel.softDeleteProduct(id, note, callback, errorCallback);
+            viewModel.deleteProduct(id, callback, errorCallback);
         }
     }
 
@@ -887,16 +868,13 @@ public class InventoryActivity extends BaseActivity {
 
         dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
             dialog.dismiss();
-            viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
+            viewModel.deleteProduct(product.getId(), deleted -> {
                 if (Boolean.TRUE.equals(deleted)) {
                     ReminderScheduler.runSoon(this);
                     viewModel.loadProducts();
-                    InAppNotificationManager.showUndo(InventoryActivity.this,
+                    InAppNotificationManager.show(InventoryActivity.this,
                             getString(R.string.undo_delete_format, product.getName()),
-                            R.drawable.ic_delete,
-                            R.drawable.bg_action_icon_circle_delete,
-                            R.color.smart_error,
-                            () -> undoMark(product));
+                            InAppNotificationManager.Type.SUCCESS);
                 }
             }, error -> {
                 Log.e(TAG, "Failed to delete product", error);

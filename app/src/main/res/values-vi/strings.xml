@@ -476,7 +476,7 @@
     <string name="mark_status_snackbar_format">Đã chuyển \"%1$s\" vào lịch sử dưới dạng %2$s</string>
     <string name="mark_undo">Hoàn tác</string>
     <string name="mark_undone_format">Đã chuyển \"%1$s\" về trạng thái đang dùng</string>
-    <string name="undo_delete_format">Đã chuyển \"%1$s\" vào lịch sử</string>
+    <string name="undo_delete_format">Đã xóa \"%1$s\"</string>
     <string name="mark_wasted_confirm_text">Sản phẩm này sẽ được đánh dấu là lãng phí.</string>
 
     <!-- Authentication Strings -->
@@ -513,7 +513,7 @@
     <string name="batch_consumed_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng đã dùng</string>
     <string name="batch_wasted_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng lãng phí</string>
     <string name="batch_donated_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng đã tặng</string>
-    <string name="batch_deleted_format">Đã chuyển %1$d sản phẩm vào lịch sử</string>
+    <string name="batch_deleted_format">Đã xóa %1$d sản phẩm</string>
     <string name="batch_status_format">Đã cập nhật %1$d sản phẩm</string>
     <string name="batch_undone_format">Đã khôi phục %1$d sản phẩm</string>
 
