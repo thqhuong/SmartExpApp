@@ -31,8 +31,32 @@
     <color name="category_custom_yellow">#F1C40F</color>
     <color name="category_custom_deep_orange">#FF5722</color>
     <color name="category_custom_brown">#795548</color>
+    <color name="category_custom_06">#9C27B0</color>
+    <color name="category_custom_07">#3F51B5</color>
+    <color name="category_custom_08">#2196F3</color>
+    <color name="category_custom_09">#009688</color>
+    <color name="category_custom_10">#4CAF50</color>
+    <color name="category_custom_11">#8BC34A</color>
+    <color name="category_custom_12">#FFC107</color>
+    <color name="category_custom_13">#FF9800</color>
+    <color name="category_custom_14">#607D8B</color>
+    <color name="category_custom_15">#F06292</color>
+    <color name="category_custom_16">#BA68C8</color>
+    <color name="category_custom_17">#4DD0E1</color>
+    <color name="category_custom_18">#AED581</color>
+    <color name="category_custom_19">#FFD54F</color>
+    <color name="category_custom_20">#FF8A65</color>
+    <color name="category_custom_21">#A1887F</color>
+    <color name="category_custom_22">#90A4AE</color>
+    <color name="category_custom_23">#B39DDB</color>
+    <color name="category_custom_24">#F48FB1</color>
+    <color name="category_custom_25">#80CBC4</color>
+    <color name="category_custom_26">#A5D6A7</color>
+    <color name="category_custom_27">#E6EE9C</color>
+    <color name="category_custom_28">#FFCC80</color>
+    <color name="category_custom_29">#BCAAA4</color>
   
-    <!-- Bottom Nav Add Button Styles -->
+  <!-- Bottom Nav Add Button Styles -->
     <color name="bottom_nav_add_border">#FFFFFF</color>
     <color name="bottom_nav_add_icon">#FFFFFF</color>
  
