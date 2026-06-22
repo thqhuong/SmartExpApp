@@ -165,23 +165,23 @@ public class SignInActivity extends BaseActivity {
         String password = passwordInput.getText().toString().trim();
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, R.string.login_error_empty, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.login_error_empty));
             return;
         }
 
         if (!EmailValidator.isValid(email)) {
-            Toast.makeText(this, R.string.login_error_invalid_email, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.login_error_invalid_email));
             return;
         }
 
         if (password.length() < 6) {
-            Toast.makeText(this, R.string.login_error_short_password, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.login_error_short_password));
             return;
         }
 
         FirebaseAuth auth = getAuth();
         if (auth == null) {
-            Toast.makeText(this, R.string.firebase_config_error, Toast.LENGTH_LONG).show();
+            showErrorNotification(getString(R.string.firebase_config_error));
             return;
         }
 
@@ -190,7 +190,7 @@ public class SignInActivity extends BaseActivity {
         if (isRegisterMode) {
             String name = displayNameInput.getText().toString().trim();
             if (name.isEmpty()) {
-                Toast.makeText(this, R.string.display_name_empty_error, Toast.LENGTH_SHORT).show();
+                showWarningNotification(getString(R.string.display_name_empty_error));
                 setLoading(false);
                 return;
             }
@@ -212,18 +212,18 @@ public class SignInActivity extends BaseActivity {
                                                         } else {
                                                             setLoading(false);
                                                             String errorMsg = verificationSendTask.getException() != null ? verificationSendTask.getException().getLocalizedMessage() : "Failed to send verification email.";
-                                                            Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                                                            showErrorNotification(errorMsg);
                                                         }
                                                     });
                                         });
                             } else {
                                 setLoading(false);
-                                Toast.makeText(this, "Failed to get current authenticated user.", Toast.LENGTH_SHORT).show();
+                                showErrorNotification("Failed to get current authenticated user.");
                             }
                         } else {
                             setLoading(false);
                             String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
-                            Toast.makeText(this, getString(R.string.registration_failed_format, errorMsg), Toast.LENGTH_LONG).show();
+                            showErrorNotification(getString(R.string.registration_failed_format, errorMsg));
                         }
                     });
         } else {
@@ -243,7 +243,7 @@ public class SignInActivity extends BaseActivity {
                         } else {
                             setLoading(false);
                             String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
-                            Toast.makeText(this, getString(R.string.login_failed_format, errorMsg), Toast.LENGTH_LONG).show();
+                            showErrorNotification(getString(R.string.login_failed_format, errorMsg));
                         }
                     });
         }
@@ -252,7 +252,7 @@ public class SignInActivity extends BaseActivity {
     private void handleGoogleSignIn() {
         FirebaseAuth auth = getAuth();
         if (auth == null) {
-            Toast.makeText(this, R.string.firebase_config_error, Toast.LENGTH_LONG).show();
+            showErrorNotification(getString(R.string.firebase_config_error));
             return;
         }
 
@@ -269,7 +269,7 @@ public class SignInActivity extends BaseActivity {
         }
 
         if (webClientId.isEmpty() || webClientId.contains("placeholder")) {
-            Toast.makeText(this, R.string.firebase_config_error, Toast.LENGTH_LONG).show();
+            showErrorNotification(getString(R.string.firebase_config_error));
             return;
         }
 
@@ -305,17 +305,13 @@ public class SignInActivity extends BaseActivity {
                             } catch (Exception e) {
                                 runOnUiThread(() -> {
                                     setLoading(false);
-                                    Toast.makeText(SignInActivity.this,
-                                            getString(R.string.google_sign_in_failed, e.getLocalizedMessage()),
-                                            Toast.LENGTH_LONG).show();
+                                    showErrorNotification(getString(R.string.google_sign_in_failed, e.getLocalizedMessage()));
                                 });
                             }
                         } else {
                             runOnUiThread(() -> {
                                 setLoading(false);
-                                Toast.makeText(SignInActivity.this,
-                                        "Google sign in failed: Unexpected credential type",
-                                        Toast.LENGTH_LONG).show();
+                                showErrorNotification("Google sign in failed: Unexpected credential type");
                             });
                         }
                     }
@@ -324,9 +320,7 @@ public class SignInActivity extends BaseActivity {
                     public void onError(GetCredentialException e) {
                         runOnUiThread(() -> {
                             setLoading(false);
-                            Toast.makeText(SignInActivity.this,
-                                    getString(R.string.google_sign_in_failed, e.getLocalizedMessage()),
-                                    Toast.LENGTH_LONG).show();
+                            showErrorNotification(getString(R.string.google_sign_in_failed, e.getLocalizedMessage()));
                         });
                     }
                 }
@@ -350,7 +344,7 @@ public class SignInActivity extends BaseActivity {
                     } else {
                         setLoading(false);
                         String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
-                        Toast.makeText(this, getString(R.string.google_sign_in_failed, errorMsg), Toast.LENGTH_LONG).show();
+                        showErrorNotification(getString(R.string.google_sign_in_failed, errorMsg));
                     }
                 }));
     }
@@ -369,39 +363,51 @@ public class SignInActivity extends BaseActivity {
     private void handleForgotPassword() {
         String email = emailInput.getText().toString().trim();
         if (email.isEmpty()) {
-            Toast.makeText(this, R.string.forgot_password_email_empty, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.forgot_password_email_empty));
             return;
         }
 
         if (!EmailValidator.isValid(email)) {
-            Toast.makeText(this, R.string.login_error_invalid_email, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.login_error_invalid_email));
             return;
         }
 
         FirebaseAuth auth = getAuth();
         if (auth == null) {
-            Toast.makeText(this, R.string.firebase_config_error, Toast.LENGTH_LONG).show();
+            showErrorNotification(getString(R.string.firebase_config_error));
             return;
         }
 
-        new android.app.AlertDialog.Builder(this)
-                .setTitle(R.string.forgot_password_dialog_title)
-                .setMessage(getString(R.string.forgot_password_dialog_message, email))
-                .setPositiveButton(R.string.save_label, (dialog, which) -> {
-                    setLoading(true);
-                    auth.sendPasswordResetEmail(email)
-                            .addOnCompleteListener(task -> {
-                                setLoading(false);
-                                if (task.isSuccessful()) {
-                                    Toast.makeText(this, R.string.forgot_password_email_sent, Toast.LENGTH_LONG).show();
-                                } else {
-                                    String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
-                                    Toast.makeText(this, getString(R.string.forgot_password_email_failed, errorMsg), Toast.LENGTH_LONG).show();
-                                }
-                            });
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_forgot_password_confirm)
+                .create();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogMessage)).setText(
+                getString(R.string.forgot_password_dialog_message, email));
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            setLoading(true);
+            auth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener(task -> {
+                        setLoading(false);
+                        if (task.isSuccessful()) {
+                            showSuccessNotification(getString(R.string.forgot_password_email_sent));
+                        } else {
+                            String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
+                            showErrorNotification(getString(R.string.forgot_password_email_failed, errorMsg));
+                        }
+                    });
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void navigateToDashboard() {
@@ -529,11 +535,11 @@ public class SignInActivity extends BaseActivity {
                                 snapshot -> continueAfterSignedIn(),
                                 error -> continueAfterSignedIn());
                     } else {
-                        Toast.makeText(this, R.string.verify_error_not_verified, Toast.LENGTH_LONG).show();
+                        showWarningNotification(getString(R.string.verify_error_not_verified));
                     }
                 } else {
                     String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
+                    showErrorNotification(errorMsg);
                 }
             });
         });
@@ -543,11 +549,11 @@ public class SignInActivity extends BaseActivity {
             user.sendEmailVerification().addOnCompleteListener(task -> {
                 resendBtn.setEnabled(true);
                 if (task.isSuccessful()) {
-                    Toast.makeText(this, R.string.verify_code_resent, Toast.LENGTH_SHORT).show();
+                    showSuccessNotification(getString(R.string.verify_code_resent));
                     startVerificationResendTimer(timerText, resendBtn);
                 } else {
                     String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    showErrorNotification(errorMsg);
                 }
             });
         });

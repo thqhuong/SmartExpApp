@@ -1,13 +1,16 @@
 package com.example.smartexpapp;
 
 import android.app.DatePickerDialog;
+import android.app.AlertDialog;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -26,10 +29,12 @@ import com.example.smartexpapp.model.Product;
 import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ProductQuantityValidator;
+import com.example.smartexpapp.util.InAppNotificationManager;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -113,7 +118,7 @@ public class EditProductDialog {
         }
 
         selectedDate.setTimeInMillis(product.getExpiryDateMillis());
-        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+        expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
         expiryDateInput.setTextColor(activity.getColor(R.color.smart_on_surface));
 
         view.findViewById(R.id.editPhotoPreview).setOnClickListener(v ->
@@ -128,7 +133,7 @@ public class EditProductDialog {
                     activity,
                     (dv, year, month, dayOfMonth) -> {
                         selectedDate.set(year, month, dayOfMonth, 23, 59, 59);
-                        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+                        expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
                         expiryDateInput.setTextColor(activity.getColor(R.color.smart_on_surface));
                     },
                     selectedDate.get(Calendar.YEAR),
@@ -193,7 +198,7 @@ public class EditProductDialog {
         }
         String path = activity.saveImageToInternalStorage(uri);
         if (path == null) {
-            Toast.makeText(activity, R.string.photo_save_failed, Toast.LENGTH_SHORT).show();
+            activity.showErrorNotification(activity.getString(R.string.photo_save_failed));
             return;
         }
         if (currentPhotoPath != null && !currentPhotoPath.equals(originalPhotoPath)) {
@@ -241,7 +246,7 @@ public class EditProductDialog {
     private void refreshCategorySpinner(BaseActivity activity) {
         CategoryRepository.getDisplayCategoriesAsync(activity,
                 items -> bindCategorySpinner(activity, items),
-                error -> Toast.makeText(activity, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+                error -> activity.showErrorNotification(activity.getString(R.string.category_load_error)));
     }
 
     private void bindCategorySpinner(BaseActivity activity, List<String> items) {
@@ -294,52 +299,13 @@ public class EditProductDialog {
             name.setText(cat);
             name.setTextColor(activity.getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
 
-            MaterialButton editBtn = row.findViewById(R.id.btnEditCategory);
-            MaterialButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
-
-            editBtn.setVisibility(View.VISIBLE);
-            editBtn.setOnClickListener(v -> {
-                showRenameCategoryDialog(activity, canonicalCat, () -> showManageCategoriesDialog(activity));
-            });
-
-            boolean used = isCategoryUsed(activity, canonicalCat);
-            if (used) {
-                deleteBtn.setVisibility(View.GONE);
-            } else {
-                deleteBtn.setVisibility(View.VISIBLE);
-                deleteBtn.setOnClickListener(v -> {
-                    showDeleteCategoryDialog(activity, canonicalCat, () -> showManageCategoriesDialog(activity));
-                });
-            }
+            ImageButton gear = row.findViewById(R.id.btnGear);
+            gear.setOnClickListener(v -> showCategoryActionDialog(activity, canonicalCat));
 
             categoryList.addView(row);
         }
 
-        btnAdd.setOnClickListener(v -> {
-            View inputLayout = inflater.inflate(R.layout.dialog_edit_text, null);
-            EditText input = inputLayout.findViewById(android.R.id.edit);
-            new MaterialAlertDialogBuilder(activity)
-                    .setTitle(R.string.category_add_title)
-                    .setView(inputLayout)
-                    .setPositiveButton(R.string.add_label, (d, w) -> {
-                        String newCat = input.getText().toString().trim();
-                        String canonicalNew = canonicalCategory(activity, newCat);
-                        if (!newCat.isEmpty()) {
-                            CategoryRepository.addCategoryAsync(activity, canonicalNew, added -> {
-                                if (!added) {
-                                    Toast.makeText(activity, activity.getString(R.string.category_already_exists_format, newCat), Toast.LENGTH_SHORT).show();
-                                    showManageCategoriesDialog(activity);
-                                    return;
-                                }
-                                selectedCategory = canonicalNew;
-                                refreshCategorySpinner(activity);
-                                showManageCategoriesDialog(activity);
-                            }, error -> Toast.makeText(activity, R.string.category_load_error, Toast.LENGTH_SHORT).show());
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
-        });
+        btnAdd.setOnClickListener(v -> showAddCategoryDialog(activity));
 
         if (manageDialog != null && manageDialog.isShowing()) {
             manageDialog.dismiss();
@@ -348,6 +314,60 @@ public class EditProductDialog {
                 .setTitle(R.string.manage_categories_title)
                 .setView(content)
                 .setPositiveButton(R.string.close_label, null)
+                .show();
+    }
+
+    private void showCategoryActionDialog(BaseActivity activity, String canonicalCat) {
+        View actionView = LayoutInflater.from(activity).inflate(R.layout.dialog_category_action, null);
+        int usedCount = countProductsForCategory(activity, canonicalCat);
+        String displayName = CategoryColorHelper.getLocalizedCategory(activity, canonicalCat);
+
+        android.app.Dialog actionDialog = new MaterialAlertDialogBuilder(activity)
+                .setTitle(displayName)
+                .setView(actionView)
+                .show();
+
+        actionView.findViewById(R.id.actionEdit).setOnClickListener(v -> {
+            actionDialog.dismiss();
+            showRenameCategoryDialog(activity, canonicalCat, () -> {
+                if (manageDialog != null) manageDialog.dismiss();
+                showManageCategoriesDialog(activity);
+            });
+        });
+        actionView.findViewById(R.id.actionDelete).setOnClickListener(v -> {
+            actionDialog.dismiss();
+            showDeleteCategoryDialog(activity, canonicalCat, usedCount, () -> {
+                if (manageDialog != null) manageDialog.dismiss();
+                showManageCategoriesDialog(activity);
+            });
+        });
+    }
+
+    private void showAddCategoryDialog(BaseActivity activity) {
+        View inputLayout = LayoutInflater.from(activity).inflate(R.layout.dialog_edit_text, null);
+        EditText input = inputLayout.findViewById(android.R.id.edit);
+        new MaterialAlertDialogBuilder(activity)
+                .setTitle(R.string.category_add_title)
+                .setView(inputLayout)
+                .setPositiveButton(R.string.add_label, (d, w) -> {
+                    String newCat = input.getText().toString().trim();
+                    String canonicalNew = canonicalCategory(activity, newCat);
+                    if (!newCat.isEmpty()) {
+                        CategoryRepository.addCategoryAsync(activity, canonicalNew, added -> {
+                            if (!added) {
+                                Toast.makeText(activity, activity.getString(R.string.category_already_exists_format, newCat), Toast.LENGTH_SHORT).show();
+                                showManageCategoriesDialog(activity);
+                                return;
+                            }
+                            selectedCategory = canonicalNew;
+                            refreshCategorySpinner(activity);
+                            showManageCategoriesDialog(activity);
+                            showCategorySnackbar(activity, activity.getString(R.string.category_add_success_format, newCat),
+                                    android.R.drawable.ic_menu_add, R.color.smart_primary_container);
+                        }, error -> Toast.makeText(activity, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
@@ -370,6 +390,8 @@ public class EditProductDialog {
                         if (canonicalCategory(activity, selectedCategory).equals(oldName)) selectedCategory = canonicalNew;
                         refreshCategorySpinner(activity);
                         onDone.run();
+                        showCategorySnackbar(activity, activity.getString(R.string.category_rename_success_format, newName),
+                                R.drawable.ic_edit, R.color.smart_primary_container);
                     }, error -> {
                         Toast.makeText(activity, R.string.category_rename_error, Toast.LENGTH_SHORT).show();
                         onDone.run();
@@ -379,27 +401,103 @@ public class EditProductDialog {
                 .show();
     }
 
-    private void showDeleteCategoryDialog(BaseActivity activity, String catToDelete, Runnable onDone) {
+    private void showDeleteCategoryDialog(BaseActivity activity, String catToDelete, int productCount, Runnable onDone) {
         String displayDelete = CategoryColorHelper.getLocalizedCategory(activity, catToDelete);
-        new MaterialAlertDialogBuilder(activity)
-                .setTitle(activity.getString(R.string.delete_category_title_format, displayDelete))
-                .setMessage(R.string.category_delete_message_empty)
-                .setPositiveButton(R.string.delete_confirm, (d, w) -> {
-                    CategoryRepository.deleteCategoryAsync(activity, catToDelete, ignored ->
-                            CategoryRepository.getDisplayCategoriesAsync(activity, active -> {
-                                if (canonicalCategory(activity, selectedCategory).equals(catToDelete)) {
-                                    selectedCategory = active.isEmpty() ? "General" : canonicalCategory(activity, active.get(0));
-                                }
-                                refreshCategorySpinner(activity);
-                                onDone.run();
-                            }, error -> {
-                                refreshCategorySpinner(activity);
-                                onDone.run();
-                            }), error -> Toast.makeText(activity, R.string.category_load_error, Toast.LENGTH_SHORT).show());
-                })
-                .setNegativeButton(R.string.cancel, (d, w) -> onDone.run())
-                .setOnDismissListener(d -> onDone.run())
-                .show();
+        if (productCount > 0) {
+            showCannotDeleteDialog(activity, displayDelete, catToDelete, productCount);
+            return;
+        }
+        View confirmView = LayoutInflater.from(activity).inflate(R.layout.dialog_delete_confirm, null);
+        android.app.Dialog dlg = new android.app.Dialog(activity, android.R.style.Theme_Translucent_NoTitleBar);
+        dlg.setContentView(confirmView);
+        dlg.show();
+        if (dlg.getWindow() != null) {
+            android.view.WindowManager.LayoutParams p = dlg.getWindow().getAttributes();
+            p.gravity = android.view.Gravity.CENTER;
+            p.dimAmount = 0.5f;
+            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dlg.getWindow().setAttributes(p);
+            dlg.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(
+                activity.getString(R.string.delete_category_title_format, displayDelete));
+        ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
+                R.string.category_delete_message_empty);
+
+        confirmView.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dlg.dismiss();
+            CategoryRepository.deleteCategoryAsync(activity, catToDelete, success -> {
+                if (!success) {
+                    Toast.makeText(activity, R.string.category_delete_blocked_title, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                CategoryRepository.getDisplayCategoriesAsync(activity, active -> {
+                    if (canonicalCategory(activity, selectedCategory).equals(catToDelete)) {
+                        selectedCategory = active.isEmpty() ? "General" : canonicalCategory(activity, active.get(0));
+                    }
+                    refreshCategorySpinner(activity);
+                    onDone.run();
+
+                    Snackbar snackbar = Snackbar.make(activity.findViewById(R.id.root),
+                            activity.getString(R.string.category_delete_success_format, displayDelete),
+                            Snackbar.LENGTH_SHORT);
+                    snackbar.getView().setBackgroundResource(R.drawable.bg_undo_bar);
+                    snackbar.setActionTextColor(activity.getColor(R.color.smart_primary));
+                    snackbar.setAction(R.string.undo_delete_label, v2 -> {
+                        CategoryRepository.addCategoryAsync(activity, catToDelete, unused -> {
+                            selectedCategory = catToDelete;
+                            refreshCategorySpinner(activity);
+                        }, error -> {});
+                    });
+                    snackbar.show();
+                }, error -> {
+                    refreshCategorySpinner(activity);
+                    onDone.run();
+                });
+            }, error -> Toast.makeText(activity, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+        });
+        confirmView.findViewById(R.id.dialogCancel).setOnClickListener(v -> dlg.dismiss());
+    }
+
+    private void showCannotDeleteDialog(BaseActivity activity, String displayName, String canonicalCat, int count) {
+        View confirmView = LayoutInflater.from(activity).inflate(R.layout.dialog_delete_confirm, null);
+        android.app.Dialog dlg = new android.app.Dialog(activity, android.R.style.Theme_Translucent_NoTitleBar);
+        dlg.setContentView(confirmView);
+        dlg.show();
+        if (dlg.getWindow() != null) {
+            android.view.WindowManager.LayoutParams p = dlg.getWindow().getAttributes();
+            p.gravity = android.view.Gravity.CENTER;
+            p.dimAmount = 0.5f;
+            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dlg.getWindow().setAttributes(p);
+            dlg.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(R.string.category_delete_blocked_title);
+        ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
+                activity.getString(R.string.category_delete_blocked_message_format, count));
+
+        Button confirmBtn = confirmView.findViewById(R.id.dialogConfirm);
+        confirmBtn.setText(R.string.got_it);
+        confirmBtn.setOnClickListener(v -> dlg.dismiss());
+        confirmView.findViewById(R.id.dialogCancel).setVisibility(View.GONE);
+    }
+
+    private int countProductsForCategory(BaseActivity activity, String canonicalCat) {
+        int count = 0;
+        for (Product p : productsSnapshot) {
+            if (canonicalCat.equals(canonicalCategory(activity, p.getCategory()))) count++;
+        }
+        return count;
+    }
+
+    private void showCategorySnackbar(BaseActivity activity, String message, int iconRes, int tintRes) {
+        Snackbar snackbar = Snackbar.make(activity.findViewById(R.id.root), message, Snackbar.LENGTH_SHORT);
+        snackbar.getView().setBackgroundResource(R.drawable.bg_undo_bar);
+        snackbar.show();
     }
 
     private int dpToPx(BaseActivity activity, int dp) {
@@ -412,13 +510,6 @@ public class EditProductDialog {
 
     private boolean categoryExistsInProducts(BaseActivity activity, String cat) {
         String canonicalCat = canonicalCategory(activity, cat);
-        for (Product p : productsSnapshot) {
-            if (canonicalCat.equals(canonicalCategory(activity, p.getCategory()))) return true;
-        }
-        return false;
-    }
-
-    private boolean isCategoryUsed(BaseActivity activity, String canonicalCat) {
         for (Product p : productsSnapshot) {
             if (canonicalCat.equals(canonicalCategory(activity, p.getCategory()))) return true;
         }
@@ -440,7 +531,7 @@ public class EditProductDialog {
     private void confirm(BaseActivity activity) {
         String name = nameInput.getText().toString().trim();
         if (name.isEmpty()) {
-            Toast.makeText(activity, R.string.enter_product_name, Toast.LENGTH_SHORT).show();
+            activity.showWarningNotification(activity.getString(R.string.enter_product_name));
             return;
         }
 
@@ -459,7 +550,7 @@ public class EditProductDialog {
         if (quantity == null) {
             quantityInput.setError(activity.getString(R.string.quantity_invalid));
             quantityInput.requestFocus();
-            Toast.makeText(activity, R.string.quantity_invalid, Toast.LENGTH_SHORT).show();
+            activity.showWarningNotification(activity.getString(R.string.quantity_invalid));
             return;
         }
         String unit = unitSpinner.getSelectedItem().toString();
@@ -486,12 +577,12 @@ public class EditProductDialog {
                 product.getLastSyncedAt()
         );
         ProductRepository.updateProductAsync(activity, updated, saved -> {
-            Toast.makeText(activity, R.string.product_updated, Toast.LENGTH_SHORT).show();
+            activity.showSuccessNotification(activity.getString(R.string.product_updated));
             dialog.dismiss();
             if (onUpdated != null) {
                 onUpdated.run();
             }
-        }, error -> Toast.makeText(activity, R.string.error_load, Toast.LENGTH_SHORT).show());
+        }, error -> activity.showErrorNotification(activity.getString(R.string.error_load)));
     }
 
     private String selectedStorage() {

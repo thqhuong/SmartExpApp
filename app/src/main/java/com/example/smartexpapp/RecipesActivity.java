@@ -62,8 +62,8 @@ public class RecipesActivity extends BaseActivity {
     private TextView recipeStateText;
     private ChipGroup recipePromptChipGroup;
 
-    private final ActivityResultLauncher<Intent> agentSpeechLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+    private final ActivityResultLauncher<Intent> agentSpeechLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
                     showTypedPromptDialog();
                     return;
@@ -128,14 +128,13 @@ public class RecipesActivity extends BaseActivity {
                 if (width > 0) {
                     Shader textShader = new LinearGradient(
                             0, 0, width, 0,
-                            new int[]{
+                            new int[] {
                                     Color.parseColor("#4285F4"),
                                     Color.parseColor("#9B72CB"),
                                     Color.parseColor("#D96570")
                             },
                             null,
-                            Shader.TileMode.CLAMP
-                    );
+                            Shader.TileMode.CLAMP);
                     titleView.getPaint().setShader(textShader);
                     titleView.invalidate();
                 }
@@ -235,7 +234,7 @@ public class RecipesActivity extends BaseActivity {
         if (safePrompt.isEmpty()) {
             safePrompt = "Suggest recipes from my expiring items";
         }
-        Toast.makeText(this, R.string.recipes_checking_inventory, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.recipes_checking_inventory));
         setRecipeState(getString(R.string.recipes_loading), false);
         String finalPrompt = safePrompt;
         executor.execute(() -> {
@@ -243,7 +242,7 @@ public class RecipesActivity extends BaseActivity {
                 String answer = AgentRepository.answerInventoryQuestion(this, finalPrompt);
                 RecipeSuggestionResult result = AgentRepository.getRecipeSuggestionResult(this, finalPrompt);
                 mainHandler.post(() -> {
-                    Toast.makeText(this, answer, Toast.LENGTH_LONG).show();
+                    showInfoNotification(answer);
                     speak(answer);
                     defaultSessionRecipeResult = result;
                     saveRecipeResultToPrefs(result);
@@ -263,14 +262,14 @@ public class RecipesActivity extends BaseActivity {
 
     private void startPulseAnimation() {
         View pulseView = findViewById(R.id.voiceAssistantPulseView);
-        if (pulseView == null) return;
+        if (pulseView == null)
+            return;
 
         ScaleAnimation scaleAnim = new ScaleAnimation(
                 1.0f, 1.4f,
                 1.0f, 1.4f,
                 Animation.RELATIVE_TO_SELF, 0.5f,
-                Animation.RELATIVE_TO_SELF, 0.5f
-        );
+                Animation.RELATIVE_TO_SELF, 0.5f);
         scaleAnim.setDuration(1600);
         scaleAnim.setRepeatCount(Animation.INFINITE);
         scaleAnim.setRepeatMode(Animation.RESTART);
@@ -294,7 +293,7 @@ public class RecipesActivity extends BaseActivity {
 
     private void triggerRecipeGeneration(boolean showLoadingFeedback) {
         if (showLoadingFeedback) {
-            Toast.makeText(this, R.string.recipes_checking_inventory, Toast.LENGTH_SHORT).show();
+            showInfoNotification(getString(R.string.recipes_checking_inventory));
             setRecipeState(getString(R.string.recipes_loading), false);
         }
         executor.execute(() -> {
@@ -355,7 +354,8 @@ public class RecipesActivity extends BaseActivity {
     }
 
     private void saveRecipeResultToPrefs(RecipeSuggestionResult result) {
-        if (result == null) return;
+        if (result == null)
+            return;
         try {
             JSONObject obj = new JSONObject();
             obj.put("statusMessage", result.getStatusMessage());
@@ -411,7 +411,8 @@ public class RecipesActivity extends BaseActivity {
     private RecipeSuggestionResult loadRecipeResultFromPrefs() {
         try {
             String json = getSharedPreferences("recipes_prefs", MODE_PRIVATE).getString("saved_recipes", null);
-            if (json == null) return null;
+            if (json == null)
+                return null;
 
             JSONObject obj = new JSONObject(json);
             String statusMessage = obj.optString("statusMessage", "");
@@ -435,14 +436,16 @@ public class RecipesActivity extends BaseActivity {
                 int iconRes = rObj.getInt("iconRes");
                 boolean featured = rObj.getBoolean("featured");
                 String imageUrl = rObj.optString("imageUrl", "");
-                if (imageUrl.isEmpty()) imageUrl = null;
+                if (imageUrl.isEmpty())
+                    imageUrl = null;
 
                 String prepTime = rObj.optString("prepTime", "20 min");
                 String difficulty = rObj.optString("difficulty", "Medium");
                 String calories = rObj.optString("calories", "400 kcal");
 
                 String smartTip = rObj.optString("smartTip", "");
-                if (smartTip.isEmpty()) smartTip = null;
+                if (smartTip.isEmpty())
+                    smartTip = null;
 
                 JSONArray allIngArr = rObj.optJSONArray("allIngredients");
                 List<String> allIngredients = new ArrayList<>();
@@ -525,7 +528,8 @@ public class RecipesActivity extends BaseActivity {
         }
         ImageView iconView = item.findViewById(R.id.recipeIcon);
         if (iconView != null) {
-            ViewUtils.setIcon(iconView, recipe.getIconRes(), recipe.isFeatured() ? R.color.smart_surface : R.color.smart_secondary);
+            ViewUtils.setIcon(iconView, recipe.getIconRes(),
+                    recipe.isFeatured() ? R.color.smart_surface : R.color.smart_secondary);
             ImageLoader.load(iconView, recipe.getImageUrl());
         }
 
@@ -568,7 +572,8 @@ public class RecipesActivity extends BaseActivity {
                 for (String ingredient : recipe.getAllIngredients()) {
                     String ingredientLower = ingredient.toLowerCase(Locale.US).trim();
                     String productLower = product.getName().toLowerCase(Locale.US).trim();
-                    if (productLower.length() >= 3 && (ingredientLower.contains(productLower) || productLower.contains(ingredientLower))) {
+                    if (productLower.length() >= 3
+                            && (ingredientLower.contains(productLower) || productLower.contains(ingredientLower))) {
                         matches = true;
                         break;
                     } else if (productLower.equalsIgnoreCase(ingredientLower)) {

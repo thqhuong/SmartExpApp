@@ -6,7 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -15,6 +18,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.IdRes;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
@@ -22,7 +26,9 @@ import androidx.core.os.LocaleListCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.smartexpapp.data.OcrCaptureRepository;
 import com.example.smartexpapp.data.SettingsRepository;
+import com.example.smartexpapp.util.InAppNotificationManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,12 +38,26 @@ import java.util.function.Consumer;
 
 public abstract class BaseActivity extends AppCompatActivity {
     private Consumer<Uri> productPhotoCallback;
-    private final ActivityResultLauncher<String> productPhotoPicker =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+    private Uri pendingPhotoCaptureUri;
+    private View statusBarScrim;
+
+    private final ActivityResultLauncher<String> productPhotoPicker = registerForActivityResult(
+            new ActivityResultContracts.GetContent(), uri -> {
                 Consumer<Uri> callback = productPhotoCallback;
                 productPhotoCallback = null;
                 if (callback != null) {
                     callback.accept(uri);
+                }
+            });
+
+    private final ActivityResultLauncher<Uri> productPhotoCamera = registerForActivityResult(
+            new ActivityResultContracts.TakePicture(), success -> {
+                Uri captured = pendingPhotoCaptureUri;
+                pendingPhotoCaptureUri = null;
+                Consumer<Uri> callback = productPhotoCallback;
+                productPhotoCallback = null;
+                if (Boolean.TRUE.equals(success) && captured != null && callback != null) {
+                    callback.accept(captured);
                 }
             });
 
@@ -67,6 +87,88 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
     }
 
+    @Override
+    public void setContentView(int layoutResID) {
+        super.setContentView(layoutResID);
+        applyTopStatusBarInset();
+    }
+
+    @Override
+    public void setContentView(View view) {
+        super.setContentView(view);
+        applyTopStatusBarInset();
+    }
+
+    @Override
+    public void setContentView(View view, ViewGroup.LayoutParams params) {
+        super.setContentView(view, params);
+        applyTopStatusBarInset();
+    }
+
+    /**
+     * Constrains every screen's content so it never draws over the status bar.
+     * Android 15+ (targetSdk 36) forces edge-to-edge, so content otherwise spills
+     * under the status bar.
+     *
+     * <p>
+     * Two things happen here:
+     * <ul>
+     * <li>The status-bar inset is added as top padding on the screen's root view,
+     * so the actual content (top bar, forms, lists) is pushed below the status
+     * bar. The root's own background still fills the whole window (padding
+     * doesn't clip it), so the decorative gradient stays full-bleed.</li>
+     * <li>An opaque scrim is drawn on top of everything, exactly covering the
+     * status-bar region. Some screens disable child clipping on their scroll
+     * containers, which lets scrolled content bleed up into the status-bar
+     * area; the scrim guarantees that content is always covered there.</li>
+     * </ul>
+     *
+     * On pre-edge-to-edge devices the status-bar inset is 0, so nothing changes.
+     */
+    private void applyTopStatusBarInset() {
+        View content = findViewById(android.R.id.content);
+        if (!(content instanceof ViewGroup)) {
+            return;
+        }
+        ViewGroup contentGroup = (ViewGroup) content;
+        if (contentGroup.getChildCount() == 0) {
+            return;
+        }
+        View root = contentGroup.getChildAt(0);
+        final int start = root.getPaddingStart();
+        final int initialTop = root.getPaddingTop();
+        final int end = root.getPaddingEnd();
+        final int bottom = root.getPaddingBottom();
+
+        final View scrim = ensureStatusBarScrim(contentGroup);
+
+        ViewCompat.setOnApplyWindowInsetsListener(root, (view, insets) -> {
+            int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            view.setPaddingRelative(start, initialTop + top, end, bottom);
+            ViewGroup.LayoutParams lp = scrim.getLayoutParams();
+            if (lp != null && lp.height != top) {
+                lp.height = top;
+                scrim.setLayoutParams(lp);
+            }
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(root);
+    }
+
+    private View ensureStatusBarScrim(ViewGroup contentGroup) {
+        if (statusBarScrim != null && statusBarScrim.getParent() == contentGroup) {
+            statusBarScrim.bringToFront();
+            return statusBarScrim;
+        }
+        View scrim = new View(this);
+        scrim.setBackgroundColor(getColor(R.color.smart_background));
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, 0, Gravity.TOP);
+        contentGroup.addView(scrim, lp);
+        statusBarScrim = scrim;
+        return scrim;
+    }
+
     protected void setupChrome(@IdRes int selectedNavItemId) {
         ImageButton menuButton = findViewById(R.id.topActionMenu);
         View btnToggleLightMode = findViewById(R.id.btnToggleLightMode);
@@ -92,27 +194,31 @@ public abstract class BaseActivity extends AppCompatActivity {
                 sunBg,
                 moonBg,
                 sunIcon,
-                moonIcon
-        );
+                moonIcon);
         View.OnClickListener toggleThemeListener = v -> {
             boolean nextNightMode = !SettingsRepository.getCachedDarkMode(this);
-            if (btnToggleLightMode != null) btnToggleLightMode.setEnabled(false);
-            if (btnToggleDarkMode != null) btnToggleDarkMode.setEnabled(false);
-            if (themeTogglePill != null) themeTogglePill.setEnabled(false);
+            if (btnToggleLightMode != null)
+                btnToggleLightMode.setEnabled(false);
+            if (btnToggleDarkMode != null)
+                btnToggleDarkMode.setEnabled(false);
+            if (themeTogglePill != null)
+                themeTogglePill.setEnabled(false);
             bindThemeToggleVisuals(nextNightMode, sunBg, moonBg, sunIcon, moonIcon);
 
             applyDarkMode(nextNightMode, error -> {
-                if (btnToggleLightMode != null) btnToggleLightMode.setEnabled(true);
-                if (btnToggleDarkMode != null) btnToggleDarkMode.setEnabled(true);
-                if (themeTogglePill != null) themeTogglePill.setEnabled(true);
+                if (btnToggleLightMode != null)
+                    btnToggleLightMode.setEnabled(true);
+                if (btnToggleDarkMode != null)
+                    btnToggleDarkMode.setEnabled(true);
+                if (themeTogglePill != null)
+                    themeTogglePill.setEnabled(true);
                 bindThemeToggleVisuals(
                         SettingsRepository.getCachedDarkMode(this),
                         sunBg,
                         moonBg,
                         sunIcon,
-                        moonIcon
-                );
-                Toast.makeText(this, R.string.theme_save_error, Toast.LENGTH_SHORT).show();
+                        moonIcon);
+                showErrorNotification(getString(R.string.theme_save_error));
             });
         };
 
@@ -127,7 +233,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (themeTogglePill != null) {
             themeTogglePill.setOnClickListener(toggleThemeListener);
         }
-
         if (bottomNavigation == null) {
             return;
         }
@@ -151,8 +256,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         SettingsRepository.setDarkModeAsync(this, darkMode, settings -> {
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             AppCompatDelegate.setDefaultNightMode(
-                    settings.isDarkMode() ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
-            );
+                    settings.isDarkMode() ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
         }, errorCallback);
     }
 
@@ -161,8 +265,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             View sunBg,
             View moonBg,
             ImageView sunIcon,
-            ImageView moonIcon
-    ) {
+            ImageView moonIcon) {
         if (sunBg == null || moonBg == null || sunIcon == null || moonIcon == null) {
             return;
         }
@@ -277,7 +380,8 @@ public abstract class BaseActivity extends AppCompatActivity {
             try (InputStream in = resolver.openInputStream(sourceUri)) {
                 bitmap = BitmapFactory.decodeStream(in);
             }
-            if (bitmap == null) return null;
+            if (bitmap == null)
+                return null;
             try (FileOutputStream out = new FileOutputStream(file)) {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
             }
@@ -287,12 +391,61 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Lets the user add a product photo either by taking a new picture with the
+     * camera or by choosing one from the gallery. The chosen image {@link Uri} is
+     * delivered to {@code callback}.
+     */
     public void pickProductPhoto(Consumer<Uri> callback) {
-        pickImage(callback);
+        productPhotoCallback = callback;
+        String[] options = {
+                getString(R.string.ocr_source_camera),
+                getString(R.string.ocr_source_gallery)
+        };
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.add_product_photo_desc)
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        launchProductPhotoCamera();
+                    } else {
+                        productPhotoPicker.launch("image/*");
+                    }
+                })
+                .setNegativeButton(R.string.cancel, (dialog, which) -> productPhotoCallback = null)
+                .setOnCancelListener(dialog -> productPhotoCallback = null)
+                .show();
     }
 
+    private void launchProductPhotoCamera() {
+        try {
+            pendingPhotoCaptureUri = OcrCaptureRepository.createCaptureUri(this);
+            productPhotoCamera.launch(pendingPhotoCaptureUri);
+        } catch (Exception error) {
+            pendingPhotoCaptureUri = null;
+            productPhotoCallback = null;
+            showErrorNotification(getString(R.string.ocr_camera_error));
+        }
+    }
+
+    /** Opens the gallery picker directly, bypassing the camera/gallery chooser. */
     public void pickImage(Consumer<Uri> callback) {
         productPhotoCallback = callback;
         productPhotoPicker.launch("image/*");
+    }
+
+    public void showSuccessNotification(String message) {
+        InAppNotificationManager.showNotification(this, message, InAppNotificationManager.Type.SUCCESS, null, null);
+    }
+
+    public void showErrorNotification(String message) {
+        InAppNotificationManager.showNotification(this, message, InAppNotificationManager.Type.ERROR, null, null);
+    }
+
+    public void showWarningNotification(String message) {
+        InAppNotificationManager.showNotification(this, message, InAppNotificationManager.Type.WARNING, null, null);
+    }
+
+    public void showInfoNotification(String message) {
+        InAppNotificationManager.showNotification(this, message, InAppNotificationManager.Type.INFO, null, null);
     }
 }

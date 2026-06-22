@@ -1,6 +1,7 @@
 package com.example.smartexpapp;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,6 +39,7 @@ import com.example.smartexpapp.util.CategoryColorHelper;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ViewUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.example.smartexpapp.util.InAppNotificationManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -76,8 +78,6 @@ public class InventoryActivity extends BaseActivity {
 
     private List<Product> latestProducts = new ArrayList<>();
     private InventoryViewModel viewModel;
-    private View undoBarView;
-    private Handler undoHandler;
 
     private View multiSelectBar;
     private View searchFilterContainer;
@@ -111,17 +111,7 @@ public class InventoryActivity extends BaseActivity {
 
         productList = findViewById(R.id.productList);
         productList.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new InventoryAdapter(new InventoryAdapter.OnProductClickListener() {
-            @Override
-            public void onProductClick(Product product) {
-                showProductActions(product);
-            }
-
-            @Override
-            public void onDeleteClick(Product product) {
-                confirmDelete(product);
-            }
-        });
+        adapter = new InventoryAdapter(product -> showProductActions(product));
         adapter.setOnProductLongClickListener(product -> {
             enterMultiSelect(product);
             return true;
@@ -155,9 +145,12 @@ public class InventoryActivity extends BaseActivity {
 
         findViewById(R.id.btnCloseMultiSelect).setOnClickListener(v -> finishMultiSelect());
         findViewById(R.id.btnSelectAll).setOnClickListener(v -> adapter.selectAll());
-        findViewById(R.id.btnBatchConsumed).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.CONSUMED));
-        findViewById(R.id.btnBatchWasted).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.WASTED));
-        findViewById(R.id.btnBatchDonated).setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.DONATED));
+        findViewById(R.id.btnBatchConsumed)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.CONSUMED));
+        findViewById(R.id.btnBatchWasted)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.WASTED));
+        findViewById(R.id.btnBatchDonated)
+                .setOnClickListener(v -> batchMarkStatus(adapter.getSelectedIds(), ProductStatus.DONATED));
         findViewById(R.id.btnBatchDelete).setOnClickListener(v -> batchDelete(adapter.getSelectedIds()));
 
         AppContainer appContainer = ((SmartExpAppApplication) getApplicationContext()).appContainer;
@@ -211,8 +204,7 @@ public class InventoryActivity extends BaseActivity {
                 error -> {
                     Log.w(TAG, "Initial product sync failed; loading local inventory cache.", error);
                     viewModel.loadProducts();
-                }
-        );
+                });
     }
 
     @Override
@@ -230,6 +222,26 @@ public class InventoryActivity extends BaseActivity {
         viewModel.setExpiringSoonDays(expiringSoonDays);
         adapter.setExpiringSoonDays(expiringSoonDays);
         viewModel.loadProducts();
+        showIntentNotification();
+    }
+
+    private void showIntentNotification() {
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("extra_notification_message")) {
+            String message = intent.getStringExtra("extra_notification_message");
+            String type = intent.getStringExtra("extra_notification_type");
+            intent.removeExtra("extra_notification_message");
+            intent.removeExtra("extra_notification_type");
+            if ("success".equals(type)) {
+                showSuccessNotification(message);
+            } else if ("error".equals(type)) {
+                showErrorNotification(message);
+            } else if ("warning".equals(type)) {
+                showWarningNotification(message);
+            } else {
+                showInfoNotification(message);
+            }
+        }
     }
 
     @Override
@@ -320,12 +332,13 @@ public class InventoryActivity extends BaseActivity {
 
         List<Product> affectedProducts = new ArrayList<>();
         for (Product p : latestProducts) {
-            if (ids.contains(p.getId())) affectedProducts.add(p);
+            if (ids.contains(p.getId()))
+                affectedProducts.add(p);
         }
 
         String message = getString(R.string.batch_status_format, ids.size()) + " - " + label;
 
-        int[] completed = {0};
+        int[] completed = { 0 };
         ProductRepository.Callback<Boolean> callback = result -> {
             synchronized (completed) {
                 completed[0]++;
@@ -333,7 +346,8 @@ public class InventoryActivity extends BaseActivity {
                     runOnUiThread(() -> {
                         finishMultiSelect();
                         viewModel.loadProducts();
-                        showUndoBar(null, iconRes, iconBgRes, iconTintRes, message,
+                        InAppNotificationManager.showUndo(InventoryActivity.this, message, iconRes, iconBgRes,
+                                iconTintRes,
                                 () -> batchUndo(affectedProducts));
                     });
                 }
@@ -352,15 +366,15 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void batchDelete(Set<String> ids) {
-        List<Product> affectedProducts = new ArrayList<>();
+        List<Product> deletedProducts = new ArrayList<>();
         for (Product p : latestProducts) {
-            if (ids.contains(p.getId())) affectedProducts.add(p);
+            if (ids.contains(p.getId())) {
+                deletedProducts.add(p);
+            }
         }
-
-        String note = "Batch deleted from inventory";
         String message = getString(R.string.batch_deleted_format, ids.size());
 
-        int[] completed = {0};
+        int[] completed = { 0 };
         ProductRepository.Callback<Boolean> callback = result -> {
             synchronized (completed) {
                 completed[0]++;
@@ -368,41 +382,55 @@ public class InventoryActivity extends BaseActivity {
                     runOnUiThread(() -> {
                         finishMultiSelect();
                         viewModel.loadProducts();
-                        showUndoBar(null,
-                                R.drawable.ic_delete, R.drawable.bg_action_icon_circle_delete,
-                                R.color.smart_error, message,
-                                () -> batchUndo(affectedProducts));
+                        InAppNotificationManager.showUndo(InventoryActivity.this, message,
+                                R.drawable.ic_delete,
+                                R.drawable.bg_action_icon_circle_delete,
+                                R.color.smart_error,
+                                () -> batchUndo(deletedProducts));
                     });
                 }
             }
         };
         ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch delete failed", e);
         for (String id : ids) {
-            viewModel.softDeleteProduct(id, note, callback, errorCallback);
+            viewModel.deleteProduct(id, callback, errorCallback);
         }
     }
 
     private void batchUndo(List<Product> products) {
-        int[] completed = {0};
+        int[] completed = { 0 };
         int total = products.size();
-        ProductRepository.Callback<Boolean> callback = result -> {
-            synchronized (completed) {
-                completed[0]++;
-                if (completed[0] == total) {
-                    runOnUiThread(() -> {
-                        Toast.makeText(this,
-                                getString(R.string.batch_undone_format, total),
-                                Toast.LENGTH_SHORT).show();
-                        ReminderScheduler.runSoon(this);
-                        viewModel.loadProducts();
-                    });
-                }
-            }
-        };
-        ProductRepository.ErrorCallback errorCallback = e ->
-                Log.e(TAG, "Batch undo failed", e);
+        ProductRepository.ErrorCallback errorCallback = e -> Log.e(TAG, "Batch undo failed", e);
         for (Product product : products) {
-            viewModel.revertStatus(product.getId(), "Batch undo", callback, errorCallback);
+            viewModel.revertStatus(product.getId(), "Batch undo",
+                    reverted -> {
+                        if (!Boolean.TRUE.equals(reverted)) {
+                            ProductRepository.addProductAsync(InventoryActivity.this, product,
+                                    unused -> {
+                                        synchronized (completed) {
+                                            completed[0]++;
+                                            if (completed[0] == total) {
+                                                runOnUiThread(() -> {
+                                                    showSuccessNotification(getString(R.string.batch_undone_format, total));
+                                                    ReminderScheduler.runSoon(this);
+                                                    viewModel.loadProducts();
+                                                });
+                                            }
+                                        }
+                                    }, errorCallback);
+                        } else {
+                            synchronized (completed) {
+                                completed[0]++;
+                                if (completed[0] == total) {
+                                    runOnUiThread(() -> {
+                                        showSuccessNotification(getString(R.string.batch_undone_format, total));
+                                        ReminderScheduler.runSoon(this);
+                                        viewModel.loadProducts();
+                                    });
+                                }
+                            }
+                        }
+                    }, errorCallback);
         }
     }
 
@@ -446,10 +474,18 @@ public class InventoryActivity extends BaseActivity {
             public void onSelected(int index, String label) {
                 String filter;
                 switch (index) {
-                    case 1: filter = FILTER_EXPIRING_SOON; break;
-                    case 2: filter = "StillGood"; break;
-                    case 3: filter = "Expired"; break;
-                    default: filter = "All"; break;
+                    case 1:
+                        filter = FILTER_EXPIRING_SOON;
+                        break;
+                    case 2:
+                        filter = "StillGood";
+                        break;
+                    case 3:
+                        filter = "Expired";
+                        break;
+                    default:
+                        filter = "All";
+                        break;
                 }
                 expiryFilterValue.setText(label);
                 finishMultiSelectIfActive();
@@ -474,9 +510,15 @@ public class InventoryActivity extends BaseActivity {
             public void onSelected(int index, String label) {
                 String sort;
                 switch (index) {
-                    case 1: sort = "name"; break;
-                    case 2: sort = "newest"; break;
-                    default: sort = "oldest"; break;
+                    case 1:
+                        sort = "name";
+                        break;
+                    case 2:
+                        sort = "newest";
+                        break;
+                    default:
+                        sort = "oldest";
+                        break;
                 }
                 sortFilterValue.setText(label);
                 finishMultiSelectIfActive();
@@ -552,9 +594,13 @@ public class InventoryActivity extends BaseActivity {
         for (int i = 0; i < container.getChildCount(); i++) {
             View option = container.getChildAt(i);
             ImageView radio = option.findViewById(R.id.filterOptionRadio);
-            radio.setImageResource(i == selectedIndex
+            boolean selected = i == selectedIndex;
+            radio.setImageResource(selected
                     ? R.drawable.ic_radio_button_checked
                     : R.drawable.ic_radio_button_unchecked);
+            radio.setImageTintList(ColorStateList.valueOf(getColor(selected
+                    ? R.color.smart_primary_container
+                    : R.color.smart_outline_variant)));
         }
     }
 
@@ -584,7 +630,7 @@ public class InventoryActivity extends BaseActivity {
             expiryFilterValue.setText(R.string.filter_expiring);
         }
         viewModel.applyLaunchFilter(FILTER_EXPIRING_SOON);
-        Toast.makeText(this, R.string.reminder_filter_toast, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.reminder_filter_toast));
     }
 
     private void resetInventoryFilters() {
@@ -806,12 +852,12 @@ public class InventoryActivity extends BaseActivity {
     }
 
     private void onMarkSuccess(Boolean updated, Product product,
-                               int iconRes, int iconBgRes, int iconTintRes, String statusLabel) {
+            int iconRes, int iconBgRes, int iconTintRes, String statusLabel) {
         if (Boolean.TRUE.equals(updated)) {
             ReminderScheduler.runSoon(this);
             viewModel.loadProducts();
             String message = getString(R.string.mark_status_snackbar_format, product.getName(), statusLabel);
-            showUndoBar(product, iconRes, iconBgRes, iconTintRes, message, () -> undoMark(product));
+            InAppNotificationManager.showUndo(this, message, iconRes, iconBgRes, iconTintRes, () -> undoMark(product));
         }
     }
 
@@ -819,79 +865,30 @@ public class InventoryActivity extends BaseActivity {
         viewModel.revertStatus(product.getId(), "Reverted from undo bar",
                 reverted -> {
                     if (Boolean.TRUE.equals(reverted)) {
-                        Toast.makeText(this,
-                                getString(R.string.mark_undone_format, product.getName()),
-                                Toast.LENGTH_SHORT).show();
+                        showSuccessNotification(getString(R.string.mark_undone_format, product.getName()));
                         ReminderScheduler.runSoon(this);
                         viewModel.loadProducts();
                     }
                 }, this::onStatusUpdateFailed);
     }
 
-    private void showUndoBar(Product product, int iconRes, int iconBgRes, int iconTintRes,
-                             String message, Runnable undoAction) {
-        ViewGroup root = findViewById(R.id.root);
-        if (root == null) return;
-
-        if (undoBarView != null) {
-            root.removeView(undoBarView);
-            undoBarView = null;
-        }
-        if (undoHandler != null) {
-            undoHandler.removeCallbacksAndMessages(null);
-        }
-
-        undoBarView = LayoutInflater.from(this).inflate(R.layout.dialog_undo_delete, root, false);
-
-        FrameLayout iconContainer = undoBarView.findViewById(R.id.undoIconContainer);
-        iconContainer.setBackgroundResource(iconBgRes);
-
-        ImageView icon = undoBarView.findViewById(R.id.undoIcon);
-        icon.setImageResource(iconRes);
-        icon.setImageTintList(android.content.res.ColorStateList.valueOf(
-                getColor(iconTintRes)));
-
-        ((TextView) undoBarView.findViewById(R.id.undoMessage)).setText(message);
-
-        undoBarView.findViewById(R.id.undoAction).setOnClickListener(v -> {
-            dismissUndoBar();
-            undoAction.run();
-        });
-
-        root.addView(undoBarView, root.getChildCount() - 1);
-
-        undoBarView.setTranslationY(200f);
-        undoBarView.setAlpha(0f);
-        undoBarView.animate()
-                .translationY(0f)
-                .alpha(1f)
-                .setDuration(350)
-                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
-                .start();
-
-        undoHandler = new Handler(Looper.getMainLooper());
-        undoHandler.postDelayed(this::dismissUndoBar, 5000);
-    }
-
-    private void dismissUndoBar() {
-        if (undoHandler != null) {
-            undoHandler.removeCallbacksAndMessages(null);
-        }
-        if (undoBarView != null) {
-            undoBarView.animate()
-                    .translationY(200f)
-                    .alpha(0f)
-                    .setDuration(250)
-                    .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
-                    .withEndAction(() -> {
-                        ViewGroup root = findViewById(R.id.root);
-                        if (root != null && undoBarView != null) {
-                            root.removeView(undoBarView);
-                        }
-                        undoBarView = null;
-                    })
-                    .start();
-        }
+    private void undoDelete(Product product) {
+        viewModel.revertStatus(product.getId(), "Restored from undo bar",
+                reverted -> {
+                    if (Boolean.TRUE.equals(reverted)) {
+                        showSuccessNotification(getString(R.string.restored_format, product.getName()));
+                        ReminderScheduler.runSoon(this);
+                        viewModel.loadProducts();
+                    } else {
+                        ProductRepository.addProductAsync(InventoryActivity.this, product,
+                                unused -> {
+                                    showSuccessNotification(getString(R.string.restored_format, product.getName()));
+                                    ReminderScheduler.runSoon(this);
+                                    viewModel.loadProducts();
+                                },
+                                this::onStatusUpdateFailed);
+                    }
+                }, this::onStatusUpdateFailed);
     }
 
     private void openEditDialog(Product product) {
@@ -916,20 +913,20 @@ public class InventoryActivity extends BaseActivity {
 
         dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
             dialog.dismiss();
-            viewModel.softDeleteProduct(product.getId(), "Deleted from inventory", deleted -> {
+            viewModel.deleteProduct(product.getId(), deleted -> {
                 if (Boolean.TRUE.equals(deleted)) {
                     ReminderScheduler.runSoon(this);
                     viewModel.loadProducts();
-                    showUndoBar(product,
+                    InAppNotificationManager.showUndo(InventoryActivity.this,
+                            getString(R.string.undo_delete_format, product.getName()),
                             R.drawable.ic_delete,
                             R.drawable.bg_action_icon_circle_delete,
                             R.color.smart_error,
-                            getString(R.string.undo_delete_format, product.getName()),
-                            () -> undoMark(product));
+                            () -> undoDelete(product));
                 }
             }, error -> {
                 Log.e(TAG, "Failed to delete product", error);
-                Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+                showErrorNotification(getString(R.string.error_load));
             });
         });
 
@@ -938,6 +935,6 @@ public class InventoryActivity extends BaseActivity {
 
     private void onStatusUpdateFailed(Exception error) {
         Log.e(TAG, "Failed to update product status", error);
-        Toast.makeText(this, R.string.error_load, Toast.LENGTH_SHORT).show();
+        showErrorNotification(getString(R.string.error_load));
     }
 }

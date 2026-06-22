@@ -54,7 +54,7 @@
             android:layout_marginTop="20dp"
             android:background="@drawable/bg_dialog_confirm_button_orange"
             android:gravity="center"
-            android:text="Restore"
+            android:text="@string/restore_confirm"
             android:textAllCaps="false"
             android:textColor="@color/smart_on_primary"
             android:textSize="14sp"

@@ -18,7 +18,6 @@ local-signing/
 *.jks
 *.keystore
 /.idea/misc.xml
-app/google-services.json
 
 
 # Ignore Wrangler cache and temporary files

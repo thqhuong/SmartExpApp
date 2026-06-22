@@ -167,6 +167,7 @@ public final class CategoryRepository {
         });
         syncCategories(context, database);
         ProductSyncRepository.syncProductsAsync(context, database);
+        CategoryColorHelper.transferColorMapping(context, oldCanonical, newCanonical);
         return true;
     }
 

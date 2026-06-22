@@ -36,12 +36,14 @@ public class Product {
     private final String ownerUserId;
     private final String syncStatus;
     private final Long lastSyncedAt;
+    private final String note;
 
     public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes) {
         this(name, category, amount, storage, daysUntilExpiry, iconRes, null);
     }
 
-    public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes, String imageUrl) {
+    public Product(String name, String category, String amount, String storage, int daysUntilExpiry, int iconRes,
+            String imageUrl) {
         this(
                 newId(),
                 name,
@@ -60,15 +62,16 @@ public class Product {
                 null,
                 null,
                 SYNC_STATUS_LOCAL,
-                null
-        );
+                null);
     }
 
-    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis, int iconRes) {
+    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis,
+            int iconRes) {
         this(name, category, quantity, unit, storage, expiryDateMillis, iconRes, null);
     }
 
-    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis, int iconRes, String imageUrl) {
+    public Product(String name, String category, String quantity, String unit, String storage, long expiryDateMillis,
+            int iconRes, String imageUrl) {
         this(
                 newId(),
                 name,
@@ -87,8 +90,7 @@ public class Product {
                 null,
                 null,
                 SYNC_STATUS_LOCAL,
-                null
-        );
+                null);
     }
 
     public Product(
@@ -109,8 +111,31 @@ public class Product {
             String cloudId,
             String ownerUserId,
             String syncStatus,
-            Long lastSyncedAt
-    ) {
+            Long lastSyncedAt) {
+        this(id, name, category, quantity, unit, storage, storageLocationId, expiryDateMillis, barcode, status, iconRes,
+                imageUrl, createdAt, updatedAt, cloudId, ownerUserId, syncStatus, lastSyncedAt, null);
+    }
+
+    public Product(
+            String id,
+            String name,
+            String category,
+            String quantity,
+            String unit,
+            String storage,
+            String storageLocationId,
+            long expiryDateMillis,
+            String barcode,
+            String status,
+            int iconRes,
+            String imageUrl,
+            long createdAt,
+            long updatedAt,
+            String cloudId,
+            String ownerUserId,
+            String syncStatus,
+            Long lastSyncedAt,
+            String note) {
         this.id = valueOrDefault(id, newId());
         this.name = valueOrDefault(name, "Unnamed Product");
         this.category = valueOrDefault(category, "General");
@@ -129,6 +154,7 @@ public class Product {
         this.ownerUserId = ownerUserId;
         this.syncStatus = valueOrDefault(syncStatus, SYNC_STATUS_LOCAL);
         this.lastSyncedAt = lastSyncedAt;
+        this.note = note;
     }
 
     public Product withStatus(String newStatus, long updatedAt) {
@@ -150,8 +176,8 @@ public class Product {
                 cloudId,
                 ownerUserId,
                 syncStatus,
-                lastSyncedAt
-        );
+                lastSyncedAt,
+                note);
     }
 
     public Product withOwnerUserId(String newOwnerUserId, long updatedAt) {
@@ -173,8 +199,8 @@ public class Product {
                 cloudId,
                 newOwnerUserId,
                 syncStatus,
-                lastSyncedAt
-        );
+                lastSyncedAt,
+                note);
     }
 
     public Product withSyncMetadata(String newCloudId, String newSyncStatus, Long newLastSyncedAt, long updatedAt) {
@@ -196,12 +222,39 @@ public class Product {
                 newCloudId,
                 ownerUserId,
                 newSyncStatus,
-                newLastSyncedAt
-        );
+                newLastSyncedAt,
+                note);
+    }
+
+    public Product withNote(String newNote) {
+        return new Product(
+                id,
+                name,
+                category,
+                quantity,
+                unit,
+                storage,
+                storageLocationId,
+                expiryDateMillis,
+                barcode,
+                status,
+                iconRes,
+                imageUrl,
+                createdAt,
+                updatedAt,
+                cloudId,
+                ownerUserId,
+                syncStatus,
+                lastSyncedAt,
+                newNote);
     }
 
     public String getId() {
         return id;
+    }
+
+    public String getNote() {
+        return note;
     }
 
     public String getName() {
@@ -383,10 +436,13 @@ public class Product {
     }
 
     public String getGroup(int expiringSoonDays) {
-        if (isExpired()) return "Expired";
+        if (isExpired())
+            return "Expired";
         int days = getDaysUntilExpiry();
-        if (days <= 1) return "Urgent";
-        if (days <= expiringSoonDays) return "Soon";
+        if (days <= 1)
+            return "Urgent";
+        if (days <= expiringSoonDays)
+            return "Soon";
         return "Safe";
     }
 
@@ -417,9 +473,9 @@ public class Product {
         String safeAmount = valueOrDefault(amount, "1 pcs").trim();
         int firstSpace = safeAmount.indexOf(' ');
         if (firstSpace < 0) {
-            return new String[]{safeAmount, ""};
+            return new String[] { safeAmount, "" };
         }
-        return new String[]{
+        return new String[] {
                 safeAmount.substring(0, firstSpace).trim(),
                 safeAmount.substring(firstSpace + 1).trim()
         };

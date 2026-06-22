@@ -138,11 +138,11 @@ public class RecipeDetailsActivity extends BaseActivity {
             if (isFavorited[0]) {
                 favoriteBtn.setImageResource(R.drawable.ic_favorite_filled);
                 favoriteBtn.setImageTintList(null);
-                Toast.makeText(this, R.string.favorite_saved, Toast.LENGTH_SHORT).show();
+                showSuccessNotification(getString(R.string.favorite_saved));
             } else {
                 favoriteBtn.setImageResource(R.drawable.ic_favorite_border);
                 favoriteBtn.setImageTintList(ColorStateList.valueOf(getColor(R.color.smart_primary)));
-                Toast.makeText(this, R.string.favorite_removed, Toast.LENGTH_SHORT).show();
+                showInfoNotification(getString(R.string.favorite_removed));
             }
         });
     }

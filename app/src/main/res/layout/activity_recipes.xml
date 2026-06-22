@@ -5,18 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_glass_screen"
-    android:orientation="vertical"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:orientation="vertical">
 
     <include layout="@layout/include_top_bar" />
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/recipesScroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipChildren="false"
-        android:clipToPadding="false">
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -149,7 +146,6 @@
                 android:paddingBottom="10dp" />
 
             <TextView
-                android:id="@+id/recipesDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"

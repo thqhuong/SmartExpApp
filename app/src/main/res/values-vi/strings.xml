@@ -257,7 +257,7 @@
     <string name="expiry_not_detected">Không phát hiện ngày hết hạn. Vui lòng chọn ngày trước khi lưu.</string>
     <string name="select_expiry_before_saving">Chọn ngày hết hạn trước khi lưu.</string>
     <string name="enter_product_name">Nhập tên sản phẩm.</string>
-    <string name="scan_expiry_text">Quét chữ hạn dùng</string>
+    <string name="scan_expiry_text">Quét thông tin hạn sử dụng</string>
     <string name="ocr_source_camera">Camera</string>
     <string name="ocr_source_gallery">Thư viện</string>
     <string name="ocr_camera_error">Không thể mở camera để OCR.</string>
@@ -281,6 +281,8 @@
     <string name="category_add_title">Thêm danh mục mới</string>
     <string name="add_label">Thêm</string>
     <string name="manage_categories_title">Quản lý danh mục</string>
+    <string name="manage_categories_instruction">Nhấn vào một danh mục để đổi tên hoặc xóa</string>
+    <string name="category_default_tag"> (Mặc định)</string>
     <string name="close_label">Đóng</string>
     <string name="rename_category_title">Đổi tên danh mục</string>
     <string name="rename_label">Đổi tên</string>
@@ -474,7 +476,7 @@
     <string name="mark_status_snackbar_format">Đã chuyển \"%1$s\" vào lịch sử dưới dạng %2$s</string>
     <string name="mark_undo">Hoàn tác</string>
     <string name="mark_undone_format">Đã chuyển \"%1$s\" về trạng thái đang dùng</string>
-    <string name="undo_delete_format">Đã chuyển \"%1$s\" vào lịch sử</string>
+    <string name="undo_delete_format">Đã xóa \"%1$s\"</string>
     <string name="mark_wasted_confirm_text">Sản phẩm này sẽ được đánh dấu là lãng phí.</string>
 
     <!-- Authentication Strings -->
@@ -511,7 +513,7 @@
     <string name="batch_consumed_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng đã dùng</string>
     <string name="batch_wasted_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng lãng phí</string>
     <string name="batch_donated_format">Đã chuyển %1$d sản phẩm vào lịch sử dưới dạng đã tặng</string>
-    <string name="batch_deleted_format">Đã chuyển %1$d sản phẩm vào lịch sử</string>
+    <string name="batch_deleted_format">Đã xóa %1$d sản phẩm</string>
     <string name="batch_status_format">Đã cập nhật %1$d sản phẩm</string>
     <string name="batch_undone_format">Đã khôi phục %1$d sản phẩm</string>
 
@@ -553,4 +555,15 @@
     <string name="recipe_status_dietary_pref"> Tùy chọn ăn uống: %1$s.</string>
     <string name="recipe_status_local_empty_inventory">Kho cục bộ đang trống. Đây là các gợi ý chung; bạn cũng có thể nhập món muốn nấu.</string>
     <string name="recipe_status_local_active">Đang dùng gợi ý cục bộ từ kho đã lưu và yêu cầu của bạn.</string>
+    <string name="history_note_format">Ghi chú: %s</string>
+
+    <!-- Category Management -->
+    <string name="category_add_success_format">Đã thêm \"%1$s\"</string>
+    <string name="category_rename_success_format">Đã đổi tên thành \"%1$s\"</string>
+    <string name="category_undo_deleted_format">Đã khôi phục \"%1$s\"</string>
+    <string name="category_delete_blocked_title">Không thể xóa danh mục này</string>
+    <string name="category_delete_blocked_message_format">Danh mục này có %1$d sản phẩm. Hãy xóa hết sản phẩm trước khi xóa danh mục.</string>
+    <string name="got_it">Đã hiểu</string>
+    <string name="undo_delete_label">HOÀN TÁC</string>
+    <string name="category_delete_success_format">Đã xóa \"%1$s\"</string>
 </resources>

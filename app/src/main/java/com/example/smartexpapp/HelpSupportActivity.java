@@ -41,7 +41,7 @@ public class HelpSupportActivity extends BaseActivity {
         try {
             startActivity(Intent.createChooser(intent, getString(R.string.support_email_chooser)));
         } catch (ActivityNotFoundException error) {
-            Toast.makeText(this, R.string.support_no_email_app, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.support_no_email_app));
         }
     }
 

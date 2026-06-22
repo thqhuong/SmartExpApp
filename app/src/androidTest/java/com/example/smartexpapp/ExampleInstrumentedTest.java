@@ -27,9 +27,9 @@ public class ExampleInstrumentedTest {
 
         try (ActivityScenario<InventoryActivity> ignored = ActivityScenario.launch(InventoryActivity.class)) {
             onView(withId(R.id.searchInput)).check(matches(isDisplayed()));
-            onView(withId(R.id.expirySpinner)).check(matches(isDisplayed()));
-            onView(withId(R.id.storageSpinner)).check(matches(isDisplayed()));
-            onView(withId(R.id.sortSpinner)).check(matches(isDisplayed()));
+            onView(withId(R.id.expiryFilterRow)).check(matches(isDisplayed()));
+            onView(withId(R.id.storageFilterRow)).check(matches(isDisplayed()));
+            onView(withId(R.id.sortFilterRow)).check(matches(isDisplayed()));
         }
     }
 }

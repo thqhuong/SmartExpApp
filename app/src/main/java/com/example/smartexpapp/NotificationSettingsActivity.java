@@ -65,7 +65,7 @@ public class NotificationSettingsActivity extends BaseActivity {
                     draftNotificationsEnabled = false;
                     pendingSaveAfterPermission = false;
                     bindDetailSwitchState();
-                    Toast.makeText(this, R.string.notification_permission_needed, Toast.LENGTH_SHORT).show();
+                    showWarningNotification(getString(R.string.notification_permission_needed));
                 }
             });
 
@@ -204,11 +204,11 @@ public class NotificationSettingsActivity extends BaseActivity {
             setEditingEnabled(true);
             setMasterSwitchChecked(settings.areNotificationsEnabled());
             bindDetailSwitchState();
-            Toast.makeText(this, R.string.notification_settings_saved, Toast.LENGTH_SHORT).show();
+            showSuccessNotification(getString(R.string.notification_settings_saved));
         }, error -> {
             setEditingEnabled(true);
             bindDetailSwitchState();
-            Toast.makeText(this, R.string.notification_settings_save_error, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.notification_settings_save_error));
         });
     }
 
@@ -249,11 +249,11 @@ public class NotificationSettingsActivity extends BaseActivity {
             try {
                 days = Integer.parseInt(input.getText().toString().trim());
             } catch (NumberFormatException error) {
-                Toast.makeText(this, R.string.custom_reminder_invalid, Toast.LENGTH_SHORT).show();
+                showWarningNotification(getString(R.string.custom_reminder_invalid));
                 return;
             }
             if (days < 0 || days > SettingsRepository.MAX_REMINDER_DAYS_BEFORE) {
-                Toast.makeText(this, R.string.custom_reminder_invalid, Toast.LENGTH_SHORT).show();
+                showWarningNotification(getString(R.string.custom_reminder_invalid));
                 return;
             }
             dialog.dismiss();

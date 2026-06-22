@@ -114,7 +114,7 @@ public class AccountDetailsActivity extends BaseActivity {
         SettingsRepository.getSettingsAsync(this, settings -> {
             profileAvatarPath = settings.getProfileAvatarPath();
             bindAvatar();
-        }, error -> Toast.makeText(this, R.string.profile_load_error, Toast.LENGTH_SHORT).show());
+        }, error -> showErrorNotification(getString(R.string.profile_load_error)));
     }
 
     private void bindLocalAccount(AuthStateRepository.AuthState authState) {
@@ -145,13 +145,13 @@ public class AccountDetailsActivity extends BaseActivity {
             }
             profileAvatarPath = settings.getProfileAvatarPath();
             bindAvatar();
-        }, error -> Toast.makeText(this, R.string.profile_load_error, Toast.LENGTH_SHORT).show());
+        }, error -> showErrorNotification(getString(R.string.profile_load_error)));
     }
 
     private void saveProfile() {
         String displayName = displayNameInput == null ? "" : displayNameInput.getText().toString().trim();
         if (displayName.isEmpty()) {
-            Toast.makeText(this, R.string.display_name_empty_error, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.display_name_empty_error));
             return;
         }
 
@@ -167,7 +167,7 @@ public class AccountDetailsActivity extends BaseActivity {
                         saveLocalAndRefresh(displayName);
                     } else {
                         String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Unknown error";
-                        Toast.makeText(this, getString(R.string.profile_save_error) + ": " + errorMsg, Toast.LENGTH_SHORT).show();
+                        showErrorNotification(getString(R.string.profile_save_error) + ": " + errorMsg);
                     }
                 });
             } else {
@@ -187,9 +187,9 @@ public class AccountDetailsActivity extends BaseActivity {
                     if (displayNameHeader != null) {
                         displayNameHeader.setText(settings.getDisplayName());
                     }
-                    Toast.makeText(this, R.string.profile_saved, Toast.LENGTH_SHORT).show();
+                    showSuccessNotification(getString(R.string.profile_saved));
                 },
-                error -> Toast.makeText(this, R.string.profile_save_error, Toast.LENGTH_SHORT).show());
+                error -> showErrorNotification(getString(R.string.profile_save_error)));
     }
 
     private void bindAvatar() {
@@ -230,7 +230,7 @@ public class AccountDetailsActivity extends BaseActivity {
         String previousPath = profileAvatarPath;
         String path = saveImageToInternalStorage(uri);
         if (path == null) {
-            Toast.makeText(this, R.string.avatar_save_error, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.avatar_save_error));
             return;
         }
         SettingsRepository.setProfileAvatarPathAsync(this, path, settings -> {
@@ -239,10 +239,10 @@ public class AccountDetailsActivity extends BaseActivity {
                 LocalImageRepository.deleteProductImage(getApplicationContext(), previousPath);
             }
             bindAvatar();
-            Toast.makeText(this, R.string.avatar_saved, Toast.LENGTH_SHORT).show();
+            showSuccessNotification(getString(R.string.avatar_saved));
         }, error -> {
             LocalImageRepository.deleteProductImage(getApplicationContext(), path);
-            Toast.makeText(this, R.string.avatar_save_error, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.avatar_save_error));
         });
     }
 
@@ -250,12 +250,23 @@ public class AccountDetailsActivity extends BaseActivity {
         if (profileAvatarPath == null || profileAvatarPath.trim().isEmpty()) {
             return;
         }
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.remove_avatar_title)
-                .setMessage(R.string.remove_avatar_message)
-                .setPositiveButton(R.string.remove_label, (dialog, which) -> removeAvatar())
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(R.layout.dialog_remove_avatar_confirm)
+                .create();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        dialog.show();
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            removeAvatar();
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
     }
 
     private void removeAvatar() {
@@ -264,8 +275,8 @@ public class AccountDetailsActivity extends BaseActivity {
             profileAvatarPath = settings.getProfileAvatarPath();
             LocalImageRepository.deleteProductImage(getApplicationContext(), previousPath);
             bindAvatar();
-            Toast.makeText(this, R.string.avatar_removed, Toast.LENGTH_SHORT).show();
-        }, error -> Toast.makeText(this, R.string.avatar_remove_error, Toast.LENGTH_SHORT).show());
+            showSuccessNotification(getString(R.string.avatar_removed));
+        }, error -> showErrorNotification(getString(R.string.avatar_remove_error)));
     }
 
     private void bindSyncState(AuthStateRepository.AuthState authState) {
@@ -323,14 +334,14 @@ public class AccountDetailsActivity extends BaseActivity {
                     UserDataSyncRepository.syncUserDataAsync(this, database);
                     bindAccountState();
                 });
-        Toast.makeText(this, R.string.retry_sync_started, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.retry_sync_started));
     }
 
     private void exportLocalData() {
-        Toast.makeText(this, R.string.export_preparing, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.export_preparing));
         LocalDataExportRepository.exportAsync(this,
                 this::shareExport,
-                error -> Toast.makeText(this, R.string.export_error, Toast.LENGTH_SHORT).show());
+                error -> showErrorNotification(getString(R.string.export_error)));
     }
 
     private void shareExport(Uri uri) {
@@ -352,13 +363,13 @@ public class AccountDetailsActivity extends BaseActivity {
     }
 
     private void deleteLocalData() {
-        Toast.makeText(this, R.string.delete_local_data_progress, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.delete_local_data_progress));
         LocalDataResetRepository.resetAsync(this,
                 summary -> {
                     bindAccountState();
-                    Toast.makeText(this, R.string.delete_local_data_done, Toast.LENGTH_SHORT).show();
+                    showSuccessNotification(getString(R.string.delete_local_data_done));
                 },
-                error -> Toast.makeText(this, R.string.delete_local_data_error, Toast.LENGTH_SHORT).show());
+                error -> showErrorNotification(getString(R.string.delete_local_data_error)));
     }
 
     private void navigateToSignIn() {

@@ -3,20 +3,22 @@ package com.example.smartexpapp;
 import android.app.DatePickerDialog;
 import android.app.AlertDialog;
 import android.app.Activity;
+import android.content.res.ColorStateList;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,8 +41,10 @@ import com.example.smartexpapp.util.DateParser;
 import com.example.smartexpapp.util.DateParser.DateCandidate;
 import com.example.smartexpapp.util.ImageLoader;
 import com.example.smartexpapp.util.ProductQuantityValidator;
+import com.example.smartexpapp.util.InAppNotificationManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
@@ -64,9 +68,15 @@ public class AddProductActivity extends BaseActivity {
     private int selectedStorageId = R.id.storageRoom;
     private EditText productNameInput;
     private EditText quantityInput;
-    private Spinner unitSpinner;
-    private Spinner categorySpinner;
+    private TextView unitSelectorValue;
+    private TextView categorySelectorValue;
+    private View categorySelectedDot;
+    private LinearLayout unitDropdown;
+    private LinearLayout categoryDropdown;
+    private ImageView unitSelectorChevron;
+    private ImageView categorySelectorChevron;
     private MaterialButton btnManageCategories;
+    private String selectedUnit = "pcs";
     private String selectedCategory = "General";
     private TextView expiryDateInput;
     private MaterialButton submitButton;
@@ -92,17 +102,14 @@ public class AddProductActivity extends BaseActivity {
     private int smartDraftTotalCount;
     private int smartDraftCurrentIndex;
 
-    private final ActivityResultLauncher<String> pickPhotoLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onPhotoPicked);
+    private final ActivityResultLauncher<Uri> ocrPhotoLauncher = registerForActivityResult(
+            new ActivityResultContracts.TakePicture(), this::onOcrPhotoCaptured);
 
-    private final ActivityResultLauncher<Uri> ocrPhotoLauncher =
-            registerForActivityResult(new ActivityResultContracts.TakePicture(), this::onOcrPhotoCaptured);
+    private final ActivityResultLauncher<String> ocrGalleryLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(), this::onOcrGalleryImagePicked);
 
-    private final ActivityResultLauncher<String> ocrGalleryLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onOcrGalleryImagePicked);
-
-    private final ActivityResultLauncher<Intent> smartAddSpeechLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+    private final ActivityResultLauncher<Intent> smartAddSpeechLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
                     showSmartAddTextDialog();
                     return;
@@ -123,8 +130,13 @@ public class AddProductActivity extends BaseActivity {
 
         productNameInput = findViewById(R.id.productNameInput);
         quantityInput = findViewById(R.id.quantityInput);
-        unitSpinner = findViewById(R.id.unitSpinner);
-        categorySpinner = findViewById(R.id.categorySpinner);
+        unitSelectorValue = findViewById(R.id.unitSelectorValue);
+        categorySelectorValue = findViewById(R.id.categorySelectorValue);
+        categorySelectedDot = findViewById(R.id.categorySelectedDot);
+        unitDropdown = findViewById(R.id.unitDropdown);
+        categoryDropdown = findViewById(R.id.categoryDropdown);
+        unitSelectorChevron = findViewById(R.id.unitSelectorChevron);
+        categorySelectorChevron = findViewById(R.id.categorySelectorChevron);
         btnManageCategories = findViewById(R.id.btnManageCategories);
         expiryDateInput = findViewById(R.id.expiryDateInput);
         submitButton = findViewById(R.id.addProductButton);
@@ -141,14 +153,14 @@ public class AddProductActivity extends BaseActivity {
         findViewById(R.id.btnLaunchSmartVoice).setOnClickListener(v -> startSmartAddVoice());
         findViewById(R.id.btnTypeSmartAdd).setOnClickListener(v -> showSmartAddTextDialog());
 
-        photoPreview.setOnClickListener(v -> pickPhotoLauncher.launch("image/*"));
+        photoPreview.setOnClickListener(v -> pickProductPhoto(this::onPhotoPicked));
         btnOcrScan.setOnClickListener(v -> showOcrSourceDialog());
         btnRemovePhoto.setOnClickListener(v -> confirmRemovePhoto());
 
         editingProductId = getIntent().getStringExtra(EXTRA_PRODUCT_ID);
 
-        setupUnitSpinner();
-        setupCategorySpinner();
+        setupUnitDropdown();
+        setupCategoryDropdown();
         setupStorageOptions();
         expiryDateInput.setOnClickListener(v -> showDatePicker());
         submitButton.setOnClickListener(v -> submitProduct());
@@ -165,6 +177,28 @@ public class AddProductActivity extends BaseActivity {
             deleteUnsavedSelectedPhoto(selectedPhotoPath);
         }
         super.onDestroy();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View focused = getCurrentFocus();
+            if (focused instanceof EditText) {
+                int[] pos = new int[2];
+                focused.getLocationOnScreen(pos);
+                float x = event.getRawX();
+                float y = event.getRawY();
+                if (x < pos[0] || x > pos[0] + focused.getWidth()
+                        || y < pos[1] || y > pos[1] + focused.getHeight()) {
+                    focused.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
     }
 
     private void startSmartAddVoice() {
@@ -197,7 +231,8 @@ public class AddProductActivity extends BaseActivity {
 
         input.addTextChangedListener(new android.text.TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -220,7 +255,7 @@ public class AddProductActivity extends BaseActivity {
                 dialog.dismiss();
                 parseSmartAddDraft(text);
             } else {
-                Toast.makeText(this, R.string.enter_product_name, Toast.LENGTH_SHORT).show();
+                showWarningNotification(getString(R.string.enter_product_name));
             }
         });
 
@@ -228,7 +263,7 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void parseSmartAddDraft(String input) {
-        Toast.makeText(this, R.string.smart_add_preparing, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.smart_add_preparing));
         AgentRepository.parseProductDraftsAsync(this, input, this::showSmartDraftConfirmation);
     }
 
@@ -238,7 +273,7 @@ public class AddProductActivity extends BaseActivity {
 
     private void showReviewDraftsDialog(List<ProductDraft> drafts) {
         if (drafts == null || drafts.isEmpty()) {
-            Toast.makeText(this, R.string.smart_add_no_details, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.smart_add_no_details));
             return;
         }
 
@@ -267,7 +302,7 @@ public class AddProductActivity extends BaseActivity {
         View btnCancel = dialogView.findViewById(R.id.btnReviewCancel);
         View btnFillForm = dialogView.findViewById(R.id.btnFillForm);
 
-        final int[] currentIndex = {0};
+        final int[] currentIndex = { 0 };
         final int totalCount = drafts.size();
 
         Runnable bindDraft = new Runnable() {
@@ -275,7 +310,8 @@ public class AddProductActivity extends BaseActivity {
             public void run() {
                 ProductDraft draft = drafts.get(currentIndex[0]);
 
-                badgeItemCount.setText(getString(R.string.smart_add_item_count_format, currentIndex[0] + 1, totalCount));
+                badgeItemCount
+                        .setText(getString(R.string.smart_add_item_count_format, currentIndex[0] + 1, totalCount));
 
                 if (draft.getName() != null && !draft.getName().trim().isEmpty()) {
                     rowValueName.setText(draft.getName());
@@ -325,7 +361,8 @@ public class AddProductActivity extends BaseActivity {
                 }
 
                 if (draft.hasExpiryDate()) {
-                    String expiry = new SimpleDateFormat("MMM d, yyyy", Locale.US).format(new java.util.Date(draft.getExpiryDateMillis()));
+                    String expiry = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                            .format(new java.util.Date(draft.getExpiryDateMillis()));
                     rowValueExpiry.setText(expiry);
                     rowValueExpiry.setTextColor(Color.WHITE);
                     rowValueExpiry.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -336,7 +373,8 @@ public class AddProductActivity extends BaseActivity {
                 }
 
                 String src = draft.getSourceText();
-                if (src == null) src = "";
+                if (src == null)
+                    src = "";
                 src = src.trim();
                 if (!src.startsWith("\"")) {
                     src = "\"" + src + "\"";
@@ -413,19 +451,20 @@ public class AddProductActivity extends BaseActivity {
         }
         resetFormForSmartDraft();
         applyDraftFields(drafts.get(0), true);
-        Toast.makeText(this, getString(R.string.smart_add_review_first_format, drafts.size()), Toast.LENGTH_LONG).show();
+        showInfoNotification(getString(R.string.smart_add_review_first_format, drafts.size()));
     }
 
     private void applyDraftFields(ProductDraft draft, boolean includeExpiry) {
         productNameInput.setText(draft.getName());
         quantityInput.setText(draft.getQuantity());
-        selectSpinnerValue(unitSpinner, draft.getUnit());
+        selectUnitValue(draft.getUnit());
 
         selectedCategory = canonicalCategory(draft.getCategory());
         if (!CategoryRepository.isBuiltInCanonical(selectedCategory)) {
-            CategoryRepository.addCategoryAsync(this, selectedCategory, ignored -> refreshCategorySpinner(), error -> refreshCategorySpinner());
+            CategoryRepository.addCategoryAsync(this, selectedCategory, ignored -> refreshCategoryDropdown(),
+                    error -> refreshCategoryDropdown());
         } else {
-            refreshCategorySpinner();
+            refreshCategoryDropdown();
         }
 
         String storageId = LocalDataContract.storageIdForName(draft.getStorage());
@@ -440,25 +479,15 @@ public class AddProductActivity extends BaseActivity {
         if (includeExpiry && draft.hasExpiryDate()) {
             selectedDate.setTimeInMillis(draft.getExpiryDateMillis());
             hasSelectedDate = true;
-            expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+            expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
             expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
         } else if (includeExpiry) {
-            Toast.makeText(this, R.string.expiry_not_detected, Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void selectSpinnerValue(Spinner spinner, String value) {
-        if (value == null) return;
-        for (int i = 0; i < spinner.getCount(); i++) {
-            if (value.equalsIgnoreCase(spinner.getItemAtPosition(i).toString())) {
-                spinner.setSelection(i);
-                return;
-            }
+            showWarningNotification(getString(R.string.expiry_not_detected));
         }
     }
 
     private void showOcrSourceDialog() {
-        String[] sources = {getString(R.string.ocr_source_camera), getString(R.string.ocr_source_gallery)};
+        String[] sources = { getString(R.string.ocr_source_camera), getString(R.string.ocr_source_gallery) };
         new AlertDialog.Builder(this)
                 .setTitle(R.string.scan_expiry_text)
                 .setItems(sources, (dialog, which) -> {
@@ -477,7 +506,7 @@ public class AddProductActivity extends BaseActivity {
             pendingOcrCaptureUri = createOcrCaptureUri();
             ocrPhotoLauncher.launch(pendingOcrCaptureUri);
         } catch (Exception error) {
-            Toast.makeText(this, R.string.ocr_camera_error, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.ocr_camera_error));
         }
     }
 
@@ -506,32 +535,32 @@ public class AddProductActivity extends BaseActivity {
         try {
             InputImage image = InputImage.fromFilePath(this, uri);
             TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
-            
-            Toast.makeText(this, R.string.ocr_scanning_dates, Toast.LENGTH_SHORT).show();
-            
+
+            showInfoNotification(getString(R.string.ocr_scanning_dates));
+
             recognizer.process(image)
                     .addOnSuccessListener(visionText -> {
                         String rawText = visionText.getText();
                         if (rawText == null || rawText.trim().isEmpty()) {
-                            Toast.makeText(this, R.string.ocr_no_text, Toast.LENGTH_SHORT).show();
+                            showWarningNotification(getString(R.string.ocr_no_text));
                             return;
                         }
                         handleOcrText(rawText);
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(this, getString(R.string.ocr_failed_format, e.getMessage()), Toast.LENGTH_SHORT).show();
+                        showErrorNotification(getString(R.string.ocr_failed_format, e.getMessage()));
                     })
                     .addOnCompleteListener(task -> {
                         recognizer.close();
                     });
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, R.string.image_process_failed, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.image_process_failed));
         }
     }
 
     private void handleOcrText(String rawText) {
-        Toast.makeText(this, R.string.ocr_preparing_draft, Toast.LENGTH_SHORT).show();
+        showInfoNotification(getString(R.string.ocr_preparing_draft));
         List<DateCandidate> detectedDates = DateParser.extractDateCandidates(rawText);
         AgentRepository.parseProductDraftAsync(this, rawText, draft -> {
             if (detectedDates.isEmpty()) {
@@ -544,14 +573,14 @@ public class AddProductActivity extends BaseActivity {
 
     private void showDetectedDatesDialog(List<DateCandidate> dates, String rawText, ProductDraft draft) {
         String[] dateStrings = new String[dates.size()];
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy", Locale.US);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         for (int i = 0; i < dates.size(); i++) {
             DateCandidate candidate = dates.get(i);
             dateStrings[i] = sdf.format(new java.util.Date(candidate.getDateMillis()))
                     + " - " + candidate.getSnippet();
         }
 
-        final int[] selectedIndex = {0};
+        final int[] selectedIndex = { 0 };
 
         new AlertDialog.Builder(this)
                 .setTitle(R.string.ocr_scan_review_title)
@@ -582,7 +611,7 @@ public class AddProductActivity extends BaseActivity {
                     pendingExpiryScan.rawText = rawText;
                     pendingExpiryScan.confidence = 0.25f;
                     pendingExpiryScan.scannedAt = System.currentTimeMillis();
-                    Toast.makeText(this, R.string.select_expiry_before_saving, Toast.LENGTH_LONG).show();
+                    showWarningNotification(getString(R.string.select_expiry_before_saving));
                 })
                 .setNeutralButton(R.string.select_date, (dialog, which) -> showDatePicker(rawText))
                 .setNegativeButton(R.string.cancel, null)
@@ -596,8 +625,7 @@ public class AddProductActivity extends BaseActivity {
                 draft.getQuantity(),
                 draft.getUnit(),
                 draft.getCategory(),
-                draft.getStorage()
-        );
+                draft.getStorage());
     }
 
     private void applyDetectedDate(DateCandidate candidate, String rawText) {
@@ -607,7 +635,7 @@ public class AddProductActivity extends BaseActivity {
         selectedDate.set(Calendar.SECOND, 59);
         selectedDate.set(Calendar.MILLISECOND, 999);
         hasSelectedDate = true;
-        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+        expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
         expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
 
         pendingExpiryScan = new ExpiryScanEntity();
@@ -619,10 +647,11 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void onPhotoPicked(Uri uri) {
-        if (uri == null) return;
+        if (uri == null)
+            return;
         String path = saveImageToInternalStorage(uri);
         if (path == null) {
-            Toast.makeText(this, R.string.photo_save_failed, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.photo_save_failed));
             return;
         }
         deleteUnsavedSelectedPhoto(selectedPhotoPath);
@@ -670,33 +699,49 @@ public class AddProductActivity extends BaseActivity {
         }
     }
 
-    private void setupUnitSpinner() {
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.unit_options, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        unitSpinner.setAdapter(adapter);
+    private void setupUnitDropdown() {
+        findViewById(R.id.unitSelectorRow).setOnClickListener(v -> {
+            closeDropdown(categoryDropdown, categorySelectorChevron);
+            toggleDropdown(unitDropdown, unitSelectorChevron);
+        });
+        populateUnitDropdown();
         if (editingProductId == null) {
             quantityInput.setText(R.string.quantity_default);
         }
     }
 
-    private void setupCategorySpinner() {
-        refreshCategorySpinner();
+    private void setupCategoryDropdown() {
+        findViewById(R.id.categorySelectorRow).setOnClickListener(v -> {
+            closeDropdown(unitDropdown, unitSelectorChevron);
+            toggleDropdown(categoryDropdown, categorySelectorChevron);
+        });
+        refreshCategoryDropdown();
         btnManageCategories.setOnClickListener(v -> showManageCategoriesDialog());
     }
 
-    private void refreshCategorySpinner() {
-        CategoryRepository.getDisplayCategoriesAsync(this, this::refreshCategorySpinner, error -> {
-            Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show();
+    private void populateUnitDropdown() {
+        String[] units = getResources().getStringArray(R.array.unit_options);
+        int selectedIndex = indexOfIgnoreCase(units, selectedUnit);
+        if (selectedIndex < 0 && units.length > 0) {
+            selectedIndex = 0;
+            selectedUnit = units[0];
+        }
+        unitSelectorValue.setText(selectedUnit);
+        populateDropdown(unitDropdown, units, selectedIndex, (index, label) -> {
+            selectedUnit = label;
+            unitSelectorValue.setText(label);
+            updateRadioSelection(unitDropdown, index);
+            toggleDropdown(unitDropdown, unitSelectorChevron);
         });
     }
 
-    private void refreshCategorySpinner(List<String> items) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, items);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(adapter);
+    private void refreshCategoryDropdown() {
+        CategoryRepository.getDisplayCategoriesAsync(this, this::refreshCategoryDropdown, error -> {
+            showErrorNotification(getString(R.string.category_load_error));
+        });
+    }
 
+    private void refreshCategoryDropdown(List<String> items) {
         String canonicalSelected = canonicalCategory(selectedCategory);
         int pos = -1;
         for (int i = 0; i < items.size(); i++) {
@@ -705,24 +750,143 @@ public class AddProductActivity extends BaseActivity {
                 break;
             }
         }
-        if (pos >= 0) categorySpinner.setSelection(pos);
+        if (pos < 0 && !items.isEmpty()) {
+            pos = 0;
+            selectedCategory = canonicalCategory(items.get(0));
+        }
 
-        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String display = parent.getItemAtPosition(position).toString();
-                selectedCategory = canonicalCategory(display);
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        String[] options = items.toArray(new String[0]);
+        updateCategorySelectorDisplay(pos >= 0 ? options[pos] : selectedCategory);
+        populateDropdown(categoryDropdown, options, pos, true, (index, label) -> {
+            selectedCategory = canonicalCategory(label);
+            updateCategorySelectorDisplay(label);
+            updateRadioSelection(categoryDropdown, index);
+            toggleDropdown(categoryDropdown, categorySelectorChevron);
         });
     }
 
+    private void selectUnitValue(String value) {
+        if (value == null || value.trim().isEmpty()) return;
+        String[] units = getResources().getStringArray(R.array.unit_options);
+        int index = indexOfIgnoreCase(units, value);
+        if (index < 0) return;
+        selectedUnit = units[index];
+        unitSelectorValue.setText(selectedUnit);
+        updateRadioSelection(unitDropdown, index);
+    }
+
+    private void populateDropdown(LinearLayout container, String[] options, int selectedIndex, DropdownCallback callback) {
+        populateDropdown(container, options, selectedIndex, false, callback);
+    }
+
+    private void populateDropdown(LinearLayout container, String[] options, int selectedIndex,
+                                  boolean showCategoryDots, DropdownCallback callback) {
+        container.removeAllViews();
+        for (int i = 0; i < options.length; i++) {
+            View option = getLayoutInflater().inflate(R.layout.item_filter_option, container, false);
+            TextView label = option.findViewById(R.id.filterOptionLabel);
+            label.setText(options[i]);
+            if (showCategoryDots) {
+                addCategoryDot(option, label, options[i]);
+            }
+            final int pos = i;
+            option.setOnClickListener(v -> callback.onSelected(pos, options[pos]));
+            container.addView(option);
+        }
+        updateRadioSelection(container, selectedIndex);
+    }
+
+    private void addCategoryDot(View option, TextView label, String category) {
+        ViewGroup parent = (ViewGroup) label.getParent();
+        View dot = new View(this);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dpToPx(10), dpToPx(10));
+        params.setMarginEnd(dpToPx(8));
+        dot.setLayoutParams(params);
+        dot.setBackgroundResource(R.drawable.bg_category_dot);
+        dot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, category)));
+        parent.addView(dot, parent.indexOfChild(label));
+        option.setContentDescription(category);
+    }
+
+    private void updateCategorySelectorDisplay(String displayCategory) {
+        categorySelectorValue.setText(displayCategory);
+        String canonical = canonicalCategory(displayCategory);
+        categorySelectedDot.getBackground().setTint(getColor(CategoryColorHelper.getColor(this, canonical)));
+    }
+
+    private void updateRadioSelection(LinearLayout container, int selectedIndex) {
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View option = container.getChildAt(i);
+            ImageView radio = option.findViewById(R.id.filterOptionRadio);
+            boolean selected = i == selectedIndex;
+            radio.setImageResource(selected
+                    ? R.drawable.ic_radio_button_checked
+                    : R.drawable.ic_radio_button_unchecked);
+            radio.setImageTintList(ColorStateList.valueOf(getColor(selected
+                    ? R.color.smart_primary_container
+                    : R.color.smart_outline_variant)));
+        }
+    }
+
+    private void toggleDropdown(LinearLayout dropdown, ImageView chevron) {
+        boolean isOpen = dropdown.getVisibility() == View.VISIBLE;
+        if (isOpen) {
+            hideDropdown(dropdown, chevron);
+        } else {
+            showDropdown(dropdown, chevron);
+        }
+    }
+
+    private void showDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.setAlpha(0f);
+        dropdown.setTranslationY(-8f);
+        dropdown.setVisibility(View.VISIBLE);
+        dropdown.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(200)
+                .start();
+        chevron.animate().rotation(180f).setDuration(200).start();
+    }
+
+    private void hideDropdown(LinearLayout dropdown, ImageView chevron) {
+        dropdown.animate()
+                .alpha(0f)
+                .translationY(-8f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    dropdown.setVisibility(View.GONE);
+                    dropdown.setTranslationY(0f);
+                })
+                .start();
+        chevron.animate().rotation(0f).setDuration(200).start();
+    }
+
+    private void closeDropdown(LinearLayout dropdown, ImageView chevron) {
+        if (dropdown.getVisibility() == View.VISIBLE) {
+            hideDropdown(dropdown, chevron);
+        }
+    }
+
+    private int indexOfIgnoreCase(String[] items, String value) {
+        if (value == null) return -1;
+        for (int i = 0; i < items.length; i++) {
+            if (value.equalsIgnoreCase(items[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    interface DropdownCallback {
+        void onSelected(int index, String label);
+    }
+
     private void showManageCategoriesDialog() {
-        ProductRepository.getProductsAsync(this, products ->
-                CategoryRepository.getDisplayCategoriesAsync(this,
-                        categories -> showManageCategoriesDialog(products, categories),
-                        error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show()),
-                error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+        ProductRepository.getProductsAsync(this, products -> CategoryRepository.getDisplayCategoriesAsync(this,
+                categories -> showManageCategoriesDialog(products, categories),
+                error -> showErrorNotification(getString(R.string.category_load_error))),
+                error -> showErrorNotification(getString(R.string.category_load_error)));
     }
 
     private void showManageCategoriesDialog(List<Product> all, List<String> allCats) {
@@ -742,48 +906,13 @@ public class AddProductActivity extends BaseActivity {
             name.setText(cat);
             name.setTextColor(getColor(builtin ? R.color.smart_secondary : R.color.smart_on_surface));
 
-            MaterialButton editBtn = row.findViewById(R.id.btnEditCategory);
-            MaterialButton deleteBtn = row.findViewById(R.id.btnDeleteCategory);
-
-            editBtn.setVisibility(View.VISIBLE);
-            editBtn.setOnClickListener(v -> showRenameCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
-
-            boolean used = isCategoryUsed(canonicalCat, all);
-            if (used) {
-                deleteBtn.setVisibility(View.GONE);
-            } else {
-                deleteBtn.setVisibility(View.VISIBLE);
-                deleteBtn.setOnClickListener(v -> showDeleteCategoryDialog(canonicalCat, () -> showManageCategoriesDialog()));
-            }
+            ImageButton gear = row.findViewById(R.id.btnGear);
+            gear.setOnClickListener(v -> showCategoryActionDialog(canonicalCat, all));
 
             categoryList.addView(row);
         }
 
-        btnAdd.setOnClickListener(v -> {
-            View inputLayout = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
-            EditText input = inputLayout.findViewById(android.R.id.edit);
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.category_add_title)
-                    .setView(inputLayout)
-                    .setPositiveButton(R.string.add_label, (d, w) -> {
-                        String newCat = input.getText().toString().trim();
-                        String canonicalNew = canonicalCategory(newCat);
-                        if (!newCat.isEmpty()) {
-                            CategoryRepository.addCategoryAsync(this, canonicalNew, added -> {
-                                if (!added) {
-                                    Toast.makeText(this, getString(R.string.category_already_exists_format, newCat), Toast.LENGTH_SHORT).show();
-                                    showManageCategoriesDialog();
-                                    return;
-                                }
-                                selectedCategory = canonicalNew;
-                                refreshCategorySpinner();
-                                showManageCategoriesDialog();
-                            }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
-        });
+        btnAdd.setOnClickListener(v -> showAddCategoryDialog());
 
         if (manageDialog != null && manageDialog.isShowing()) {
             manageDialog.dismiss();
@@ -792,6 +921,60 @@ public class AddProductActivity extends BaseActivity {
                 .setTitle(R.string.manage_categories_title)
                 .setView(content)
                 .setPositiveButton(R.string.close_label, null)
+                .show();
+    }
+
+    private void showCategoryActionDialog(String canonicalCat, List<Product> all) {
+        View actionView = getLayoutInflater().inflate(R.layout.dialog_category_action, null);
+        int usedCount = countProductsForCategory(canonicalCat, all);
+        String displayName = CategoryColorHelper.getLocalizedCategory(this, canonicalCat);
+
+        android.app.Dialog actionDialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(displayName)
+                .setView(actionView)
+                .show();
+
+        actionView.findViewById(R.id.actionEdit).setOnClickListener(v -> {
+            actionDialog.dismiss();
+            showRenameCategoryDialog(canonicalCat, () -> {
+                if (manageDialog != null) manageDialog.dismiss();
+                showManageCategoriesDialog();
+            });
+        });
+        actionView.findViewById(R.id.actionDelete).setOnClickListener(v -> {
+            actionDialog.dismiss();
+            showDeleteCategoryDialog(canonicalCat, usedCount, () -> {
+                if (manageDialog != null) manageDialog.dismiss();
+                showManageCategoriesDialog();
+            });
+        });
+    }
+
+    private void showAddCategoryDialog() {
+        View inputLayout = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
+        EditText input = inputLayout.findViewById(android.R.id.edit);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.category_add_title)
+                .setView(inputLayout)
+                .setPositiveButton(R.string.add_label, (d, w) -> {
+                    String newCat = input.getText().toString().trim();
+                    String canonicalNew = canonicalCategory(newCat);
+                    if (!newCat.isEmpty()) {
+                        CategoryRepository.addCategoryAsync(this, canonicalNew, added -> {
+                            if (!added) {
+                                Toast.makeText(this, getString(R.string.category_already_exists_format, newCat), Toast.LENGTH_SHORT).show();
+                                showManageCategoriesDialog();
+                                return;
+                            }
+                            selectedCategory = canonicalNew;
+                            refreshCategoryDropdown();
+                            showManageCategoriesDialog();
+                            showCategorySnackbar(getString(R.string.category_add_success_format, newCat),
+                                    android.R.drawable.ic_menu_add, R.color.smart_primary_container);
+                        }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
@@ -810,15 +993,12 @@ public class AddProductActivity extends BaseActivity {
                     if (newName.isEmpty() || canonicalNew.equals(oldName)) {
                         return;
                     }
-                    ProductRepository.getProductsAsync(this, all -> {
-                        CategoryRepository.renameCategoryAsync(this, oldName, canonicalNew, ignored -> {
+                    CategoryRepository.renameCategoryAsync(this, oldName, canonicalNew, ignored -> {
                         if (canonicalCategory(selectedCategory).equals(oldName)) selectedCategory = canonicalNew;
-                        refreshCategorySpinner();
+                        refreshCategoryDropdown();
                         onDone.run();
-                        }, error -> {
-                            Toast.makeText(this, R.string.category_rename_error, Toast.LENGTH_SHORT).show();
-                            onDone.run();
-                        });
+                        showCategorySnackbar(getString(R.string.category_rename_success_format, newName),
+                                R.drawable.ic_edit, R.color.smart_primary_container);
                     }, error -> {
                         Toast.makeText(this, R.string.category_rename_error, Toast.LENGTH_SHORT).show();
                         onDone.run();
@@ -828,28 +1008,104 @@ public class AddProductActivity extends BaseActivity {
                 .show();
     }
 
-    private void showDeleteCategoryDialog(String catToDelete, Runnable onDone) {
+    private void showDeleteCategoryDialog(String catToDelete, int productCount, Runnable onDone) {
         String displayDelete = CategoryColorHelper.getLocalizedCategory(this, catToDelete);
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(getString(R.string.delete_category_title_format, displayDelete))
-                .setMessage(R.string.category_delete_message_empty)
-                .setPositiveButton(R.string.delete_confirm, (d, w) -> {
-                    CategoryRepository.deleteCategoryAsync(this, catToDelete, ignored -> {
-                        CategoryRepository.getDisplayCategoriesAsync(this, active -> {
-                            if (canonicalCategory(selectedCategory).equals(catToDelete)) {
-                                String fallback = active.isEmpty() ? "General" : canonicalCategory(active.get(0));
-                                selectedCategory = fallback;
-                            }
-                            refreshCategorySpinner();
-                            onDone.run();
-                        }, error -> {
-                            refreshCategorySpinner();
-                            onDone.run();
-                        });
-                    }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
+        if (productCount > 0) {
+            showCannotDeleteDialog(displayDelete, catToDelete, productCount);
+            return;
+        }
+        View confirmView = getLayoutInflater().inflate(R.layout.dialog_delete_confirm, null);
+        android.app.Dialog dialog = new android.app.Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
+        dialog.setContentView(confirmView);
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            android.view.WindowManager.LayoutParams p = dialog.getWindow().getAttributes();
+            p.gravity = android.view.Gravity.CENTER;
+            p.dimAmount = 0.5f;
+            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dialog.getWindow().setAttributes(p);
+            dialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(
+                getString(R.string.delete_category_title_format, displayDelete));
+        ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
+                R.string.category_delete_message_empty);
+
+        confirmView.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            CategoryRepository.deleteCategoryAsync(this, catToDelete, success -> {
+                if (!success) {
+                    Toast.makeText(this, R.string.category_delete_blocked_title, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                CategoryRepository.getDisplayCategoriesAsync(this, active -> {
+                    if (canonicalCategory(selectedCategory).equals(catToDelete)) {
+                        String fallback = active.isEmpty() ? "General" : canonicalCategory(active.get(0));
+                        selectedCategory = fallback;
+                    }
+                    refreshCategoryDropdown();
+                    onDone.run();
+
+                    Snackbar snackbar = Snackbar.make(findViewById(R.id.root),
+                            getString(R.string.category_delete_success_format, displayDelete),
+                            Snackbar.LENGTH_SHORT);
+                    snackbar.getView().setBackgroundResource(R.drawable.bg_undo_bar);
+                    snackbar.setActionTextColor(getColor(R.color.smart_primary));
+                    snackbar.setAction(R.string.undo_delete_label, v2 -> {
+                        CategoryRepository.addCategoryAsync(this, catToDelete, unused -> {
+                            selectedCategory = catToDelete;
+                            refreshCategoryDropdown();
+                        }, error -> {});
+                    });
+                    snackbar.show();
+                }, error -> {
+                    refreshCategoryDropdown();
+                    onDone.run();
+                });
+            }, error -> Toast.makeText(this, R.string.category_load_error, Toast.LENGTH_SHORT).show());
+        });
+        confirmView.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
+    }
+
+    private void showCannotDeleteDialog(String displayName, String canonicalCat, int count) {
+        View confirmView = getLayoutInflater().inflate(R.layout.dialog_delete_confirm, null);
+        android.app.Dialog dialog = new android.app.Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
+        dialog.setContentView(confirmView);
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            android.view.WindowManager.LayoutParams p = dialog.getWindow().getAttributes();
+            p.gravity = android.view.Gravity.CENTER;
+            p.dimAmount = 0.5f;
+            p.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+            p.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            dialog.getWindow().setAttributes(p);
+            dialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        ((TextView) confirmView.findViewById(R.id.dialogTitle)).setText(R.string.category_delete_blocked_title);
+        ((TextView) confirmView.findViewById(R.id.dialogMessage)).setText(
+                getString(R.string.category_delete_blocked_message_format, count));
+
+        Button confirmBtn = confirmView.findViewById(R.id.dialogConfirm);
+        confirmBtn.setText(R.string.got_it);
+        confirmBtn.setOnClickListener(v -> dialog.dismiss());
+        confirmView.findViewById(R.id.dialogCancel).setVisibility(View.GONE);
+    }
+
+    private int countProductsForCategory(String canonicalCat, List<Product> allProducts) {
+        int count = 0;
+        for (Product p : allProducts) {
+            if (canonicalCat.equals(canonicalCategory(p.getCategory()))) count++;
+        }
+        return count;
+    }
+
+    private void showCategorySnackbar(String message, int iconRes, int tintRes) {
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.root), message, Snackbar.LENGTH_SHORT);
+        snackbar.getView().setBackgroundResource(R.drawable.bg_undo_bar);
+        snackbar.show();
     }
 
     private Product copyWithCategory(Product product, String category) {
@@ -860,8 +1116,7 @@ public class AddProductActivity extends BaseActivity {
                 product.getBarcode(), product.getStatus(), product.getIconRes(),
                 product.getImageUrl(), product.getCreatedAt(), System.currentTimeMillis(),
                 product.getCloudId(), product.getOwnerUserId(),
-                product.getSyncStatus(), product.getLastSyncedAt()
-        );
+                product.getSyncStatus(), product.getLastSyncedAt());
     }
 
     private int dpToPx(int dp) {
@@ -948,7 +1203,8 @@ public class AddProductActivity extends BaseActivity {
                     selectedDate.set(year, month, dayOfMonth, 23, 59, 59);
                     selectedDate.set(Calendar.MILLISECOND, 999);
                     hasSelectedDate = true;
-                    expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+                    expiryDateInput
+                            .setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
                     expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
                     if (rawOcrText != null) {
                         pendingExpiryScan = new ExpiryScanEntity();
@@ -961,21 +1217,20 @@ public class AddProductActivity extends BaseActivity {
                 },
                 selectedDate.get(Calendar.YEAR),
                 selectedDate.get(Calendar.MONTH),
-                selectedDate.get(Calendar.DAY_OF_MONTH)
-        );
+                selectedDate.get(Calendar.DAY_OF_MONTH));
         dialog.show();
     }
 
     private void populateForEdit(String productId) {
         ProductRepository.getProductByIdAsync(this, productId, product -> {
             if (product == null) {
-                Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
+                showErrorNotification(getString(R.string.product_not_found));
                 finish();
                 return;
             }
             populateProductFields(product);
         }, error -> {
-            Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
+            showErrorNotification(getString(R.string.product_not_found));
             finish();
         });
     }
@@ -988,12 +1243,12 @@ public class AddProductActivity extends BaseActivity {
 
         productNameInput.setText(product.getName());
         quantityInput.setText(product.getQuantity());
-        selectSpinnerValue(unitSpinner, product.getUnit());
+        selectUnitValue(product.getUnit());
 
         selectedCategory = product.getCategory() == null || product.getCategory().trim().isEmpty()
                 ? "General"
                 : canonicalCategory(product.getCategory());
-        refreshCategorySpinner();
+        refreshCategoryDropdown();
 
         String imgPath = product.getImageUrl();
         if (imgPath != null && !imgPath.isEmpty()) {
@@ -1013,35 +1268,36 @@ public class AddProductActivity extends BaseActivity {
 
         selectedDate.setTimeInMillis(product.getExpiryDateMillis());
         hasSelectedDate = true;
-        expiryDateInput.setText(new SimpleDateFormat("MMM d, yyyy", Locale.US).format(selectedDate.getTime()));
+        expiryDateInput.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.getTime()));
         expiryDateInput.setTextColor(getColor(R.color.smart_on_surface));
     }
 
     private void submitProduct() {
         String name = productNameInput.getText().toString().trim();
         if (name.isEmpty()) {
-            Toast.makeText(this, R.string.enter_product_name, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.enter_product_name));
             return;
         }
         if (!hasSelectedDate) {
-            Toast.makeText(this, R.string.select_expiry_before_saving, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.select_expiry_before_saving));
             return;
         }
 
         String storage = selectedStorage();
         int icon = iconForStorage(storage);
 
-        String category = selectedCategory == null || selectedCategory.isEmpty() ? "General" : canonicalCategory(selectedCategory);
+        String category = selectedCategory == null || selectedCategory.isEmpty() ? "General"
+                : canonicalCategory(selectedCategory);
 
         String quantity = ProductQuantityValidator.normalize(quantityInput.getText().toString());
         if (quantity == null) {
             quantityInput.setError(getString(R.string.quantity_invalid));
             quantityInput.requestFocus();
-            Toast.makeText(this, R.string.quantity_invalid, Toast.LENGTH_SHORT).show();
+            showWarningNotification(getString(R.string.quantity_invalid));
             return;
         }
         final String finalQuantity = quantity;
-        String unit = unitSpinner.getSelectedItem().toString();
+        String unit = selectedUnit;
         submitButton.setEnabled(false);
         skipSmartDraftButton.setEnabled(false);
         if (editingProductId != null) {
@@ -1049,7 +1305,7 @@ public class AddProductActivity extends BaseActivity {
                 if (existing == null) {
                     submitButton.setEnabled(true);
                     skipSmartDraftButton.setEnabled(true);
-                    Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
+                    showErrorNotification(getString(R.string.product_not_found));
                     return;
                 }
                 Product updatedProduct = new Product(
@@ -1070,20 +1326,20 @@ public class AddProductActivity extends BaseActivity {
                         existing.getCloudId(),
                         existing.getOwnerUserId(),
                         existing.getSyncStatus(),
-                        existing.getLastSyncedAt()
-                );
+                        existing.getLastSyncedAt());
                 ProductRepository.updateProductAsync(this, updatedProduct, updated -> {
                     if (Boolean.TRUE.equals(updated)) {
                         afterProductSaved(updatedProduct, getString(R.string.product_updated));
                     } else {
                         submitButton.setEnabled(true);
                         skipSmartDraftButton.setEnabled(true);
-                        Toast.makeText(this, R.string.product_not_found, Toast.LENGTH_SHORT).show();
+                        showErrorNotification(getString(R.string.product_not_found));
                     }
                 }, error -> showSaveFailed());
             }, error -> showSaveFailed());
         } else {
-            Product finalProductToSave = new Product(name, category, finalQuantity, unit, storage, selectedDate.getTimeInMillis(), icon, selectedPhotoPath);
+            Product finalProductToSave = new Product(name, category, finalQuantity, unit, storage,
+                    selectedDate.getTimeInMillis(), icon, selectedPhotoPath);
             ProductRepository.addProductAsync(this, finalProductToSave,
                     ignored -> afterProductSaved(finalProductToSave, getString(R.string.product_added_format, name)),
                     error -> showSaveFailed());
@@ -1100,7 +1356,7 @@ public class AddProductActivity extends BaseActivity {
             ProductRepository.insertExpiryScanAsync(this, scan,
                     ignored -> finishProductSave(toastMessage),
                     error -> {
-                        Toast.makeText(this, R.string.ocr_save_warning, Toast.LENGTH_SHORT).show();
+                        showWarningNotification(getString(R.string.ocr_save_warning));
                         finishProductSave(toastMessage);
                     });
             return;
@@ -1109,11 +1365,10 @@ public class AddProductActivity extends BaseActivity {
     }
 
     private void finishProductSave(String toastMessage) {
-        Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show();
         ReminderScheduler.scheduleDaily(this);
         ReminderScheduler.runSoon(this);
 
-        if (moveToNextSmartDraft(true)) {
+        if (moveToNextSmartDraft(true, toastMessage)) {
             return;
         }
 
@@ -1122,12 +1377,14 @@ public class AddProductActivity extends BaseActivity {
         Intent inventoryIntent = new Intent(this, InventoryActivity.class);
         inventoryIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         inventoryIntent.putExtra(InventoryActivity.EXTRA_RESET_FILTERS, true);
+        inventoryIntent.putExtra("extra_notification_message", toastMessage);
+        inventoryIntent.putExtra("extra_notification_type", "success");
         startActivity(inventoryIntent);
         overridePendingTransition(0, 0);
         finish();
     }
 
-    private boolean moveToNextSmartDraft(boolean showToast) {
+    private boolean moveToNextSmartDraft(boolean showToast, String successMessage) {
         if (pendingSmartDrafts.isEmpty()) {
             return false;
         }
@@ -1137,23 +1394,27 @@ public class AddProductActivity extends BaseActivity {
         applyDraftFields(next, true);
         updateSmartDraftActions();
         if (showToast) {
-            Toast.makeText(this, R.string.smart_add_next_ready, Toast.LENGTH_LONG).show();
+            showSuccessNotification(successMessage);
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                showInfoNotification(getString(R.string.smart_add_next_ready));
+            }, 2000);
         }
         return true;
     }
 
     private void skipCurrentSmartDraft() {
         deleteUnsavedSelectedPhoto(selectedPhotoPath);
-        if (moveToNextSmartDraft(false)) {
-            Toast.makeText(this, R.string.smart_add_item_skipped, Toast.LENGTH_SHORT).show();
+        if (moveToNextSmartDraft(false, null)) {
+            showInfoNotification(getString(R.string.smart_add_item_skipped));
             return;
         }
         clearSmartDraftBatch();
-        Toast.makeText(this, R.string.smart_add_item_skipped, Toast.LENGTH_SHORT).show();
         saveCompleted = true;
         Intent inventoryIntent = new Intent(this, InventoryActivity.class);
         inventoryIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         inventoryIntent.putExtra(InventoryActivity.EXTRA_RESET_FILTERS, true);
+        inventoryIntent.putExtra("extra_notification_message", getString(R.string.smart_add_item_skipped));
+        inventoryIntent.putExtra("extra_notification_type", "info");
         startActivity(inventoryIntent);
         overridePendingTransition(0, 0);
         finish();
@@ -1173,9 +1434,9 @@ public class AddProductActivity extends BaseActivity {
         clearPhotoPreviewOnly();
         productNameInput.setText("");
         quantityInput.setText(R.string.quantity_default);
-        selectSpinnerValue(unitSpinner, "pcs");
+        selectUnitValue("pcs");
         selectedCategory = "General";
-        refreshCategorySpinner();
+        refreshCategoryDropdown();
         selectStorage(R.id.storageRoom);
         hasSelectedDate = false;
         expiryDateInput.setText(R.string.select_expiry_date);
@@ -1191,7 +1452,8 @@ public class AddProductActivity extends BaseActivity {
     private void updateSmartDraftActions() {
         if (smartDraftTotalCount > 1 && smartDraftCurrentIndex > 0) {
             skipSmartDraftButton.setVisibility(View.VISIBLE);
-            submitButton.setText(getString(R.string.add_product_progress_format, smartDraftCurrentIndex, smartDraftTotalCount));
+            submitButton.setText(
+                    getString(R.string.add_product_progress_format, smartDraftCurrentIndex, smartDraftTotalCount));
         } else {
             skipSmartDraftButton.setVisibility(View.GONE);
             submitButton.setText(editingProductId == null ? R.string.add_product : R.string.edit_product);
@@ -1201,7 +1463,7 @@ public class AddProductActivity extends BaseActivity {
     private void showSaveFailed() {
         submitButton.setEnabled(true);
         skipSmartDraftButton.setEnabled(true);
-        Toast.makeText(this, R.string.product_save_error, Toast.LENGTH_SHORT).show();
+        showErrorNotification(getString(R.string.product_save_error));
     }
 
     private String selectedStorage() {

@@ -90,18 +90,6 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp">
 
-                    <ImageButton
-                        android:id="@+id/btnDelete"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/delete_confirm"
-                        android:padding="8dp"
-                        android:scaleType="center"
-                        android:src="@drawable/ic_close"
-                        android:visibility="visible"
-                        app:tint="@color/smart_error" />
-
                     <ImageView
                         android:id="@+id/btnCheckbox"
                         android:layout_width="24dp"

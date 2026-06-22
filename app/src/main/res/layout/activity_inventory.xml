@@ -5,15 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_glass_screen"
-    android:orientation="vertical"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:orientation="vertical">
 
     <include layout="@layout/include_top_bar" />
 
     <include layout="@layout/multi_select_bar" />
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/inventoryScroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
@@ -231,7 +230,7 @@
                 android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="48dp"
-                android:indeterminateTint="@color/smart_primary"
+                android:indeterminateTint="@color/smart_primary_container"
                 android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -240,7 +239,6 @@
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false" />
 
-            <!-- Empty State -->
             <LinearLayout
                 android:id="@+id/emptyState"
                 android:layout_width="match_parent"
