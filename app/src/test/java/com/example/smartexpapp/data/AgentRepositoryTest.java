@@ -425,13 +425,83 @@ public class AgentRepositoryTest {
         );
 
         assertEquals(3, drafts.size());
-        assertEquals("eggs", drafts.get(0).getName());
+        assertEquals("Eggs", drafts.get(0).getName());
         assertFalse(drafts.get(0).hasExpiryDate());
-        assertEquals("chicken", drafts.get(1).getName());
+        assertEquals("Chicken", drafts.get(1).getName());
         assertFalse(drafts.get(1).hasExpiryDate());
-        assertEquals("bread", drafts.get(2).getName());
+        assertEquals("Bread", drafts.get(2).getName());
         assertTrue(drafts.get(2).hasExpiryDate());
     }
+
+    @Test
+    public void parseProductDraftsSplitsOnPeriodsWithoutSplittingAbbreviations() {
+        // Test case 1: splits on periods that are sentence boundaries
+        List<ProductDraft> drafts = AgentRepository.parseProductDrafts(
+                "Pork expires 1 month in fridge. Chicken expires 1 week in room temp");
+        assertEquals(2, drafts.size());
+        assertEquals("Pork", drafts.get(0).getName());
+        assertEquals("Refrigerator", drafts.get(0).getStorage());
+        assertTrue(drafts.get(0).hasExpiryDate());
+        
+        assertEquals("Chicken", drafts.get(1).getName());
+        assertEquals("Room Temp", drafts.get(1).getStorage());
+        assertTrue(drafts.get(1).hasExpiryDate());
+
+        // Test case 2: does NOT split on unit abbreviations with periods
+        List<ProductDraft> drafts2 = AgentRepository.parseProductDrafts(
+                "Eggs 12 pcs. fridge. Bread 1 lb. expires in 5 days");
+        assertEquals(2, drafts2.size());
+        assertEquals("Eggs", drafts2.get(0).getName());
+        assertEquals("12", drafts2.get(0).getQuantity());
+        assertEquals("pcs", drafts2.get(0).getUnit());
+        assertEquals("Refrigerator", drafts2.get(0).getStorage());
+        
+        assertEquals("Bread", drafts2.get(1).getName());
+        assertEquals("1", drafts2.get(1).getQuantity());
+        assertEquals("lb", drafts2.get(1).getUnit());
+        assertTrue(drafts2.get(1).hasExpiryDate());
+    }
+
+    @Test
+    public void parseProductDraftCapitalizesFirstLetter() {
+        ProductDraft draft1 = AgentRepository.parseProductDraft("pork chop");
+        assertEquals("Pork Chop", draft1.getName());
+
+        ProductDraft draft2 = AgentRepository.parseProductDraft("fresh organic apples");
+        assertEquals("Fresh Organic Apples", draft2.getName());
+    }
+
+    @Test
+    public void parseProductDraftsSplitsItemsOnCommasEvenWithDetails() {
+        List<ProductDraft> drafts = AgentRepository.parseProductDrafts(
+                "milk expires tomorrow, eggs expire in 3 days");
+        assertEquals(2, drafts.size());
+        assertEquals("Milk", drafts.get(0).getName());
+        assertEquals("Eggs", drafts.get(1).getName());
+    }
+
+    @Test
+    public void parseProductDraftsSplitsImplicitBoundariesWithQuantities() {
+        List<ProductDraft> drafts = AgentRepository.parseProductDrafts(
+                "2 milk in freezer expiring tomorrow 3 eggs in fridge expiring in 5 days");
+        assertEquals(2, drafts.size());
+        assertEquals("Milk", drafts.get(0).getName());
+        assertEquals("Freezer", drafts.get(0).getStorage());
+        assertEquals("Eggs", drafts.get(1).getName());
+        assertEquals("Refrigerator", drafts.get(1).getStorage());
+    }
+
+    @Test
+    public void parseProductDraftsSplitsImplicitBoundariesWithoutQuantities() {
+        List<ProductDraft> drafts = AgentRepository.parseProductDrafts(
+                "milk in fridge eggs in freezer");
+        assertEquals(2, drafts.size());
+        assertEquals("Milk", drafts.get(0).getName());
+        assertEquals("Refrigerator", drafts.get(0).getStorage());
+        assertEquals("Eggs", drafts.get(1).getName());
+        assertEquals("Freezer", drafts.get(1).getStorage());
+    }
+
 
     private Product product(String name, String category, int daysUntilExpiry) {
         Calendar calendar = Calendar.getInstance(Locale.US);
