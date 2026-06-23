@@ -52,9 +52,9 @@ Tải xuống bản dựng đã được đóng gói của SmartExpApp để ch�
 
 ```mermaid
 graph TD
-    UI[Giao diện Android / Activities] --> VM[ViewModels]
+    UI["Giao diện Android / Activities"] --> VM[ViewModels]
     VM --> Repo[Repositories]
-    Repo --> Room[Cơ sở dữ liệu Room (Bộ nhớ đệm cục bộ)]
+    Repo --> Room["Cơ sở dữ liệu Room (Bộ nhớ đệm cục bộ)"]
     Repo --> Sync[Quản lý đồng bộ Firestore]
     Repo --> CF[Cloudflare Workers AI]
     CF --> CF1[Tạo hình ảnh món ăn]
