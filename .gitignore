@@ -76,3 +76,6 @@ pnpm-debug.log*
 *.sw?
 .idea/
 .vs/
+
+# Google Services config
+/app/google-services.json
