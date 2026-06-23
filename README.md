@@ -10,7 +10,7 @@ Bằng việc kết hợp cơ sở dữ liệu [AppDatabase](file:///c:/Users/AD
 
 Tải xuống bản dựng đã được đóng gói của SmartExpApp để chạy thử trên thiết bị di động của bạn:
 
-[![Tải về Release APK](https://img.shields.io/badge/Tải%20về-Release%20APK-brightgreen?style=for-the-badge&logo=android)](app/build/outputs/apk/release/app-release.apk)
+[![Tải về Release APK](https://img.shields.io/badge/Tải%20về-Release%20APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/thqhuong/SmartExpApp/releases/download/v1.0/app-release.apk)
 
 *   **Đường dẫn tệp tin trong kho lưu trữ:** [app-release.apk](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/build/outputs/apk/release/app-release.apk)
 *   **Dung lượng tệp:** ~68 MB
