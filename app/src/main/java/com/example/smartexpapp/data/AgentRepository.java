@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 public final class AgentRepository {
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
     private static final Pattern QUANTITY_PATTERN = Pattern.compile(
-            "\\b(\\d+(?:\\.\\d+)?)\\s*(pcs|pieces|piece|g|kg|ml|l|oz|lb|cup|cups|tbsp|tsp|gal|gallon|gallons|bag|bags|loaf|loaves)\\b",
+            "\\b(\\d+(?:\\.\\d+)?)\\s*(pcs|pieces|piece|g|kg|ml|l|oz|lb|cup|cups|tbsp|tsp|gal|gallon|gallons|bag|bags|loaf|loaves|kí|ki|ký|ky|hộp|hop|chai|lon|gói|goi|quả|qua|trái|trai|cái|cai|chiếc|chiec)\\b",
             Pattern.CASE_INSENSITIVE);
 
     private AgentRepository() {
@@ -110,6 +110,8 @@ public final class AgentRepository {
                 || lower.contains("freeze")
                 || lower.contains("ngan dong")
                 || lower.contains("ngăn đông")
+                || lower.contains("tu dong")
+                || lower.contains("tủ đông")
                 || lower.contains("dong lanh")
                 || lower.contains("đông lạnh")) {
             storage = LocalDataContract.STORAGE_FREEZE_NAME;
@@ -801,10 +803,19 @@ public final class AgentRepository {
                 || lower.contains("tomorrow")
                 || lower.contains("today")
                 || lower.contains("het han")
+                || lower.contains("hết hạn")
                 || lower.contains("han dung")
+                || lower.contains("hạn dùng")
                 || lower.contains("ngay mai")
+                || lower.contains("ngày mai")
                 || lower.contains("hom nay")
+                || lower.contains("hôm nay")
+                || lower.contains("tháng")
+                || lower.contains("thang")
+                || lower.contains("tuần")
+                || lower.contains("tuan")
                 || Pattern.compile("\\b(?:in|after)\\s+\\d+\\s+days?\\b", Pattern.CASE_INSENSITIVE).matcher(sourceText).find()
+                || Pattern.compile("\\b\\d+\\s*(?:day|ngay|ngày|week|tuan|tuần|month|thang|tháng)s?\\b", Pattern.CASE_INSENSITIVE).matcher(sourceText).find()
                 || Pattern.compile("\\b\\d{1,4}[/\\-.\\s]+\\d{1,2}[/\\-.\\s]+\\d{1,4}\\b").matcher(sourceText).find();
     }
 
@@ -1230,6 +1241,23 @@ public final class AgentRepository {
         if (lower.contains("today") || lower.contains("hom nay") || lower.contains("hôm nay")) {
             return endOfDay(calendar);
         }
+        Pattern relativePattern = Pattern.compile(
+                "\\b(\\d+)\\s*(day|ngay|ngày|week|tuan|tuần|month|thang|tháng)s?\\b",
+                Pattern.CASE_INSENSITIVE
+        );
+        Matcher relMatcher = relativePattern.matcher(lower);
+        if (relMatcher.find()) {
+            int amount = Integer.parseInt(relMatcher.group(1));
+            String unitStr = relMatcher.group(2).toLowerCase(Locale.US);
+            if (unitStr.contains("day") || unitStr.contains("ngay") || unitStr.contains("ngày")) {
+                calendar.add(Calendar.DAY_OF_YEAR, amount);
+            } else if (unitStr.contains("week") || unitStr.contains("tuan") || unitStr.contains("tuần")) {
+                calendar.add(Calendar.WEEK_OF_YEAR, amount);
+            } else if (unitStr.contains("month") || unitStr.contains("thang") || unitStr.contains("tháng")) {
+                calendar.add(Calendar.MONTH, amount);
+            }
+            return endOfDay(calendar);
+        }
         Matcher matcher = Pattern.compile("\\b(?:in|after)\\s+(\\d+)\\s+days?\\b", Pattern.CASE_INSENSITIVE).matcher(source);
         if (matcher.find()) {
             calendar.add(Calendar.DAY_OF_YEAR, Integer.parseInt(matcher.group(1)));
@@ -1253,11 +1281,14 @@ public final class AgentRepository {
 
     private static String inferProductName(String source, Matcher quantityMatcher) {
         String cleaned = source.replaceAll("(?i)\\b(add|track|new product|expires?|expiry|expiration|use by|best before|best|before|sell by|keep|refrigerated|nutrition|ingredients|net|weight|in|after|the|a|an|today|tomorrow|fridge|refrigerator|freezer|frozen|freeze|room temp|pantry)\\b", " ");
-        cleaned = cleaned.replaceAll("(?i)\\b(het han|hết hạn|han dung|hạn dùng|ngay mai|ngày mai|hom nay|hôm nay|cat|cất|trong|vao|vào|o|ở|tu lanh|tủ lạnh|ngan mat|ngăn mát|cat lanh|cất lạnh|ngan dong|ngăn đông|dong lanh|đông lạnh|bao quan|bảo quản)\\b", " ");
+        cleaned = cleaned.replaceAll("(?i)\\b(het han|hết hạn|han dung|hạn dùng|ngay mai|ngày mai|hom nay|hôm nay|cat|cất|trong|vao|vào|o|ở|tu lanh|tủ lạnh|ngan mat|ngăn mát|cat lanh|cất lạnh|ngan dong|ngăn đông|dong lanh|đông lạnh|bao quan|bảo quản|de|để|tu dong|tủ đông|dong|đông|tu|tủ)\\b", " ");
         cleaned = cleaned.replaceAll("\\b\\d{1,4}[/\\-.\\s]+\\d{1,2}[/\\-.\\s]+\\d{1,4}\\b", " ");
         cleaned = cleaned.replaceAll("\\b\\d+\\s+days?\\b", " ");
-        if (quantityMatcher != null) {
-            cleaned = cleaned.replaceAll("(?i)\\b\\d+(?:\\.\\d+)?\\s*(pcs|pieces|piece|g|kg|ml|l|oz|lb|cup|cups|tbsp|tsp|gal|gallon|gallons|bag|bags|loaf|loaves)\\b", " ");
+        cleaned = cleaned.replaceAll("(?i)\\b\\d+\\s*(day|ngay|ngày|week|tuan|tuần|month|thang|tháng)s?\\b", " ");
+        cleaned = cleaned.replaceAll("(?i)\\b(in|after|tháng|thang|tuần|tuan|ngày|ngay|day|days|week|weeks|month|months)\\b", " ");
+        Matcher matcher = QUANTITY_PATTERN.matcher(source);
+        if (matcher.find()) {
+            cleaned = cleaned.replaceAll("(?i)" + Pattern.quote(matcher.group()), " ");
         }
         cleaned = cleaned.replaceAll("\\s+", " ").trim();
         if (cleaned.isEmpty()) return "";
@@ -1381,6 +1412,7 @@ public final class AgentRepository {
         if (unit.equals("gallon") || unit.equals("gallons")) return "gal";
         if (unit.equals("bags")) return "bag";
         if (unit.equals("loaves")) return "loaf";
+        if (unit.equals("kí") || unit.equals("ki") || unit.equals("ký") || unit.equals("ky")) return "kg";
         return unit;
     }
 
