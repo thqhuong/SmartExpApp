@@ -154,30 +154,51 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/reminderTodayButton"
                                 android:layout_width="0dp"
-                                android:layout_height="44dp"
+                                android:layout_height="48dp"
                                 android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minWidth="0dp"
+                                android:paddingStart="2dp"
+                                android:paddingEnd="2dp"
+                                android:maxLines="1"
                                 android:text="@string/reminder_today"
                                 android:textAllCaps="false"
+                                android:textSize="13sp"
                                 app:cornerRadius="8dp" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/reminder1DayButton"
                                 android:layout_width="0dp"
-                                android:layout_height="44dp"
+                                android:layout_height="48dp"
                                 android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minWidth="0dp"
+                                android:paddingStart="2dp"
+                                android:paddingEnd="2dp"
+                                android:maxLines="1"
                                 android:text="@string/reminder_1_day"
                                 android:textAllCaps="false"
+                                android:textSize="13sp"
                                 app:cornerRadius="8dp" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/reminder3DayButton"
                                 android:layout_width="0dp"
-                                android:layout_height="44dp"
+                                android:layout_height="48dp"
                                 android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minWidth="0dp"
+                                android:paddingStart="2dp"
+                                android:paddingEnd="2dp"
+                                android:maxLines="1"
                                 android:text="@string/reminder_3_days"
                                 android:textAllCaps="false"
+                                android:textSize="13sp"
                                 app:cornerRadius="8dp" />
                         </LinearLayout>
 
@@ -190,40 +211,65 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/reminder7DayButton"
                                 android:layout_width="0dp"
-                                android:layout_height="44dp"
+                                android:layout_height="48dp"
                                 android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minWidth="0dp"
+                                android:paddingStart="2dp"
+                                android:paddingEnd="2dp"
+                                android:maxLines="1"
                                 android:text="@string/reminder_7_days"
                                 android:textAllCaps="false"
+                                android:textSize="13sp"
                                 app:cornerRadius="8dp" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/reminder14DayButton"
                                 android:layout_width="0dp"
-                                android:layout_height="44dp"
+                                android:layout_height="48dp"
                                 android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minWidth="0dp"
+                                android:paddingStart="2dp"
+                                android:paddingEnd="2dp"
+                                android:maxLines="1"
                                 android:text="@string/reminder_14_days"
                                 android:textAllCaps="false"
+                                android:textSize="13sp"
                                 app:cornerRadius="8dp" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/reminder30DayButton"
                                 android:layout_width="0dp"
-                                android:layout_height="44dp"
+                                android:layout_height="48dp"
                                 android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minWidth="0dp"
+                                android:paddingStart="2dp"
+                                android:paddingEnd="2dp"
+                                android:maxLines="1"
                                 android:text="@string/reminder_30_days"
                                 android:textAllCaps="false"
+                                android:textSize="13sp"
                                 app:cornerRadius="8dp" />
                         </LinearLayout>
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/reminderCustomButton"
                             android:layout_width="match_parent"
-                            android:layout_height="44dp"
+                            android:layout_height="48dp"
                             android:layout_marginTop="8dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:maxLines="1"
                             android:text="@string/reminder_custom"
                             android:textAllCaps="false"
+                            android:textSize="13sp"
                             app:cornerRadius="8dp" />
                     </LinearLayout>
                 </LinearLayout>
