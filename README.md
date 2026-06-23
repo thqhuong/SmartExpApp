@@ -1,90 +1,87 @@
-# 📱 SmartExpApp
+# SmartExpApp
 
-SmartExpApp is a modern, **local-first Android application** designed to help users track food inventory, manage expiry dates, configure custom reminders, and minimize food waste. Utilizing **Room Database** for seamless offline capability, **ML Kit Text Recognition** for OCR-assisted data entry, and optional **Cloudflare Workers AI** for smart recipe suggestions and natural language parsing, SmartExpApp offers a premium, high-performance food tracking experience.
+SmartExpApp là một ứng dụng Android hiện đại hoạt động theo cơ chế **ưu tiên lưu trữ nội bộ (local-first)**, được thiết kế nhằm giúp người dùng quản lý thời hạn sử dụng của thực phẩm, kiểm soát kho hàng gia đình, thiết lập nhắc nhở tự động và giảm thiểu tối đa tình trạng lãng phí thực phẩm. 
+
+Bằng việc kết hợp cơ sở dữ liệu [AppDatabase](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/src/main/java/com/example/smartexpapp/data/local/AppDatabase.java) ([Room Database]) hoạt động ngoại tuyến mượt mà, thư viện nhận dạng ký tự quang học **Google ML Kit OCR** trích xuất ngày hết hạn tiện lợi, và các dịch vụ trí tuệ nhân tạo tùy chọn từ **Cloudflare Workers AI** (gợi ý món ăn và phân tích cú pháp sản phẩm), SmartExpApp mang tới trải nghiệm tiện lợi, hiệu quả và tối giản cho cuộc sống thông minh của bạn.
 
 ---
 
-## 🚀 Quick Download
+## Tải APK cài đặt nhanh
 
-Get the latest build of SmartExpApp immediately. Click below to download the pre-compiled Release APK file:
+Tải xuống bản dựng đã được đóng gói của SmartExpApp để chạy thử trên thiết bị di động của bạn:
 
-[![Download Release APK](https://img.shields.io/badge/Download-Release%20APK-brightgreen?style=for-the-badge&logo=android)](app/build/outputs/apk/release/app-release.apk)
+[![Tải về Release APK](https://img.shields.io/badge/Tải%20về-Release%20APK-brightgreen?style=for-the-badge&logo=android)](app/build/outputs/apk/release/app-release.apk)
 
-*   **File Path in Repo:** [`app/build/outputs/apk/release/app-release.apk`](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/build/outputs/apk/release/app-release.apk)
-*   **File Size:** ~68 MB
-*   **Requirements:** Android 8.0 (API level 28) or higher.
+*   **Đường dẫn tệp tin trong kho lưu trữ:** [app-release.apk](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/build/outputs/apk/release/app-release.apk)
+*   **Dung lượng tệp:** ~68 MB
+*   **Yêu cầu hệ thống:** Android 8.0 (API level 28) trở lên.
 
 > [!NOTE]
-> If you built the project from source, you can find the generated APK in the path listed above. If signing credentials are not configured, Gradle compiles `app-release-unsigned.apk` instead.
+> Nếu tự biên dịch dự án từ mã nguồn, tệp tin APK được tạo ra sẽ nằm tại đường dẫn trên. Nếu chưa cấu hình thông tin chữ ký (signing credentials), Gradle sẽ biên dịch tệp dưới tên `app-release-unsigned.apk` thay thế.
 
 ---
 
-## 🌟 Core Features
+## Các tính năng cốt lõi
 
--   🗃️ **Local-First Storage:** Fully functional offline database powered by Android Room DB with instant responsiveness.
--   🔮 **Smart Add Parsing:** Batch add multiple products in natural language via voice or text input, parsed dynamically.
--   👁️ **OCR Expiry Scanner:** Leverage Google ML Kit Text Recognition to extract expiry dates directly from food label images.
--   🍳 **AI Recipe Suggestions:** Generate culinary ideas based on ingredients currently in your inventory, accompanied by AI-generated images.
--   💬 **AI Assistant (Chat Agent):** Built-in smart chef chatbot for cooking questions and ingredient substitutions.
--   🔄 **Firebase Cloud Sync:** Optional secure cloud synchronization for multi-device login using Firebase Authentication and Firestore.
--   🌓 **Seamless Dark Mode:** Dynamic, harmonized light/dark mode styling throughout the entire application.
+-   **Lưu trữ ưu tiên nội bộ (Local-First):** Cơ sở dữ liệu SQLite ngoại tuyến thông qua [AppDatabase](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/src/main/java/com/example/smartexpapp/data/local/AppDatabase.java) giúp ứng dụng hoạt động tức thì, phản hồi nhanh và bảo vệ quyền riêng tư người dùng.
+-   **Nhập sản phẩm thông minh (Smart Add):** Cho phép nhập thực phẩm hàng loạt bằng giọng nói hoặc văn bản qua ngôn ngữ mô tả tự nhiên thông thường.
+-   **Quét ngày hết hạn qua camera (OCR):** Nhận diện chữ viết trên nhãn chai lọ, bao bì thực phẩm để trích xuất và điền ngày hết hạn tự động thông qua Google ML Kit.
+-   **Gợi ý công thức món ăn AI:** Đề xuất các món ăn kèm hướng dẫn chuẩn bị từ các nguyên liệu sắp hết hạn đang có sẵn trong kho hàng.
+-   **Trợ lý ảo hỗ trợ:** Tích hợp tính năng Chatbot tư vấn, trả lời nhanh các thắc mắc về bảo quản thực phẩm hoặc thay thế gia vị khi nấu ăn.
+-   **Đồng bộ hóa đám mây tùy chọn:** Khả năng đồng bộ trực tuyến thông qua Firebase Auth và Cloud Firestore giúp sao lưu dữ liệu trên nhiều thiết bị.
+-   **Giao diện sáng/tối đồng bộ:** Thiết kế giao diện hiện đại hỗ trợ đầy đủ các hiệu ứng tối giản thích ứng theo cài đặt hệ thống.
 
 ---
 
-## 📸 Visual Tour
+## Trực quan hóa Giao diện
 
-### Side-by-Side Screen Showcase
+### Các màn hình chính (Chế độ Sáng / Tối)
 
-| Feature / Screen | Light Mode | Dark Mode |
+| Tính năng / Màn hình | Chế độ Sáng | Chế độ Tối |
 | :--- | :---: | :---: |
-| **Dashboard** <br> View inventory health metrics, item statistics, consumption history, and categories. | <img src="screenshots/dashboard-light.png" width="300"/> | <img src="screenshots/dashboard-dark.png" width="300"/> |
-| **Inventory & Expirations** <br> Scan items, manage expiration alerts (expired, soon, active), filter, search, and sort. | <img src="screenshots/inventory-light.png" width="300"/> | <img src="screenshots/inventory-dark.png" width="300"/> |
-| **Smart Add Parsing** <br> Add products using structured text/voice input with instantaneous AI parsing. | <img src="screenshots/add-product-light.png" width="300"/> | <img src="screenshots/add-product-dark.png" width="300"/> |
-| **AI Assistant Chat** <br> Chat with your virtual smart kitchen assistant for recipes and inventory tips. | <img src="screenshots/agent-light.png" width="300"/> | <img src="screenshots/agent-dark.png" width="300"/> |
-| **System Settings** <br> Set custom warning thresholds (e.g., alert 3 days before expiry) and manage databases. | <img src="screenshots/settings-light.png" width="300"/> | <img src="screenshots/settings-dark.png" width="300"/> |
-
-### Specialized Features
-
-| AI Recipes Generator | Interactive Recipe Cards | Authentication Screen |
-| :---: | :---: | :---: |
-| <img src="screenshots/recipes-screen.png" width="250"/> <br> Choose ingredients to cook | <img src="screenshots/recipes-cards.png" width="250"/> <br> AI Culinary suggestions | <img src="screenshots/signin-dark.png" width="250"/> <br> Optional Cloud Account Login |
+| **Bảng điều khiển (Dashboard)** <br> Thống kê nhanh tình trạng kho, biểu đồ lượng tiêu thụ, thực phẩm lãng phí và phân chia theo danh mục. | <img src="screenshots/dashboard_light.png" width="300"/> | <img src="screenshots/Dashboard_dark.png" width="300"/> |
+| **Danh mục kho hàng (Inventory)** <br> Hiển thị danh sách thực phẩm, lọc theo tình trạng hạn sử dụng (đã hết hạn, sắp hết hạn, an toàn) và tìm kiếm/sắp xếp nhanh. | <img src="screenshots/inventory_light.png" width="300"/> | <img src="screenshots/Inventory_Dark.png" width="300"/> |
+| **Thêm nhanh sản phẩm (Smart Add)** <br> Nhập văn bản hoặc ghi âm giọng nói ngôn ngữ tự nhiên để hệ thống phân tích và điền thông số tự động. | <img src="screenshots/addproduct_light.png" width="300"/> | <img src="screenshots/Addproduct_dark.png" width="300"/> |
+| **Nhật ký & Lịch sử (History)** <br> Ghi lại biểu đồ thống kê thói quen sử dụng thực phẩm hàng tuần, hàng tháng giúp cải thiện kế hoạch mua sắm. | <img src="screenshots/history_light.png" width="300"/> | <img src="screenshots/history_dark.png" width="300"/> |
+| **Gợi ý món ăn (Recipes)** <br> Các thẻ công thức đề xuất nguyên liệu chi tiết và quy trình thực hiện đi kèm hình ảnh bắt mắt. | <img src="screenshots/recipe_light.png" width="300"/> | <img src="screenshots/Recipe_dark.png" width="300"/> |
+| **Cài đặt hệ thống (Settings)** <br> Thiết lập ngưỡng cảnh báo (nhắc trước bao nhiêu ngày), kiểm tra kết nối AI và quản lý sao lưu/đồng bộ cơ sở dữ liệu. | <img src="screenshots/settings_light.png" width="300"/> | <img src="screenshots/settings_dark.png" width="300"/> |
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## Kiến trúc & Công nghệ sử dụng
 
 ```mermaid
 graph TD
-    UI[Android UI / Activities] --> VM[ViewModels]
+    UI[Giao diện Android / Activities] --> VM[ViewModels]
     VM --> Repo[Repositories]
-    Repo --> Room[Room Database (Local Cache)]
-    Repo --> Sync[Firestore Sync Manager]
+    Repo --> Room[Cơ sở dữ liệu Room (Bộ nhớ đệm cục bộ)]
+    Repo --> Sync[Quản lý đồng bộ Firestore]
     Repo --> CF[Cloudflare Workers AI]
-    CF --> CF1[Recipe Image Generator]
-    CF --> CF2[Natural Language Parser]
-    CF --> CF3[Llama-3 Chat Assistant]
+    CF --> CF1[Tạo hình ảnh món ăn]
+    CF --> CF2[Bộ phân tích ngôn ngữ tự nhiên]
+    CF --> CF3[Trợ lý Chat Llama-3]
     Sync --> FB[Firebase Firestore]
 ```
 
--   **Frontend:** Native Android (Java / Android SDK API 36)
--   **Database:** Room Database (local SQLite), Firebase Firestore (optional cloud sync)
--   **Authentication:** Firebase Auth & Android Credential Manager (One-Tap Sign-in)
--   **AI Services:** Cloudflare Workers AI endpoints (Llama, product parser, and recipe images)
--   **OCR Engine:** Google ML Kit Text Recognition
+-   **Frontend:** Giao diện Native Android (sử dụng ngôn ngữ Java trên Android SDK API 36)
+-   **Database:** [AppDatabase](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/src/main/java/com/example/smartexpapp/data/local/AppDatabase.java) (SQLite cục bộ qua Room DB), Firebase Firestore (Đồng bộ đám mây tùy chọn)
+-   **Xác thực:** Firebase Auth & Android Credential Manager (Đăng nhập Một chạm One-Tap)
+-   **AI Endpoints:** Kết nối thông qua máy chủ phụ trợ Cloudflare Workers AI
+-   **OCR Engine:** Công nghệ nhận dạng văn bản trên thiết bị Google ML Kit
 
 ---
 
-## ⚙️ Setup & Installation
+## Hướng dẫn cài đặt dự án
 
-### Local Build Requirements
--   Android Studio (Ladybug or newer recommended)
--   JDK 11
--   An Android emulator or physical device running Android 8.0+
+### Yêu cầu cấu hình xây dựng
+- Công cụ Android Studio (Khuyên dùng phiên bản Ladybug trở lên)
+- Java Development Kit (JDK) phiên bản 17
+- Thiết bị thử nghiệm (Máy ảo Emulator hoặc điện thoại chạy hệ điều hành Android 8.0 trở lên)
 
-### Configuration
-1.  Open the project root in Android Studio.
-2.  A real `app/google-services.json` is optional for local/demo work (if missing, a placeholder is auto-generated by the build script so compile completes).
-3.  Configure AI Workers by adding the following endpoints in `local.properties` (located in the root directory) or environment variables:
+### Các bước cấu hình môi trường
+1. Clone dự án và mở thư mục gốc của dự án trong phần mềm Android Studio.
+2. Tệp tin [google-services.json](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/google-services.json) cấu hình Firebase là tùy chọn cho hoạt động thử nghiệm cục bộ (nếu thiếu, tập lệnh biên dịch sẽ tự động tạo tệp tạm để quá trình build không bị lỗi).
+3. Thiết lập kết nối AI bằng cách điền các giá trị endpoint của bạn vào tệp [local.properties](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/local.properties) (hoặc thông qua cấu hình các biến môi trường):
 
 ```properties
 AI_WORKER_URL=https://your-worker.example.workers.dev
@@ -92,75 +89,76 @@ RECIPE_IMAGE_WORKER_URL=https://your-worker.example.workers.dev
 PRODUCT_PARSER_WORKER_URL=https://your-worker.example.workers.dev
 ```
 
-*Note: SmartExpApp has native local fallback behaviors when worker URLs are blank, ensuring all offline capabilities continue to work gracefully.*
+*Lưu ý: SmartExpApp hỗ trợ chế độ hoạt động ngoại tuyến tự động ngoại biên (local fallback) khi để trống các đường dẫn URL trên.*
 
 ---
 
-## 🧪 Verification & Testing
+## Kiểm thử & Xác minh phần mềm
 
-To run unit and local integration tests, run the following commands in PowerShell:
+Để khởi chạy các bài kiểm thử đơn vị hoặc kiểm thử tích hợp trên dòng lệnh, sử dụng PowerShell tại thư mục gốc:
 
 ```powershell
-# Run local Room and Repository unit tests
+# Chạy các bài kiểm thử cục bộ cho Room DB và Repositories
 .\gradlew.bat test
 
-# Assemble debug build
+# Biên dịch bản gỡ lỗi (Debug APK)
 .\gradlew.bat :app:assembleDebug
 
-# Run Lint checks
+# Khởi chạy phân tích mã nguồn tĩnh (Lint)
 .\gradlew.bat :app:lintDebug
 
-# Test Firestore security rules
+# Kiểm thử quy tắc bảo mật dữ liệu của Firestore
 npm run test:firestore-rules
 ```
 
-If you have a physical device or emulator running:
+Nếu đang kết nối thiết bị thật hoặc máy ảo Android:
 ```powershell
-# Run Android Instrumentation tests
+# Thực hiện kiểm thử UI tự động trên thiết bị (Android Instrumentation)
 .\gradlew.bat connectedDebugAndroidTest
 ```
 
 ---
 
-## 📦 Building a Release APK
+## Đóng gói tệp release
 
-To package a signed release APK, create a file named `release-signing.properties` in the project root:
+Để tạo bản dựng Release APK có chữ ký tự cài đặt, hãy tạo tệp cấu hình [release-signing.properties](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/release-signing.properties) ở thư mục gốc dự án:
 
 ```properties
-STORE_FILE=C:\\path\\to\\smartexp-release.jks
-STORE_PASSWORD=your_keystore_password
-KEY_ALIAS=your_key_alias
-KEY_PASSWORD=your_key_password
+STORE_FILE=C:\\duong\\dan\\file\\chu_ky.jks
+STORE_PASSWORD=mat_khau_kho_khoa
+KEY_ALIAS=ten_danh_xung_alias
+KEY_PASSWORD=mat_khau_chia_khoa
 ```
 
-*(Alternatively, define environment variables: `SMARTEXP_RELEASE_STORE_FILE`, `SMARTEXP_RELEASE_STORE_PASSWORD`, `SMARTEXP_RELEASE_KEY_ALIAS`, and `SMARTEXP_RELEASE_KEY_PASSWORD`.)*
+*(Hoặc định cấu hình qua các biến môi trường hệ thống: `SMARTEXP_RELEASE_STORE_FILE`, `SMARTEXP_RELEASE_STORE_PASSWORD`, `SMARTEXP_RELEASE_KEY_ALIAS`, và `SMARTEXP_RELEASE_KEY_PASSWORD`.)*
 
-Then execute:
+Thực hiện lệnh đóng gói bản dựng:
 ```powershell
 .\gradlew.bat :app:assembleRelease
 ```
-The resulting package will be stored under: `app/build/outputs/apk/release/app-release.apk`.
+
+Sau khi hoàn tất, tệp APK đóng gói sẽ nằm tại: [app-release.apk](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/build/outputs/apk/release/app-release.apk)
 
 ---
 
-## 📋 Evaluation Demo Flow
+## Hướng dẫn Demo chạy thử ứng dụng
 
-Here is a recommended path to test the application's functionality:
+Bạn có thể chạy thử nghiệm kiểm tra tính năng ứng dụng theo luồng dưới đây:
 
-1.  **Guest Session:** Launch as guest or local-only user (no credentials required).
-2.  **Product Insertion:** Add a food item manually, validating quantity and positive numeric boundaries.
-3.  **Storage Assignment:** Switch the storage category between `Room Temp`, `Refrigerator`, and `Freezer`.
-4.  **OCR Scan:** Tap the camera icon, upload an image of a food label, and verify it successfully extracts an expiration date.
-5.  **Smart Add:** Try voice/text natural language parsing (e.g., *"Add 3 apples expiring next week and 2 cartons of milk"*).
-6.  **Inventory Controls:** Filter by category, sort by expiration, and mark items as consumed, wasted, or donated (supports undo action).
-7.  **Data Analytics:** Open the stats dashboard and toggle date ranges to view wastage trends.
-8.  **Reminders:** Adjust the days-before warning threshold in notification settings.
-9.  **Data Export:** Export room database tables to JSON files and test the local data deletion.
-10. **AI Integration:** Test AI recipes and chatbot response fallbacks.
+1. **Khởi chạy ứng dụng với chế độ Khách:** Bỏ qua đăng nhập tài khoản để vào thẳng giao diện cục bộ.
+2. **Thêm thực phẩm thủ công:** Thử thêm sản phẩm mới với số lượng bất kỳ (kiểm tra ngăn chặn giá trị âm).
+3. **Thay đổi vị trí bảo quản:** Di chuyển thực phẩm qua lại giữa `Nhiệt độ phòng`, `Ngăn mát` và `Ngăn đông` để kiểm tra phân loại.
+4. **Quét nhãn qua camera:** Chụp ảnh nhãn hộp sữa hoặc sản phẩm có chữ và kiểm tra tính năng trích xuất ngày hết hạn tự động.
+5. **Thêm nhanh bằng cú pháp AI:** Thử sử dụng tính năng Smart Add bằng giọng nói hoặc nhập mô tả nhanh (ví dụ: *"3 hộp sữa chua hạn dùng tuần tới, 5 gói mì gói"*).
+6. **Kiểm soát kho thực phẩm:** Lọc thực phẩm theo tình trạng hết hạn, đánh dấu tiêu thụ hoặc vứt bỏ (thử chức năng Hoàn tác / Undo).
+7. **Phân tích Dashboard:** Thay đổi phạm vi hiển thị ngày và kiểm tra các số liệu cập nhật trên biểu đồ phân tích Dashboard.
+8. **Cấu hình thông báo:** Thử tăng/giảm số ngày báo trước thực phẩm hết hạn trong cài đặt của ứng dụng.
+9. **Sao lưu ngoại tuyến:** Tiến hành xuất/nhập cơ sở dữ liệu SQLite dưới dạng file JSON và kiểm tra việc làm sạch kho dữ liệu cục bộ.
+10. **Trải nghiệm AI:** Sử dụng kho nguyên liệu hiện có để tạo công thức món ăn AI và chat hỏi đầu bếp trợ lý ảo.
 
 ---
 
-## ⚠️ Limitations & Notes
--   Cloudflare AI Features are optional; the application automatically falls back to static generation if worker endpoints are not set up.
--   Firestore synchronization requires a valid `google-services.json` and a user to be actively signed in.
--   This application is compiled as a school evaluation/project target and is not configured for direct Google Play Store release.
+## Hạn chế & Lưu ý
+- Các tính năng Cloudflare AI là tùy chọn; ứng dụng tự động dùng dữ liệu mặc định dự phòng nếu chưa cấu hình AI Worker.
+- Đồng bộ hóa dữ liệu đám mây yêu cầu có tệp tin [google-services.json](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/google-services.json) cấu hình chính xác và đã thực hiện đăng nhập tài khoản.
+- Đây là sản phẩm chạy thử nghiệm và đánh giá học tập, không được định hình cho phân phối sản phẩm chính thức trên cửa hàng Google Play Store.
