@@ -21,6 +21,14 @@ Tải xuống bản dựng đã được đóng gói của SmartExpApp để ch�
 
 ---
 
+## Cấu trúc các nhánh trong Repository
+
+Để giữ cho nhánh chính (`master`) gọn gàng và tập trung hoàn toàn vào mã nguồn ứng dụng Android Native, các thành phần phụ trợ đã được tách và lưu trữ tại các nhánh Git riêng biệt:
+- **Nhánh `web-prototype`:** Chứa mã nguồn của bản mô phỏng giao diện web (`googleaistudio/`).
+- **Nhánh `cloudflare-worker`:** Chứa mã nguồn của Cloudflare Workers AI phục vụ tạo ảnh món ăn (`cloudflare-recipe-images/`).
+
+---
+
 ## Các tính năng cốt lõi
 
 -   **Lưu trữ ưu tiên nội bộ (Local-First):** Cơ sở dữ liệu SQLite ngoại tuyến thông qua [AppDatabase](file:///c:/Users/ADMIN/AndroidStudioProjects/SmartExpApp/app/src/main/java/com/example/smartexpapp/data/local/AppDatabase.java) giúp ứng dụng hoạt động tức thì, phản hồi nhanh và bảo vệ quyền riêng tư người dùng.
