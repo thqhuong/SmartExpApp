@@ -252,6 +252,8 @@
     <string name="smart_add_draft_title">Xem lại bản nháp Thêm thông minh</string>
     <string name="fill_form">Điền biểu mẫu</string>
     <string name="fill_details">Điền chi tiết</string>
+    <string name="review_added_items">Xem lại món đã thêm</string>
+    <string name="fill_form_btn">ĐIỀN\nFORM</string>
     <string name="smart_add_review_first_format">Xem lại món 1 trong %1$d.</string>
     <string name="smart_add_next_ready">Món Thêm thông minh tiếp theo đã sẵn sàng. Hãy xem lại và lưu.</string>
     <string name="expiry_not_detected">Không phát hiện ngày hết hạn. Vui lòng chọn ngày trước khi lưu.</string>

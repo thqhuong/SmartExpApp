@@ -253,6 +253,8 @@
     <string name="smart_add_draft_title">Review Smart Add Draft</string>
     <string name="fill_form">Fill Form</string>
     <string name="fill_details">Fill Details</string>
+    <string name="review_added_items">Review Added Items</string>
+    <string name="fill_form_btn">FILL\nFORM</string>
     <string name="smart_add_review_first_format">Review item 1 of %1$d.</string>
     <string name="smart_add_next_ready">Next Smart Add item ready. Review and save it.</string>
     <string name="smart_add_item_skipped">Smart Add item skipped.</string>
