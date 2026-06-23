@@ -569,4 +569,11 @@
     <string name="undo_delete_label">HOÀN TÁC</string>
     <string name="category_product_count_format">%1$d sản phẩm</string>
     <string name="category_delete_success_format">Đã xóa \"%1$s\"</string>
+
+    <!-- Clear History Screen Strings -->
+    <string name="history_auto_delete_info">Các mục trong lịch sử sẽ tự động được xóa sau 7 ngày.</string>
+    <string name="clear_all_history">Xóa tất cả lịch sử</string>
+    <string name="clear_history_title">Xóa tất cả lịch sử?</string>
+    <string name="clear_history_message">Bạn có chắc chắn muốn xóa tất cả lịch sử? Thao tác này sẽ xóa vĩnh viễn tất cả sản phẩm không hoạt động khỏi thiết bị này.</string>
+    <string name="clear_history_confirm">Xóa tất cả</string>
 </resources>

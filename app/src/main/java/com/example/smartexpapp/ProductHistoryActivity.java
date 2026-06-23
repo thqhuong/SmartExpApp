@@ -86,11 +86,23 @@ public class ProductHistoryActivity extends BaseActivity {
             menuButton.setOnClickListener(v -> finish());
         }
 
+        View historyContentScroll = findViewById(R.id.historyContentScroll);
+        View historyActionContainer = findViewById(R.id.historyActionContainer);
+        Button btnClearAllHistory = findViewById(R.id.btnClearAllHistory);
+        if (btnClearAllHistory != null) {
+            btnClearAllHistory.setOnClickListener(v -> onClearAllClick());
+        }
+
         viewModel.getProducts().observe(this, products -> {
             adapter.submitList(products);
             boolean empty = products == null || products.isEmpty();
-            productList.setVisibility(empty ? View.GONE : View.VISIBLE);
+            if (historyContentScroll != null) {
+                historyContentScroll.setVisibility(empty ? View.GONE : View.VISIBLE);
+            }
             emptyState.setVisibility(empty ? View.VISIBLE : View.GONE);
+            if (historyActionContainer != null) {
+                historyActionContainer.setVisibility(empty ? View.GONE : View.VISIBLE);
+            }
         });
 
         viewModel.getConsumedCount().observe(this, count -> updateStats());
@@ -212,6 +224,53 @@ public class ProductHistoryActivity extends BaseActivity {
                     error -> {
                         runOnUiThread(() -> {
                             showErrorNotification(getString(R.string.restore_error));
+                        });
+                    });
+        });
+
+        dialog.findViewById(R.id.dialogCancel).setOnClickListener(v -> dialog.dismiss());
+    }
+
+    private void onClearAllClick() {
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setView(R.layout.dialog_clear_history_confirm)
+                .create();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.6f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(
+                    android.graphics.Color.TRANSPARENT));
+        }
+        dialog.show();
+
+        ((TextView) dialog.findViewById(R.id.dialogTitle)).setText(R.string.clear_history_title);
+        ((TextView) dialog.findViewById(R.id.dialogMessage)).setText(R.string.clear_history_message);
+
+        dialog.findViewById(R.id.dialogConfirm).setOnClickListener(v -> {
+            dialog.dismiss();
+            if (loadingIndicator != null) {
+                loadingIndicator.setVisibility(View.VISIBLE);
+            }
+            viewModel.clearAllHistory(
+                    success -> {
+                        runOnUiThread(() -> {
+                            if (loadingIndicator != null) {
+                                loadingIndicator.setVisibility(View.GONE);
+                            }
+                            if (success) {
+                                showSuccessNotification(getString(R.string.delete_local_data_done));
+                                viewModel.loadHistory();
+                            } else {
+                                showErrorNotification(getString(R.string.delete_local_data_error));
+                            }
+                        });
+                    },
+                    error -> {
+                        runOnUiThread(() -> {
+                            if (loadingIndicator != null) {
+                                loadingIndicator.setVisibility(View.GONE);
+                            }
+                            showErrorNotification(getString(R.string.delete_local_data_error));
                         });
                     });
         });
