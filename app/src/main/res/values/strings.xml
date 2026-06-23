@@ -569,4 +569,11 @@
     <string name="undo_delete_label">UNDO</string>
     <string name="category_product_count_format">%1$d product(s)</string>
     <string name="category_delete_success_format">\"%1$s\" deleted</string>
+
+    <!-- Clear History Screen Strings -->
+    <string name="history_auto_delete_info">All items in the history will be automatically removed after 7 days.</string>
+    <string name="clear_all_history">Clear All History</string>
+    <string name="clear_history_title">Clear all history?</string>
+    <string name="clear_history_message">Are you sure you want to clear all history? This will permanently delete all inactive products from this device.</string>
+    <string name="clear_history_confirm">Clear All</string>
 </resources>
