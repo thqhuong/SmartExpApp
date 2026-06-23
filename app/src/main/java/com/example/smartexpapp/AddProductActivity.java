@@ -315,7 +315,7 @@ public class AddProductActivity extends BaseActivity {
 
                 if (draft.getName() != null && !draft.getName().trim().isEmpty()) {
                     rowValueName.setText(draft.getName());
-                    rowValueName.setTextColor(Color.WHITE);
+                    rowValueName.setTextColor(getColor(R.color.dialog_text_primary));
                     rowValueName.setTypeface(null, android.graphics.Typeface.BOLD);
                 } else {
                     rowValueName.setText(R.string.not_detected);
@@ -332,7 +332,7 @@ public class AddProductActivity extends BaseActivity {
                 }
                 if (!qtyStr.trim().isEmpty()) {
                     rowValueQuantity.setText(qtyStr);
-                    rowValueQuantity.setTextColor(Color.WHITE);
+                    rowValueQuantity.setTextColor(getColor(R.color.dialog_text_primary));
                     rowValueQuantity.setTypeface(null, android.graphics.Typeface.BOLD);
                 } else {
                     rowValueQuantity.setText(R.string.not_detected);
@@ -342,7 +342,7 @@ public class AddProductActivity extends BaseActivity {
 
                 if (draft.getCategory() != null && !draft.getCategory().trim().isEmpty()) {
                     rowValueCategory.setText(draft.getCategory());
-                    rowValueCategory.setTextColor(Color.WHITE);
+                    rowValueCategory.setTextColor(getColor(R.color.dialog_text_primary));
                     rowValueCategory.setTypeface(null, android.graphics.Typeface.BOLD);
                 } else {
                     rowValueCategory.setText(R.string.not_detected);
@@ -352,7 +352,7 @@ public class AddProductActivity extends BaseActivity {
 
                 if (draft.getStorage() != null && !draft.getStorage().trim().isEmpty()) {
                     rowValueStorage.setText(draft.getStorage());
-                    rowValueStorage.setTextColor(Color.WHITE);
+                    rowValueStorage.setTextColor(getColor(R.color.dialog_text_primary));
                     rowValueStorage.setTypeface(null, android.graphics.Typeface.BOLD);
                 } else {
                     rowValueStorage.setText(R.string.not_detected);
@@ -364,7 +364,7 @@ public class AddProductActivity extends BaseActivity {
                     String expiry = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                             .format(new java.util.Date(draft.getExpiryDateMillis()));
                     rowValueExpiry.setText(expiry);
-                    rowValueExpiry.setTextColor(Color.WHITE);
+                    rowValueExpiry.setTextColor(getColor(R.color.dialog_text_primary));
                     rowValueExpiry.setTypeface(null, android.graphics.Typeface.BOLD);
                 } else {
                     rowValueExpiry.setText(R.string.not_detected);
@@ -1402,7 +1402,6 @@ public class AddProductActivity extends BaseActivity {
 
     private void finishProductSave(String toastMessage) {
         ReminderScheduler.scheduleDaily(this);
-        ReminderScheduler.runSoon(this);
 
         if (moveToNextSmartDraft(true, toastMessage)) {
             return;
