@@ -1,8 +1,11 @@
 package com.example.smartexpapp.notifications;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import android.app.AlarmManager;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -15,8 +18,10 @@ import androidx.work.testing.WorkManagerTestInitHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Shadows;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowAlarmManager;
 
 import java.util.Calendar;
 import java.util.List;
@@ -36,15 +41,14 @@ public class ReminderSchedulerTest {
     }
 
     @Test
-    public void scheduleDailyEnqueuesUniqueDelayedReminderWork() throws Exception {
+    public void scheduleDailySetsAlarmBackedReminder() {
         ReminderScheduler.scheduleDaily(context, 9 * 60);
 
-        List<WorkInfo> infos = WorkManager.getInstance(context)
-                .getWorkInfosForUniqueWork(ReminderScheduler.UNIQUE_DAILY_WORK)
-                .get();
+        ShadowAlarmManager.ScheduledAlarm alarm = shadowAlarmManager().peekNextScheduledAlarm();
 
-        assertEquals(1, infos.size());
-        assertEquals(WorkInfo.State.ENQUEUED, infos.get(0).getState());
+        assertNotNull(alarm);
+        assertEquals(AlarmManager.RTC_WAKEUP, alarm.type);
+        assertTrue(alarm.isAllowWhileIdle());
     }
 
     @Test
@@ -63,6 +67,8 @@ public class ReminderSchedulerTest {
     public void cancelClearsScheduledReminderWork() throws Exception {
         ReminderScheduler.scheduleDaily(context, 9 * 60);
         ReminderScheduler.cancel(context);
+
+        assertNull(shadowAlarmManager().peekNextScheduledAlarm());
 
         List<WorkInfo> infos = WorkManager.getInstance(context)
                 .getWorkInfosForUniqueWork(ReminderScheduler.UNIQUE_DAILY_WORK)
@@ -89,5 +95,9 @@ public class ReminderSchedulerTest {
         now.set(Calendar.MILLISECOND, 0);
 
         assertEquals((23L * 60L + 30L) * 60L * 1000L, ReminderScheduler.nextDelayMillisFor(9 * 60, now.getTimeInMillis()));
+    }
+
+    private ShadowAlarmManager shadowAlarmManager() {
+        return Shadows.shadowOf((AlarmManager) context.getSystemService(Context.ALARM_SERVICE));
     }
 }
