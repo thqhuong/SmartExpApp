@@ -253,6 +253,8 @@
     <string name="smart_add_draft_title">Review Smart Add Draft</string>
     <string name="fill_form">Fill Form</string>
     <string name="fill_details">Fill Details</string>
+    <string name="review_added_items">Review Added Items</string>
+    <string name="fill_form_btn">FILL\nFORM</string>
     <string name="smart_add_review_first_format">Review item 1 of %1$d.</string>
     <string name="smart_add_next_ready">Next Smart Add item ready. Review and save it.</string>
     <string name="smart_add_item_skipped">Smart Add item skipped.</string>
@@ -569,4 +571,11 @@
     <string name="undo_delete_label">UNDO</string>
     <string name="category_product_count_format">%1$d product(s)</string>
     <string name="category_delete_success_format">\"%1$s\" deleted</string>
+
+    <!-- Clear History Screen Strings -->
+    <string name="history_auto_delete_info">All items in the history will be automatically removed after 7 days.</string>
+    <string name="clear_all_history">Clear All History</string>
+    <string name="clear_history_title">Clear all history?</string>
+    <string name="clear_history_message">Are you sure you want to clear all history? This will permanently delete all inactive products from this device.</string>
+    <string name="clear_history_confirm">Clear All</string>
 </resources>

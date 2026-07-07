@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 public final class AgentRepository {
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
     private static final Pattern QUANTITY_PATTERN = Pattern.compile(
-            "\\b(\\d+(?:\\.\\d+)?)\\s*(pcs|pieces|piece|g|kg|ml|l|oz|lb|cup|cups|tbsp|tsp|gal|gallon|gallons|bag|bags|loaf|loaves)\\b",
+            "\\b(\\d+(?:\\.\\d+)?)\\s*(pcs|pieces|piece|g|kg|ml|l|oz|lb|cup|cups|tbsp|tsp|gal|gallon|gallons|bag|bags|loaf|loaves|kí|ki|ký|ky|hộp|hop|chai|lon|gói|goi|quả|qua|trái|trai|cái|cai|chiếc|chiec)\\b",
             Pattern.CASE_INSENSITIVE);
 
     private AgentRepository() {
@@ -89,6 +89,11 @@ public final class AgentRepository {
         if (quantityMatcher.find()) {
             quantity = quantityMatcher.group(1);
             unit = normalizeUnit(quantityMatcher.group(2));
+        } else {
+            Matcher rawNumMatcher = Pattern.compile("^\\s*(?:add|track|remember|put)?\\s*(\\d+(?:\\.\\d+)?)\\s+", Pattern.CASE_INSENSITIVE).matcher(source);
+            if (rawNumMatcher.find()) {
+                quantity = rawNumMatcher.group(1);
+            }
         }
 
         String storage = LocalDataContract.STORAGE_ROOM_TEMP_NAME;
@@ -110,6 +115,8 @@ public final class AgentRepository {
                 || lower.contains("freeze")
                 || lower.contains("ngan dong")
                 || lower.contains("ngăn đông")
+                || lower.contains("tu dong")
+                || lower.contains("tủ đông")
                 || lower.contains("dong lanh")
                 || lower.contains("đông lạnh")) {
             storage = LocalDataContract.STORAGE_FREEZE_NAME;
@@ -801,10 +808,19 @@ public final class AgentRepository {
                 || lower.contains("tomorrow")
                 || lower.contains("today")
                 || lower.contains("het han")
+                || lower.contains("hết hạn")
                 || lower.contains("han dung")
+                || lower.contains("hạn dùng")
                 || lower.contains("ngay mai")
+                || lower.contains("ngày mai")
                 || lower.contains("hom nay")
+                || lower.contains("hôm nay")
+                || lower.contains("tháng")
+                || lower.contains("thang")
+                || lower.contains("tuần")
+                || lower.contains("tuan")
                 || Pattern.compile("\\b(?:in|after)\\s+\\d+\\s+days?\\b", Pattern.CASE_INSENSITIVE).matcher(sourceText).find()
+                || Pattern.compile("\\b\\d+\\s*(?:day|ngay|ngày|week|tuan|tuần|month|thang|tháng)s?\\b", Pattern.CASE_INSENSITIVE).matcher(sourceText).find()
                 || Pattern.compile("\\b\\d{1,4}[/\\-.\\s]+\\d{1,2}[/\\-.\\s]+\\d{1,4}\\b").matcher(sourceText).find();
     }
 
@@ -1117,6 +1133,12 @@ public final class AgentRepository {
         if (lower.equals("banh mi") || lower.equals("bánh mì")) return "Bánh mì";
         if (lower.equals("gao") || lower.equals("gạo")) return "Gạo";
         if (lower.equals("mi") || lower.equals("mì")) return "Mì";
+        if (!compact.isEmpty()) {
+            char first = compact.charAt(0);
+            if (Character.isLowerCase(first)) {
+                compact = Character.toUpperCase(first) + compact.substring(1);
+            }
+        }
         return compact;
     }
 
@@ -1230,6 +1252,23 @@ public final class AgentRepository {
         if (lower.contains("today") || lower.contains("hom nay") || lower.contains("hôm nay")) {
             return endOfDay(calendar);
         }
+        Pattern relativePattern = Pattern.compile(
+                "\\b(\\d+)\\s*(day|ngay|ngày|week|tuan|tuần|month|thang|tháng)s?\\b",
+                Pattern.CASE_INSENSITIVE
+        );
+        Matcher relMatcher = relativePattern.matcher(lower);
+        if (relMatcher.find()) {
+            int amount = Integer.parseInt(relMatcher.group(1));
+            String unitStr = relMatcher.group(2).toLowerCase(Locale.US);
+            if (unitStr.contains("day") || unitStr.contains("ngay") || unitStr.contains("ngày")) {
+                calendar.add(Calendar.DAY_OF_YEAR, amount);
+            } else if (unitStr.contains("week") || unitStr.contains("tuan") || unitStr.contains("tuần")) {
+                calendar.add(Calendar.WEEK_OF_YEAR, amount);
+            } else if (unitStr.contains("month") || unitStr.contains("thang") || unitStr.contains("tháng")) {
+                calendar.add(Calendar.MONTH, amount);
+            }
+            return endOfDay(calendar);
+        }
         Matcher matcher = Pattern.compile("\\b(?:in|after)\\s+(\\d+)\\s+days?\\b", Pattern.CASE_INSENSITIVE).matcher(source);
         if (matcher.find()) {
             calendar.add(Calendar.DAY_OF_YEAR, Integer.parseInt(matcher.group(1)));
@@ -1252,13 +1291,20 @@ public final class AgentRepository {
     }
 
     private static String inferProductName(String source, Matcher quantityMatcher) {
-        String cleaned = source.replaceAll("(?i)\\b(add|track|new product|expires?|expiry|expiration|use by|best before|best|before|sell by|keep|refrigerated|nutrition|ingredients|net|weight|in|after|the|a|an|today|tomorrow|fridge|refrigerator|freezer|frozen|freeze|room temp|pantry)\\b", " ");
-        cleaned = cleaned.replaceAll("(?i)\\b(het han|hết hạn|han dung|hạn dùng|ngay mai|ngày mai|hom nay|hôm nay|cat|cất|trong|vao|vào|o|ở|tu lanh|tủ lạnh|ngan mat|ngăn mát|cat lanh|cất lạnh|ngan dong|ngăn đông|dong lanh|đông lạnh|bao quan|bảo quản)\\b", " ");
+        String cleaned = source;
+        Matcher matcher = QUANTITY_PATTERN.matcher(source);
+        if (matcher.find()) {
+            cleaned = cleaned.replaceAll("(?i)" + Pattern.quote(matcher.group()), " ");
+        } else {
+            cleaned = cleaned.replaceFirst("(?i)^\\s*(add|track|remember|put)\\s+", "");
+            cleaned = cleaned.replaceFirst("^\\s*\\d+(?:\\.\\d+)?\\s+", "");
+        }
+        cleaned = cleaned.replaceAll("(?i)\\b(add|track|new product|expires?|expiry|expiration|expiring|use by|best before|best|before|sell by|keep|refrigerated|nutrition|ingredients|net|weight|in|after|the|a|an|today|tomorrow|fridge|refrigerator|freezer|frozen|freeze|room temp|pantry)\\b", " ");
+        cleaned = cleaned.replaceAll("(?i)\\b(het han|hết hạn|han dung|hạn dùng|ngay mai|ngày mai|hom nay|hôm nay|cat|cất|trong|vao|vào|o|ở|tu lanh|tủ lạnh|ngan mat|ngăn mát|cat lanh|cất lạnh|ngan dong|ngăn đông|dong lanh|đông lạnh|bao quan|bảo quản|de|để|tu dong|tủ đông|dong|đông|tu|tủ)\\b", " ");
         cleaned = cleaned.replaceAll("\\b\\d{1,4}[/\\-.\\s]+\\d{1,2}[/\\-.\\s]+\\d{1,4}\\b", " ");
         cleaned = cleaned.replaceAll("\\b\\d+\\s+days?\\b", " ");
-        if (quantityMatcher != null) {
-            cleaned = cleaned.replaceAll("(?i)\\b\\d+(?:\\.\\d+)?\\s*(pcs|pieces|piece|g|kg|ml|l|oz|lb|cup|cups|tbsp|tsp|gal|gallon|gallons|bag|bags|loaf|loaves)\\b", " ");
-        }
+        cleaned = cleaned.replaceAll("(?i)\\b\\d+\\s*(day|ngay|ngày|week|tuan|tuần|month|thang|tháng)s?\\b", " ");
+        cleaned = cleaned.replaceAll("(?i)\\b(in|after|tháng|thang|tuần|tuan|ngày|ngay|day|days|week|weeks|month|months)\\b", " ");
         cleaned = cleaned.replaceAll("\\s+", " ").trim();
         if (cleaned.isEmpty()) return "";
         List<String> words = Arrays.asList(cleaned.split(" "));
@@ -1283,31 +1329,133 @@ public final class AgentRepository {
             return items;
         }
 
-        String[] roughSegments = source.replace("\r", "\n").split("\\n+|;");
+        // 1. Split by newlines, semicolons, and dots (not inside abbreviations)
+        String[] roughSegments = source.replace("\r", "\n").split("\\n+|;|(?i)(?<!\\b(?:pcs|pc|g|kg|ml|l|oz|lb|lbs|cups|cup|tbsp|tsp|gal|approx))\\.(?=\\s+|$)");
         for (String rough : roughSegments) {
             String cleaned = stripLeadingAddVerb(rough.trim());
             if (cleaned.isEmpty()) {
                 continue;
             }
+            
+            // 2. Split by item conjunctions (and, then, also)
             List<String> conjunctionParts = splitByItemConjunctions(cleaned);
             for (String part : conjunctionParts) {
                 String candidate = stripLeadingAddVerb(part.trim());
                 if (candidate.isEmpty()) {
                     continue;
                 }
-                if (candidate.contains(",") && shouldSplitCommaItems(candidate)) {
-                    for (String commaPart : candidate.split(",")) {
-                        String commaCandidate = stripLeadingAddVerb(commaPart.trim());
-                        if (!commaCandidate.isEmpty()) {
-                            items.add(commaCandidate);
+                
+                // 3. Split by commas if they separate distinct items (not attributes)
+                List<String> commaParts = splitCommaSeparatedItems(candidate);
+                for (String commaPart : commaParts) {
+                    String subCandidate = stripLeadingAddVerb(commaPart.trim());
+                    if (subCandidate.isEmpty()) {
+                        continue;
+                    }
+                    
+                    // 4. Split by implicit boundaries (no semicolons/commas/dots at all)
+                    List<String> implicitParts = splitImplicitBoundaries(subCandidate);
+                    for (String implPart : implicitParts) {
+                        String finalItem = stripLeadingAddVerb(implPart.trim());
+                        if (!finalItem.isEmpty()) {
+                            items.add(finalItem);
                         }
                     }
-                } else {
-                    items.add(candidate);
                 }
             }
         }
         return items;
+    }
+
+    private static List<String> splitCommaSeparatedItems(String input) {
+        List<String> parts = new ArrayList<>();
+        if (!input.contains(",")) {
+            parts.add(input);
+            return parts;
+        }
+        
+        String[] rawParts = input.split(",");
+        StringBuilder currentItem = new StringBuilder();
+        
+        for (String rawPart : rawParts) {
+            String currentPart = rawPart.trim();
+            if (currentPart.isEmpty()) {
+                continue;
+            }
+            
+            if (currentItem.length() == 0) {
+                currentItem.append(rawPart);
+            } else {
+                if (isCommaAttribute(currentPart)) {
+                    currentItem.append(",").append(rawPart);
+                } else {
+                    parts.add(currentItem.toString().trim());
+                    currentItem.setLength(0);
+                    currentItem.append(rawPart);
+                }
+            }
+        }
+        if (currentItem.length() > 0) {
+            parts.add(currentItem.toString().trim());
+        }
+        return parts;
+    }
+
+    private static boolean isCommaAttribute(String part) {
+        String trimmed = part.trim();
+        if (trimmed.isEmpty()) {
+            return true;
+        }
+        
+        String[] words = trimmed.split("\\s+");
+        for (String word : words) {
+            String cleanWord = word.toLowerCase(Locale.US).replaceAll("^[^\\p{L}\\p{N}]+|[^\\p{L}\\p{N}]+$", "");
+            if (cleanWord.isEmpty()) {
+                continue;
+            }
+            if (!cleanWord.matches("\\d+(?:\\.\\d+)?") && !isKnownUnit(cleanWord) && !isAttributeKeyword(cleanWord)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isKnownUnit(String word) {
+        return Arrays.asList(
+            "pcs", "pieces", "piece", "g", "kg", "ml", "l", "oz", "lb", "lbs",
+            "cup", "cups", "tbsp", "tsp", "gal", "gallon", "gallons", "bag", "bags",
+            "loaf", "loaves", "kí", "ki", "ký", "ky", "hộp", "hop", "chai", "lon",
+            "gói", "goi", "quả", "qua", "trái", "trai", "cái", "cai", "chiếc", "chiec"
+        ).contains(word);
+    }
+
+    private static boolean isAttributeKeyword(String word) {
+        return Arrays.asList(
+            "expires", "expire", "expiry", "expiring", "hết hạn", "het han", "hạn dùng", "han dung",
+            "best", "before", "use", "by", "sell", "in", "after", "at", "on", "for", "to", "with", "under",
+            "trong", "vào", "vao", "ở", "o", "để", "de",
+            "fridge", "refrigerator", "refrigerated", "freezer", "frozen", "freeze", "room temp", "pantry",
+            "tủ lạnh", "tu lanh", "ngăn mát", "gan mat", "ngăn đông", "gan dong", "tủ đông", "tu dong",
+            "cất lạnh", "cat lanh", "đông lạnh", "dong lanh",
+            "tomorrow", "today", "day", "days", "week", "weeks", "month", "months", "ngay", "ngày",
+            "tuan", "tuần", "thang", "tháng", "tủ", "tu", "lạnh", "lanh", "đông", "dong"
+        ).contains(word);
+    }
+
+    private static List<String> splitImplicitBoundaries(String input) {
+        String boundaryRegex = "(?i)(?<=\\b(?:tomorrow|today|ngay mai|ngày mai|hom nay|hôm nay|"
+                + "days|day|weeks|week|months|month|ngày|ngay|tuần|tuan|tháng|thang|"
+                + "fridge|refrigerator|freezer|freeze|room temp|pantry|"
+                + "tủ lạnh|tu lanh|ngăn mát|gan mat|ngăn đông|gan dong|tủ đông|tu dong|"
+                + "cất lạnh|cat lanh|đông lạnh|dong lanh))\\s+"
+                + "(?=\\b(?!"
+                + "expires|expire|expiry|expiring|hết hạn|het han|hạn dùng|han dung|best|before|use|by|sell|"
+                + "in|after|at|on|for|to|with|under|trong|vào|vao|ở|o|để|de|"
+                + "fridge|refrigerator|freezer|tomorrow|today|day|days|week|weeks|month|months|ngay|ngày|tuan|tuần|thang|tháng|tủ|tu|lạnh|lanh|đông|dong|"
+                + "and|then|also|và|va|"
+                + "pcs|pieces|piece|g|kg|ml|l|oz|lb|lbs|cup|cups|tbsp|tsp|gal|gallon|gallons|bag|bags|loaf|loaves|kí|ki|ký|ky|hộp|hop|chai|lon|gói|goi|quả|qua|trái|trai|cái|cai|chiếc|chiec"
+                + ")\\w+)";
+        return Arrays.asList(input.split(boundaryRegex));
     }
 
     private static List<String> splitByItemConjunctions(String input) {
@@ -1381,6 +1529,7 @@ public final class AgentRepository {
         if (unit.equals("gallon") || unit.equals("gallons")) return "gal";
         if (unit.equals("bags")) return "bag";
         if (unit.equals("loaves")) return "loaf";
+        if (unit.equals("kí") || unit.equals("ki") || unit.equals("ký") || unit.equals("ky")) return "kg";
         return unit;
     }
 

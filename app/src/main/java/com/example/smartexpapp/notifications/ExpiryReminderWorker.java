@@ -100,7 +100,7 @@ public class ExpiryReminderWorker extends Worker {
 
     private static Result successAndScheduleNext(Context context) {
         if (SettingsRepository.areNotificationsEnabled(context)) {
-            ReminderScheduler.scheduleNextDaily(context);
+            ReminderScheduler.scheduleDailyAt(context, SettingsRepository.getReminderNotifyTimeMinutes(context));
         }
         return Result.success();
     }
