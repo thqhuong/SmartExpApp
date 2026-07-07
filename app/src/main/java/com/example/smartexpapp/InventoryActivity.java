@@ -412,6 +412,7 @@ public class InventoryActivity extends BaseActivity {
                                             if (completed[0] == total) {
                                                 runOnUiThread(() -> {
                                                     showSuccessNotification(getString(R.string.batch_undone_format, total));
+                                                    ReminderScheduler.runSoon(this);
                                                     viewModel.loadProducts();
                                                 });
                                             }
@@ -423,6 +424,7 @@ public class InventoryActivity extends BaseActivity {
                                 if (completed[0] == total) {
                                     runOnUiThread(() -> {
                                         showSuccessNotification(getString(R.string.batch_undone_format, total));
+                                        ReminderScheduler.runSoon(this);
                                         viewModel.loadProducts();
                                     });
                                 }
@@ -852,6 +854,7 @@ public class InventoryActivity extends BaseActivity {
     private void onMarkSuccess(Boolean updated, Product product,
             int iconRes, int iconBgRes, int iconTintRes, String statusLabel) {
         if (Boolean.TRUE.equals(updated)) {
+            ReminderScheduler.runSoon(this);
             viewModel.loadProducts();
             String message = getString(R.string.mark_status_snackbar_format, product.getName(), statusLabel);
             InAppNotificationManager.showUndo(this, message, iconRes, iconBgRes, iconTintRes, () -> undoMark(product));
@@ -863,6 +866,7 @@ public class InventoryActivity extends BaseActivity {
                 reverted -> {
                     if (Boolean.TRUE.equals(reverted)) {
                         showSuccessNotification(getString(R.string.mark_undone_format, product.getName()));
+                        ReminderScheduler.runSoon(this);
                         viewModel.loadProducts();
                     }
                 }, this::onStatusUpdateFailed);
@@ -873,11 +877,13 @@ public class InventoryActivity extends BaseActivity {
                 reverted -> {
                     if (Boolean.TRUE.equals(reverted)) {
                         showSuccessNotification(getString(R.string.restored_format, product.getName()));
+                        ReminderScheduler.runSoon(this);
                         viewModel.loadProducts();
                     } else {
                         ProductRepository.addProductAsync(InventoryActivity.this, product,
                                 unused -> {
                                     showSuccessNotification(getString(R.string.restored_format, product.getName()));
+                                    ReminderScheduler.runSoon(this);
                                     viewModel.loadProducts();
                                 },
                                 this::onStatusUpdateFailed);
@@ -909,6 +915,7 @@ public class InventoryActivity extends BaseActivity {
             dialog.dismiss();
             viewModel.deleteProduct(product.getId(), deleted -> {
                 if (Boolean.TRUE.equals(deleted)) {
+                    ReminderScheduler.runSoon(this);
                     viewModel.loadProducts();
                     InAppNotificationManager.showUndo(InventoryActivity.this,
                             getString(R.string.undo_delete_format, product.getName()),

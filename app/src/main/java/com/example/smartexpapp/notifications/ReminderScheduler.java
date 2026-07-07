@@ -1,10 +1,6 @@
 package com.example.smartexpapp.notifications;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
 
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
@@ -13,11 +9,11 @@ import androidx.work.WorkManager;
 import com.example.smartexpapp.data.SettingsRepository;
 
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 public final class ReminderScheduler {
     public static final String UNIQUE_DAILY_WORK = "smart_expiry_daily_reminders";
     public static final String UNIQUE_IMMEDIATE_WORK = "smart_expiry_immediate_reminder";
-    static final int DAILY_ALARM_REQUEST_CODE = 2301;
 
     private ReminderScheduler() {
     }
@@ -25,34 +21,32 @@ public final class ReminderScheduler {
     public static void scheduleDaily(Context context) {
         Context appContext = context.getApplicationContext();
         SettingsRepository.getSettingsAsync(appContext,
-                settings -> scheduleDaily(appContext, settings.getReminderNotifyTimeMinutes()),
-                error -> scheduleDaily(appContext, SettingsRepository.DEFAULT_REMINDER_NOTIFY_TIME_MINUTES));
+                settings -> scheduleDaily(appContext, settings.getReminderNotifyTimeMinutes(), ExistingWorkPolicy.REPLACE),
+                error -> scheduleDaily(appContext, SettingsRepository.DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, ExistingWorkPolicy.REPLACE));
     }
 
     public static void scheduleNextDaily(Context context) {
         Context appContext = context.getApplicationContext();
         SettingsRepository.getSettingsAsync(appContext,
-                settings -> scheduleDaily(appContext, settings.getReminderNotifyTimeMinutes()),
-                error -> scheduleDaily(appContext, SettingsRepository.DEFAULT_REMINDER_NOTIFY_TIME_MINUTES));
+                settings -> scheduleDaily(appContext, settings.getReminderNotifyTimeMinutes(), ExistingWorkPolicy.APPEND_OR_REPLACE),
+                error -> scheduleDaily(appContext, SettingsRepository.DEFAULT_REMINDER_NOTIFY_TIME_MINUTES, ExistingWorkPolicy.APPEND_OR_REPLACE));
     }
 
     public static void scheduleDailyAt(Context context, int minutesAfterMidnight) {
-        scheduleDaily(context.getApplicationContext(), minutesAfterMidnight);
+        scheduleDaily(context.getApplicationContext(), minutesAfterMidnight, ExistingWorkPolicy.REPLACE);
     }
 
     static void scheduleDaily(Context context, int minutesAfterMidnight) {
-        Context appContext = context.getApplicationContext();
-        AlarmManager alarmManager = (AlarmManager) appContext.getSystemService(Context.ALARM_SERVICE);
-        if (alarmManager == null) {
-            return;
-        }
-        long triggerAtMillis = nextTriggerAtMillisFor(minutesAfterMidnight, System.currentTimeMillis());
-        PendingIntent pendingIntent = dailyAlarmPendingIntent(appContext, PendingIntent.FLAG_UPDATE_CURRENT);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-        }
+        scheduleDaily(context, minutesAfterMidnight, ExistingWorkPolicy.REPLACE);
+    }
+
+    private static void scheduleDaily(Context context, int minutesAfterMidnight, ExistingWorkPolicy policy) {
+        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ExpiryReminderWorker.class)
+                .setInitialDelay(nextDelayMillisFor(minutesAfterMidnight, System.currentTimeMillis()), TimeUnit.MILLISECONDS)
+                .addTag(UNIQUE_DAILY_WORK)
+                .build();
+        WorkManager.getInstance(context.getApplicationContext())
+                .enqueueUniqueWork(UNIQUE_DAILY_WORK, policy, request);
     }
 
     public static void runSoon(Context context) {
@@ -64,37 +58,8 @@ public final class ReminderScheduler {
     }
 
     public static void cancel(Context context) {
-        cancelDailyAlarm(context.getApplicationContext());
         WorkManager.getInstance(context.getApplicationContext()).cancelUniqueWork(UNIQUE_DAILY_WORK);
         WorkManager.getInstance(context.getApplicationContext()).cancelUniqueWork(UNIQUE_IMMEDIATE_WORK);
-    }
-
-    static void cancelDailyAlarm(Context context) {
-        Context appContext = context.getApplicationContext();
-        AlarmManager alarmManager = (AlarmManager) appContext.getSystemService(Context.ALARM_SERVICE);
-        if (alarmManager == null) {
-            return;
-        }
-        PendingIntent pendingIntent = dailyAlarmPendingIntent(appContext, PendingIntent.FLAG_NO_CREATE);
-        if (pendingIntent != null) {
-            alarmManager.cancel(pendingIntent);
-            pendingIntent.cancel();
-        }
-    }
-
-    private static PendingIntent dailyAlarmPendingIntent(Context context, int extraFlags) {
-        Intent intent = new Intent(context, ExpiryReminderAlarmReceiver.class)
-                .setAction(ExpiryReminderAlarmReceiver.ACTION_SHOW_EXPIRY_REMINDER);
-        return PendingIntent.getBroadcast(
-                context,
-                DAILY_ALARM_REQUEST_CODE,
-                intent,
-                extraFlags | PendingIntent.FLAG_IMMUTABLE
-        );
-    }
-
-    static long nextTriggerAtMillisFor(int minutesAfterMidnight, long nowMillis) {
-        return nowMillis + nextDelayMillisFor(minutesAfterMidnight, nowMillis);
     }
 
     static long nextDelayMillisFor(int minutesAfterMidnight, long nowMillis) {

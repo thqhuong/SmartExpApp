@@ -252,8 +252,6 @@
     <string name="smart_add_draft_title">Xem lại bản nháp Thêm thông minh</string>
     <string name="fill_form">Điền biểu mẫu</string>
     <string name="fill_details">Điền chi tiết</string>
-    <string name="review_added_items">Xem lại món đã thêm</string>
-    <string name="fill_form_btn">ĐIỀN\nFORM</string>
     <string name="smart_add_review_first_format">Xem lại món 1 trong %1$d.</string>
     <string name="smart_add_next_ready">Món Thêm thông minh tiếp theo đã sẵn sàng. Hãy xem lại và lưu.</string>
     <string name="expiry_not_detected">Không phát hiện ngày hết hạn. Vui lòng chọn ngày trước khi lưu.</string>
@@ -571,11 +569,4 @@
     <string name="undo_delete_label">HOÀN TÁC</string>
     <string name="category_product_count_format">%1$d sản phẩm</string>
     <string name="category_delete_success_format">Đã xóa \"%1$s\"</string>
-
-    <!-- Clear History Screen Strings -->
-    <string name="history_auto_delete_info">Các mục trong lịch sử sẽ tự động được xóa sau 7 ngày.</string>
-    <string name="clear_all_history">Xóa tất cả lịch sử</string>
-    <string name="clear_history_title">Xóa tất cả lịch sử?</string>
-    <string name="clear_history_message">Bạn có chắc chắn muốn xóa tất cả lịch sử? Thao tác này sẽ xóa vĩnh viễn tất cả sản phẩm không hoạt động khỏi thiết bị này.</string>
-    <string name="clear_history_confirm">Xóa tất cả</string>
 </resources>

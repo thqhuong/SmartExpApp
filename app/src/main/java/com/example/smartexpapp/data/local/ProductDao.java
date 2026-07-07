@@ -105,7 +105,4 @@ public interface ProductDao {
 
     @Query("UPDATE products SET cloud_id = :cloudId, sync_status = :syncStatus, last_synced_at = :lastSyncedAt WHERE id = :id")
     int updateSyncMetadata(String id, String cloudId, String syncStatus, Long lastSyncedAt);
-
-    @Query("SELECT * FROM products WHERE status != 'ACTIVE' AND updated_at < :thresholdMillis")
-    List<ProductEntity> getOldHistoryProducts(long thresholdMillis);
 }

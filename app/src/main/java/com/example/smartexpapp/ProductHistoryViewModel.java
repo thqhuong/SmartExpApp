@@ -68,10 +68,6 @@ public class ProductHistoryViewModel extends ViewModel {
         productRepository.markActiveAsync(id, "Restored from history", callback, errorCallback);
     }
 
-    public void clearAllHistory(ProductRepository.Callback<Boolean> callback, ProductRepository.ErrorCallback errorCallback) {
-        productRepository.clearAllHistoryAsync(callback, errorCallback);
-    }
-
     private void applyFilter(List<Product> all) {
         List<Product> filtered = new ArrayList<>();
         for (Product p : all) {

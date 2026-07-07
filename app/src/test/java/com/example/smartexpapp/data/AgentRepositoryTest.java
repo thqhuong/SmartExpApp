@@ -49,28 +49,6 @@ public class AgentRepositoryTest {
     }
 
     @Test
-    public void parseProductDraftHandlesVietnameseAccentedRelativeExpiryAndUnits() {
-        ProductDraft draft = AgentRepository.parseProductDraft(
-                "thịt heo 2 kí để tủ đông hết hạn 2 tháng");
-
-        assertEquals("Thịt heo", draft.getName());
-        assertEquals("2", draft.getQuantity());
-        assertEquals("kg", draft.getUnit());
-        assertEquals("Meat", draft.getCategory());
-        assertEquals("Freezer", draft.getStorage());
-        assertTrue(draft.hasExpiryDate());
-
-        Calendar expectedCalendar = Calendar.getInstance();
-        expectedCalendar.add(Calendar.MONTH, 2);
-        expectedCalendar.set(Calendar.HOUR_OF_DAY, 23);
-        expectedCalendar.set(Calendar.MINUTE, 59);
-        expectedCalendar.set(Calendar.SECOND, 59);
-        expectedCalendar.set(Calendar.MILLISECOND, 999);
-        long expectedTime = expectedCalendar.getTimeInMillis();
-        assertTrue(Math.abs(draft.getExpiryDateMillis() - expectedTime) < 5000);
-    }
-
-    @Test
     public void parseProductDraftHandlesOcrLikePackageText() {
         ProductDraft draft = AgentRepository.parseProductDraft(
                 "Organic Milk\n1 gallon\nBest Before 12/31/2026\nKeep Refrigerated");

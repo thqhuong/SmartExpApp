@@ -114,7 +114,6 @@ public final class ProductRepository {
         this.database = database;
         this.executor = executor;
         this.mainHandler = new Handler(Looper.getMainLooper());
-        autoDeleteOldHistory();
     }
 
     // --- Instance-based APIs ---
@@ -424,50 +423,6 @@ public final class ProductRepository {
             UserDataSyncRepository.syncInventoryActionsAsync(context, database);
         }
         return updated[0];
-    }
-
-    public boolean clearAllHistory() {
-        ensureLocalDefaults(database);
-        List<Product> all = filter(null, null);
-        List<Product> inactive = new ArrayList<>();
-        for (Product p : all) {
-            String status = p.getStatus();
-            if (ProductStatus.CONSUMED.equals(status)
-                    || ProductStatus.WASTED.equals(status)
-                    || ProductStatus.DONATED.equals(status)
-                    || ProductStatus.DELETED.equals(status)) {
-                inactive.add(p);
-            }
-        }
-
-        boolean success = true;
-        for (Product p : inactive) {
-            boolean ok = deleteProduct(p.getId());
-            if (!ok) {
-                success = false;
-            }
-        }
-        return success;
-    }
-
-    public void clearAllHistoryAsync(Callback<Boolean> callback, ErrorCallback errorCallback) {
-        execute(this::clearAllHistory, callback, errorCallback);
-    }
-
-    private void autoDeleteOldHistory() {
-        executor.execute(() -> {
-            try {
-                long sevenDaysAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L;
-                List<ProductEntity> oldProducts = database.productDao().getOldHistoryProducts(sevenDaysAgo);
-                if (oldProducts != null && !oldProducts.isEmpty()) {
-                    for (ProductEntity p : oldProducts) {
-                        deleteProduct(p.id);
-                    }
-                }
-            } catch (Exception e) {
-                android.util.Log.e("ProductRepository", "Error running history auto-delete", e);
-            }
-        });
     }
 
     // --- Legacy Static compatibility delegators (Context-taking) ---
